@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="Untitled Gantt Project" company="" webLink="http://" view-date="2018-08-27" view-index="0" gantt-divider-location="300" resource-divider-location="300" version="2.8.9" locale="en_GB">
+    <description/>
+    <view zooming-state="default:4" id="gantt-chart">
+        <field id="tpd3" name="Name" width="167" order="0"/>
+        <field id="tpd4" name="Begin date" width="65" order="1"/>
+        <field id="tpd5" name="End date" width="64" order="2"/>
+        <option id="taskLabelUp" value="name"/>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="Name" width="210" order="0"/>
+        <field id="1" name="Default role" width="86" order="1"/>
+    </view>
+    <!-- -->
+    <calendars>
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+            <only-show-weekends value="true"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="5" name="Phase 1" color="#8cb6ce" meeting="false" start="2018-09-03" duration="47" complete="35" thirdDate="2018-09-03" thirdDate-constraint="0" priority="4" expand="true">
+            <depend id="7" type="2" difference="0" hardness="Strong"/>
+            <depend id="28" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="28" name="Presentation First Phase" color="#8cb6ce" meeting="true" start="2018-10-20" duration="0" complete="0" thirdDate="2018-09-17" thirdDate-constraint="0" priority="4" expand="true">
+            <notes><![CDATA[Context
+Task definition
+Project Plan]]></notes>
+        </task>
+        <task id="2" name="Paper research" color="#8cb6ce" meeting="false" start="2018-09-07" duration="26" complete="0" thirdDate="2018-09-17" thirdDate-constraint="0" expand="true"/>
+        <task id="0" name="Check for Reinforcement Frameworks" color="#8cb6ce" meeting="false" start="2018-09-14" duration="8" complete="100" thirdDate="2018-09-20" thirdDate-constraint="0" expand="true"/>
+        <task id="17" name="Set up git repository" color="#8cb6ce" meeting="false" start="2018-09-14" duration="11" complete="100" thirdDate="2018-08-27" thirdDate-constraint="0" expand="true"/>
+        <task id="18" name="Get Aachen cluster account" color="#8cb6ce" meeting="false" start="2018-09-14" duration="31" complete="25" thirdDate="2018-08-27" thirdDate-constraint="0" expand="true"/>
+        <task id="7" name="Phase 2" color="#8cb6ce" meeting="false" start="2018-10-20" duration="42" complete="0" thirdDate="2018-09-03" thirdDate-constraint="0" expand="true">
+            <depend id="10" type="2" difference="0" hardness="Strong"/>
+            <depend id="32" type="3" difference="0" hardness="Strong"/>
+        </task>
+        <task id="32" name="Presentation Second Phase" color="#8cb6ce" meeting="true" start="2018-12-01" duration="0" complete="0" thirdDate="2018-10-29" thirdDate-constraint="0" expand="true">
+            <notes><![CDATA[Laymen presentation]]></notes>
+        </task>
+        <task id="10" name="Phase 3" color="#8cb6ce" meeting="false" start="2018-12-01" duration="21" complete="0" thirdDate="2018-09-03" thirdDate-constraint="0" expand="true">
+            <depend id="35" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="35" name="Final Presentation" color="#8cb6ce" meeting="true" start="2018-12-22" duration="0" complete="0" thirdDate="2018-10-29" thirdDate-constraint="0" priority="4" expand="true"/>
+        <task id="39" name="Deadline for Report" color="#8cb6ce" meeting="false" start="2018-11-12" duration="38" complete="0" thirdDate="2018-11-12" thirdDate-constraint="0" expand="true"/>
+    </tasks>
+    <resources/>
+    <allocations/>
+    <vacations/>
+    <previous/>
+    <roles roleset-name="Default"/>
+</project>

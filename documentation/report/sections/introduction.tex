@@ -10,4 +10,9 @@
 
 Early work on transfer learning for reinforcement learning mostly relied on human intervention to create a mapping between source and target tasks \citep[e.g.][]{taylor2007cross}. \citet{taylor2007cross}, for example, developed a method called \textit{Rule Transfer}. Their algorithm learns a policy in the source task that gets transformed into rules, serving as advise to the agent when training in the new environment. To use these rules in the target task, hand-coded translation functions were applied. In contrast, \citet{taylor2008autonomous} published the first system that automatically mapped source and target task. They use little data from a short exploration period in the target task to approximate a one-to-many mapping between the state and action space. This is achieved by comparing all possible state-state and action-action pairs and choosing the ones with the smallest MSE when predicting the next action using neural networks trained on the target task observations. While their method effectively facilitated learning in the target task, it needs to be noted that transfer was performed on modifications of the same task. Hence, they were fairly similar and there was no attempt to tackle cross-domain transfer. 
 
+
+\citet{gupta2017learning} used a proxy task learnt in both the source and target domains, and a test task where transfer should occur. Firstly, with the proxy task, pairs of corresponding states are found using time-based alignment or dynamic time warping. Based on these state pairs, a common latent state space is learnt by minimizing reconstruction errors and pairwise distances. In the test task, to incentivize policy transfer from source to task, the distance to source optimal policy in the common space is incorporated the reward function.
+
+
+
 In the following sections ...

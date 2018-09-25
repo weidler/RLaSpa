@@ -4,6 +4,9 @@
 
 ## Literature
 
+#### 2018
+Meta-Reinforcement Learning of Structured Exploration Strategies (Gupta et al., 2018) [[PDF]](https://arxiv.org/pdf/1802.07245.pdf)
+
 #### 2017
 Learning invariant feature spaces to transfer skills with reinforcement learning (Gupta et al., 2017) [[PDF]](https://arxiv.org/pdf/1703.02949.pdf)
 

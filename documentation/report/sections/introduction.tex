@@ -13,6 +13,8 @@ Early work on transfer learning for reinforcement learning mostly relied on huma
 
 \citet{gupta2017learning} used a proxy task learnt in both the source and target domains, and a test task where transfer should occur. Firstly, with the proxy task, pairs of corresponding states are found using time-based alignment or dynamic time warping. Based on these state pairs, a common latent state space is learnt by minimizing reconstruction errors and pairwise distances. In the test task, to incentivize policy transfer from source to task, the distance to source optimal policy in the common space is incorporated the reward function.
 
+\citet{gupta2018learning} uses the latent space and meta-learning to improve the exploration phase for the new task the agent is tackling. To do so, model-agnostic meta-learning is used to generate knowledge that could be easily adapted for different tasks (latent space). In addition, policy gradients methods in conjunction with meta-learning are utilized to generate and train the policies. 
+
 
 
 In the following sections ...

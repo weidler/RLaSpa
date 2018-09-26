@@ -14,6 +14,8 @@ Hindsight Experience Replay (Andrychowicz et al., 2017) [[PDF]](https://arxiv.or
 
 DARLA: Improving Zero-Shot Transfer in Reinforcement Learning (Higgins et al., 2017) [[PDF]](https://arxiv.org/pdf/1707.08475.pdf)
 
+Data-efficient deep reinforcement learning for dexterous manipulation (Popov et al., 2017) [[PDF]] (https://arxiv.org/pdf/1704.03073.pdf)
+
 #### 2016
 Asynchronous Methods for Deep Reinforcement Learning (Mnih et al., 2016) [[PDF]](https://arxiv.org/pdf/1602.01783.pdf)
 
@@ -23,7 +25,7 @@ Actor-Mimic: Deep Multitask and Transfer Reinforcement Learning (Parisotto et al
 Representation Learning: A Review and New Perspectives (Bengio et al., 2014) [[PDF]](https://arxiv.org/pdf/1206.5538.pdf)
 
 #### 2013
-Automatically Mapped Transfer BetweenReinforcement Learning Tasks via Three-WayRestricted Boltzmann Machines (Bou Ammar et al, 2013) [[PDF]](http://www.ecmlpkdd2013.org/wp-content/uploads/2013/07/624.pdf)
+Automatically Mapped Transfer Between Reinforcement Learning Tasks via Three-Way Restricted Boltzmann Machines (Bou Ammar et al, 2013) [[PDF]](http://www.ecmlpkdd2013.org/wp-content/uploads/2013/07/624.pdf)
 
 #### 2012
 Reinforcement learning transfer via sparse coding (Ammar et al., 2012) [[PDF]](https://pdfs.semanticscholar.org/65ea/abe5733ced3264c8939867561d133bfd8585.pdf)
@@ -38,3 +40,7 @@ Autonomous Transfer for Reinforcement Learning (Taylor et al., 2008) [[PDF]](htt
 
 #### 2007
 Cross-Domain Transfer for Reinforcement Learning (Taylor et al., 2007) [[PDF]](http://irll.eecs.wsu.edu/wp-content/papercite-data/pdf/icml07-taylor.pdf)
+
+#### 1999
+Policy invariance under reward transformations: Theory and application to reward shaping (Ng, Harada, Russell, 1999)
+[[PDF]](http://luthuli.cs.uiuc.edu/~daf/courses/games/AIpapers/ng99policy.pdf)

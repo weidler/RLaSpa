@@ -14,7 +14,9 @@ Hindsight Experience Replay (Andrychowicz et al., 2017) [[PDF]](https://arxiv.or
 
 DARLA: Improving Zero-Shot Transfer in Reinforcement Learning (Higgins et al., 2017) [[PDF]](https://arxiv.org/pdf/1707.08475.pdf)
 
-Data-efficient deep reinforcement learning for dexterous manipulation (Popov et al., 2017) [[PDF]] (https://arxiv.org/pdf/1704.03073.pdf)
+Data-efficient deep reinforcement learning for dexterous manipulation (Popov et al., 2017) [[PDF]](https://arxiv.org/pdf/1704.03073.pdf)
+
+ Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks (Chelsea Finn et al., 2017) [[PDF]](https://arxiv.org/pdf/1703.03400.pdf)
 
 #### 2016
 Asynchronous Methods for Deep Reinforcement Learning (Mnih et al., 2016) [[PDF]](https://arxiv.org/pdf/1602.01783.pdf)

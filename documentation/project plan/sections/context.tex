@@ -1,5 +1,16 @@
 \section{Context and Motivation}
 \label{sec:context}
+
+In \textbf{Reinforcement Learning} (RL), machine learning problems are modelled as a sequence of actions taken by an agent in some environment to maximize a total reward. Instead of learning from a dataset, the agent builds knowledge about the environment and optimal actions by exploring the effect of its behaviour on received rewards. Since such interaction can be cost-intensive in real-world (or physical) applications, it is desirable to pre-train agents on a simulated tasks and afterwards generalize the obtained knowledge to the real task. 
+
+For this reason, recent research on reinforcement learning involves a lot of work on \textbf{transfer learning} (TL). In TL, an agent learns to perform one task and uses its knowledge in a before unseen task to perform to a reasonable level with minimal additional training. In its more extreme forms, TL is known as one- or zero-shot-learning, when only a single training step is allowed in the target task - or none at all \citep{goodfellow2016deep}. In RL, one of the key challenges of applying TL is to align states and actions between tasks. While some work tackles this issue with hand-crafted solutions \citep[e.g.][]{taylor2007cross}, it is desirable to develop methods to automatically map tasks.
+
+
+\textbf{Deep Learning} (DL) has been successfully applied to a variety of problems in machine learning research and got increasing attention over the last two decades \citep{goodfellow2016deep}. While DL is applicable to classical problems such as regression and classification - and may henceforth be used as a policy learner in RL as well - it is particularly useful for learning representations in a latent space. For instance, convolutional neural networks can be used to break down visual input into features modelling higher-level information. Sequences of variable length, such as natural language, can be embedded using recurrent neural networks \citep{goldberg2017neural}. Another architecture for representation learning are so called \textit{autoencoders} \citep{hinton2006reducing}. These neural networks learn to first reduce the dimensionality of their inputs and then reconstruct the original sample from this low dimensional representation. The low-dimensional representation in the middle layer often proofs useful as a representation for different tasks as it encodes the relevant information of the input space into a latent space.
+
+
+\hrulefill
+
 Describes the problem/task/goal/idea in a general context
 
 \begin{itemize}

@@ -1,7 +1,34 @@
-\section{Concepts and approach
-}
+\section{Concepts and approach}
+
+\textbf{Deep learning (DL)} is a specific subfield of machine learning that aim to learn representations of the world from sets of high level features built by the composition of lower level ones. The main aspect of deep learning is that these set of features, called layers, are learned from raw data through general-purpose procedures and without the intervention of humans. 
+
+The algorithms that allow this kind of learning are the \textbf{artificial neural networks} which are a mathematical function that maps a set of inputs values to outputs values (\cite{goodfellow2016deep}). Such function is a composition of many simpler functions that provides several levels of abstractions. 
+
+\textbf{Convolutional neural networks (CNNs)} are a category of artificial neural networks designed to process ``grid-like topology data'' (\cite{goodfellow2016deep}) like images or sounds signals. Its architecture, that take advantage of the topology of the input, arrange the neurons in three dimensions: width, height and depth. 
+
+The name of this kind of neural networks comes from the operation in which they are based, the convolution, which is a special kind of linear operation. CNNs architecture is formed by four main layers:
+
+\begin{itemize}
+    \item Convolutional layer.
+    \item ReLu layer.
+    \item Pooling layer.
+    \item Classification layer.
+\end{itemize}
+
+The convolution layer is the main part of the CNNs, being in charge of detecting the features in the data by the use of filters. To improve the speed of the training, convolution layers are followed by the rectified linear units (ReLu) layer, that acts as a rectifier function.
+
+The functionality of the pooling layer is reduce the spatial size of the representation with the objective of decrease the parameters in the network and the computation required. Finally, the last part of the network is the fully connected layer, which performs the classification task.
+
+An \textbf{autoencoder} is neural networks trained to copy its input to the output and which is formed by two parts: the encoder, that converts the input to a dense and smaller representation and the decoder, that rebuild the input from the representation. \begin{flushleft}
+    
+\end{flushleft}
+
+
+\hrulefill
 
 How will you be tackling/solving this?
+
+
 
 Concepts:
 \begin{itemize}

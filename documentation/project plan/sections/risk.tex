@@ -1,7 +1,7 @@
 \section{Risk Analysis}
 \label{sec:risk}
 
-We distinguish between technical and organizational risks, where the former involve those related to the approach chosen to tackle the research problem, whereas the latter refer to those arising from the organization of work of the project team and related parties. In addition to the descriptions and contingency plans, justifications for the costs and likelihoods of the risks are provided.
+We distinguish between technical and organizational risks, where the former involve those related to the approach chosen to tackle the research problem, whereas the latter refer to those arising from the project team itself or related parties. The two types of risks are listed in table \ref{tbl:tech_risks} and \ref{tbl:organizational_risks} respectively. In addition to the descriptions and contingency plans, justifications for the costs and likelihoods of the risks are provided in table \ref{tbl:risk_explained}.
 
 \subsection{Technical Risks}
 \begin{center} 
@@ -11,13 +11,24 @@ We distinguish between technical and organizational risks, where the former invo
 		\textbf{ID} & \textbf{Risk Description} & \textbf{Contingency Plan} & \textbf{Cost} & \textbf{Likelihood} 		 \\ 
 		\midrule
 		1 & 
-		The team fails to build the RNN- or CNN-based model from TIMIT on time. &
-		Prioritize this task over other tasks to speed up the implementation. For others tasks of which this task is a prerequisite, reallocate the assigned manpower to items with no dependency on this task.  &
+		The team cannot reproduce the results reported in selected papers on time. &
+		Provide explanations, and substantiate with experiment results.  &
+		+ &
+		+++  \\
+		2 & 
+		The team cannot implement a working RL-based Atari-playing agent on time. &
+		Focus on transfers across sinusoidal tasks (inverted pendulum, mountain car, cart pole) and explore a larger variety transfer methods.  &
 		+++ &
-		+  \\
+		++  \\
+		3 & 
+		The proposed method does not bring improved performance (no effect or ``negative transfer'') on the interested tasks pairs / groups. &
+		Investigate the reasons of the failure to transfer. Compare with scenarios where transfer is successful.  &
+		++ &
+		+++  \\
 		\bottomrule
 		%\caption{Technical Risks}
 	\end{tabular}
+\label{tbl:tech_risks}
 \end{center}
 
 \subsection{Organizational Risks}
@@ -28,14 +39,25 @@ We distinguish between technical and organizational risks, where the former invo
 		\toprule
 		\textbf{ID} & \textbf{Risk Description} & \textbf{Contingency Plan} & \textbf{Cost} & \textbf{Likelihood} 		 \\ 
 		\midrule
-		1 & 
-		Testing data from children’s speech cannot be collected before the methods need to be tested. &
-		Re-launch data collection with more accessible test subjects, such as university students of younger age. &
+		4 & 
+		One team member has to be absent from the team for long due to uncontrollable factors like severe illness or family circumstances.	 &
+		Reduce the scope of the project. When
+		in the phase of implementation, reduce
+		the number of alternative models. When
+		in the phase of experiments, reduce the
+		number of experiments and prioritize
+		those with the highest chance of yielding insightful results. &
 		+++ &
+		+  \\
+		5 & 
+		Downtime in the Aachen computing cluster makes it impossible to run experiments as scheduled. &
+		Rent GPU-enabled virtual machines on Microsoft Azure or Amazon Web Services (AWS) with the free student credits. &
+		++ &
 		+  \\
 		\bottomrule
 		%\caption{Organizational Risks}
 	\end{tabular}
+\label{tbl:organizational_risks}
 \end{center}
 
 \subsection{Cost and Likelihood Explanation}
@@ -47,10 +69,24 @@ We distinguish between technical and organizational risks, where the former invo
 		\textbf{ID} & \textbf{Cost Explanation} & \textbf{Likelihood Explanation} 		 \\ 
 		\midrule
 		1 &
-		+: Factors causing the long-term absence of a teammate are rare.  &
-		++: The absence would cause a 20\% drop in manpower. \\
+		+: Reproduced experiments results, regardless whether the same as in the original publications, can still be used as a comparison with our experiment results.  &
+		+++: It is likely that not all hyper-parameters or initialization conditions are explained in the publication, making the experiment results difficult to reproduce. \\
+		2 &
+		+++: With a large number of experiment scenarios (Atari games) ruled out, the experiments will be limited to sinusoidal tasks. &
+		++: Although no team member had experience with game control based on raw pixels, there are existing tutorials and Git repositories that accomplished this task. \\
+		3 &
+		++: Negative results without well-interpreted results would render this research unsuccessful. &
+		+++: It may be challenging to apply suitable techniques	to achieve transfer across our experiment tasks, as transfer learning in reinforcement learning is still an area with open issues. \\
+		4 &
+		+++: The absence would cause a 20\% drop in manpower.  &
+		+: Factors causing the long-term absence of a teammate are rare. \\
+		
+		5 &
+		++: Experiments results may be delayed, impacting project progress.  &
+		+: Long-lasting downtime of the Aachen cluster is unlikely. \\
 		
 		\bottomrule
 		%\caption{Cost and Likelihood Explanation}
 	\end{tabular}
+\label{tbl:risk_explained}
 \end{center}

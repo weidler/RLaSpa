@@ -3,33 +3,33 @@
 
 In \textbf{Reinforcement Learning} (RL), machine learning problems are modelled as a sequence of actions taken by an agent in some environment to maximize a total reward. Instead of learning from a dataset, the agent builds knowledge about the environment by exploring the effect of its behaviour. Since such interaction can be cost-intensive in real-world (or physical) applications, it is desirable to pre-train agents on a simulated task and afterwards generalize the obtained knowledge to the real task. 
 
+% increased attention
 For this reason, recent research on reinforcement learning involves a lot of work on \textbf{transfer learning} (TL). In TL, an agent learns to do a \textit{source task} and uses its knowledge in a before unseen \textit{target task} to perform to a reasonable level with minimal additional training. In its more extreme forms, TL is known as one- or zero-shot-learning, where only a single training step is allowed in the target task - or none at all \citep{goodfellow2016deep}. In RL, one of the key challenges of applying TL is inter-task alignment of states and actions. While some work tackles this issue with hand-crafted solutions \citep[e.g.][]{taylor2007cross}, it is desirable to develop methods to automatically map the tasks. Another approach is to learn in a common state (and possibly action) space, into which all tasks can be translated.
 
-\textbf{Deep Learning} (DL) has been successfully applied to a variety of problems in machine learning research and got increasing attention over the last two decades \citep{goodfellow2016deep}. While DL is applicable to classical problems such as regression and classification - and may henceforth be used as a policy learner in RL as well - it is particularly useful for learning representations in a latent space. For instance, convolutional neural networks can be used to break down visual input into features modelling higher-level information. Sequences of variable length, such as natural language, can be embedded using recurrent neural networks \citep{goldberg2017neural}. Another architecture for representation learning is the so called \textit{autoencoder} \citep{hinton2006reducing}. These neural networks learn to first reduce the dimensionality of their inputs. They then reconstruct the original sample from the low dimensional representation. The low-dimensional representation in the middle layer often proofs to be useful as a representation for different applications as it encodes the relevant information of the input space into a latent space. Using DL, it may be possible to find state and action representations for multiple tasks that allow joint learning and generalization to unseen tasks.
+\textbf{Deep Learning} (DL) has been successfully applied to a variety of problems in machine learning research and got increasing attention over the last two decades \citep{goodfellow2016deep}. While DL is applicable to classical problems such as regression and classification - and may henceforth be used as a policy learner in RL as well - it is particularly useful for learning representations in a latent space. For instance, convolutional neural networks can be used to break down visual input into features modelling higher-level information. Sequences of variable length, such as natural language, can be embedded using recurrent neural networks \citep{goldberg2017neural}. Another architecture for representation learning is the so called \textit{autoencoder} \citep{hinton2006reducing}. These neural networks learn to first reduce the dimensionality of their inputs. They then reconstruct the original sample from the low dimensional representation. The low-dimensional representation in the middle layer often proofs to be useful as a representation for different applications as it encodes the relevant information of the input space into a latent space. 
 
-\paragraph{Motivation} This is useful for several reasons. As stated previously, it facilitates learning in costly tasks. Take, for example, the training of a robot playing soccer. If the agent needs to learn its behaviour entirely from physical play, the training process could only be run in real time. A simulation modelling the environment closely could be run much faster and, if done correctly, the learning is generalizable to the original task. Tasks that seem infeasible to train become solvable. Going further, knowledge gathered from playing soccer should be useful in other ball sports or even physical activities in general. If we aim to develop agents capable of performing any task in a given domain\footnote{Such as sports or any class of activities that rely on a common ground of skills (e.g. motor skills).}, we would expect it to use experience from one task in other tasks if they are at least partially applicable. For that, the different state spaces (and their representations) need to be abstracted into some latent space, as can be done with DL. In this latent space, all tasks may benefit from the experience in other tasks and only need to adjust to the specific requirements of the new situation. For instance, soccer and handball share the objective of bringing a ball into a goal as well as basic movement patterns and cooperation strategies. Though, they differ in the way the ball is handled.
+\paragraph{Motivation} Using DL, it may be possible to find state and action representations for multiple tasks that allow joint learning and generalization to unseen tasks. This is useful for several reasons. As stated previously, it facilitates learning in costly tasks. Take, for example, the training of a robot playing soccer. If the agent needs to learn its behaviour entirely from physical play, the training process could only be run in real time. A simulation modelling the environment closely could be run much faster and, if done correctly, the learning is generalizable to the original task. Tasks that seem infeasible to train become solvable. Going further, knowledge gathered from playing soccer should be useful in other ball sports or even physical activities in general. If we aim to develop agents capable of performing any task in a given domain\footnote{Such as sports or any class of activities that rely on a common ground of skills (e.g. motor skills).}, we would expect it to use experience from one task in other tasks if they are at least partially applicable. For that, the different state spaces (and their representations) need to be abstracted into some latent space, as can be done with DL. In this latent space, all tasks may benefit from the experience in other tasks and only need to adjust to the specific requirements of the new situation. For instance, soccer and handball share the objective of bringing a ball into a goal as well as basic movement patterns and cooperation strategies. However, they differ in the way the ball is handled.
 
 \paragraph{Objective} In this project, we aim to design a learning framework in which multiple RL tasks can be trained in the same latent space. The resulting knowledge should be generalizable to unseen tasks, whose training gets kick-started or at least sped up. An agent capable of playing multiple and partly unseen Atari games will be developed. It is hypothesized that Variational Autoencoders (VAE) can serve as a technique to convert the different states of different games into a latent space. The following research questions are posed:
 
-\begin{itemize}
-
-	\item \textbf{A first Question:} Some blablabla and dideldum.
+\NumTabs{4}
+	\begin{researchquestion}[Research Question I] \tab{Can a joint latent state space be learned for multiple different tasks from visual input using Deep Learning?}
+	\end{researchquestion}	
 	
-	\item \textbf{A second Question:} More blablabla and dideldum.
+	\begin{researchquestion}[Research Question II] \tab{Can the state space of unseen tasks be translated to the latent space without additional training on the new task?}
+	\end{researchquestion}
 	
-	\item \textbf{A third Question:} the most important blablabla and dideldum.
-
-\end{itemize}
-
-Hence, our contributions to the field are the following
-
-\begin{itemize}
-	\item We
-	\item Are
-	\item Awesome
-\end{itemize}
-
-\hrulefill
+	\begin{researchquestion}[Research Question III] \tab{Can a single agent learn multiple tasks when using the latent space to represent states during Q-Learning?}
+	\end{researchquestion}
+		
+	\begin{researchquestion}[Research Question IV] \tab{Does the policy network trained on the source tasks significantly improve the training of unseen tasks in the latent space?}
+	\end{researchquestion}
+	
+	\begin{researchquestion}[Research Question V] \tab{Does the policy learned in the source tasks allow an agent to perform to a descent level on the target tasks without additional training?}
+	\end{researchquestion}
+			
+	\begin{researchquestion}[Research Question VI] \tab{Can we identify crucial information encoded in the latent space? If yes, what are those pieces of information that are encoded in the latent space and what behaviour do they entail?}
+	\end{researchquestion}
 
 %Describes the problem/task/goal/idea in a general context
 

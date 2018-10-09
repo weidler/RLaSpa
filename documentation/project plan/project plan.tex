@@ -11,10 +11,12 @@
 \usepackage[normalem]{ulem}
 \usepackage[ruled]{algorithm2e}
 \usepackage[]{setspace}
+\usepackage{tabto}
 \useunder{\uline}{\ul}{}
 \usepackage{caption} 
 \usepackage{lastpage}
 \usepackage{float}
+\usepackage{scrextend}
 \usepackage[page]{appendix}
 \pagestyle{plain} 
 \usepackage{graphicx}
@@ -26,6 +28,14 @@
 \addbibresource{../references.bib}
 
 \AtBeginBibliography{\small}
+ 
+\newenvironment{researchquestion}[1][]%
+   {\refstepcounter{paragraph}%
+    \list{}{\leftmargin=3em\rightmargin=\leftmargin}\item[]%
+    {\bfseries #1}\
+   }%
+   {\endlist%
+   } 
  
 \begin{document}
 

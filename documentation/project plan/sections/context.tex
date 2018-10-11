@@ -13,31 +13,20 @@ For this reason, recent research on reinforcement learning an increased aattenti
 \paragraph{Objective} In this project, we aim to design a learning framework in which multiple RL tasks can be trained in the same latent space. The resulting knowledge should be generalizable to unseen tasks, whose training gets kick-started or at least sped up. An agent capable of playing multiple and partly unseen Atari games will be developed. It is hypothesized that Variational Autoencoders (VAE) can serve as a technique to convert the different states of different games into a latent space. The following research questions are posed:
 
 \NumTabs{4}
-	\begin{researchquestion}[Research Question I] \tab{Can a joint latent state space be learned for multiple different tasks from visual input using Deep Learning?}
+	\begin{researchquestion}[Research Question I] \tab{Can the state (and action) spaces of different but related tasks be jointly represented in a latent space, e.g. using a variational autoencoder?}
 	\end{researchquestion}	
 	
-	\begin{researchquestion}[Research Question II] \tab{Can the state space of unseen tasks be translated to the latent space without additional training on the new task?}
+	\begin{researchquestion}[Research Question II] \tab{Can  unseen tasks be translated into the latent space representations without additional training?}
 	\end{researchquestion}
 	
-	\begin{researchquestion}[Research Question III] \tab{Can a single agent learn multiple tasks when using the latent space to represent states during Q-Learning?}
+	\begin{researchquestion}[Research Question III] \tab{Can a single agent learn multiple tasks simultaneously when using the latent space during Q-Learning?}
 	\end{researchquestion}
 		
-	\begin{researchquestion}[Research Question IV] \tab{Does the policy network trained on the source tasks significantly improve the training of unseen tasks in the latent space?}
+	\begin{researchquestion}[Research Question IV] \tab{To what extent can the policy network trained on the latent representations improve the learning of unseen tasks?}
 	\end{researchquestion}
 	
-	\begin{researchquestion}[Research Question V] \tab{Does the policy learned in the source tasks allow an agent to perform to a descent level on the target tasks without additional training?}
+	\begin{researchquestion}[Research Question V] \tab{Will the policy learned in the source tasks allow the agent to perform the target tasks without additional training?}
 	\end{researchquestion}
 			
-	\begin{researchquestion}[Research Question VI] \tab{Can we identify crucial information encoded in the latent space? If yes, what are those pieces of information that are encoded in the latent space and what behaviour do they entail?}
+	\begin{researchquestion}[Research Question VI] \tab{Can we identify crucial information encoded in the latent space? If yes, what are the encoded pieces of information and what behaviour do they correspond to?}
 	\end{researchquestion}
-
-%Describes the problem/task/goal/idea in a general context
-
-%\begin{itemize}
-%\item Domain
-%\item Relevance
-%\item State of the Art
-%\item Open issues
-%\item Objectives
-%\item Research Questions
-%\end{itemize}

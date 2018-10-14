@@ -14,6 +14,14 @@ To achieve transfer learning, the agent will learn from the shared latent repres
 % using deep reinforcement learning techniques. This algorithms will be used with the objective of creating an agent that will be capable of detecting similar states and situations that occur on tasks and act in a similar way in each of them. 
 Two approaches of reinforcement learning will be taken into consideration. On the one hand, \textbf{deep Q-learning (DQN)} makes use of a special type of neural network called deep Q-network which is used to approximate the reward based on the state, called Q-value. The objective of this method is to find a function that maximize that value, which is the expected reward after taking a specific action in a certain  state. On the other hand, \textbf{policy gradients} follow a simpler approach and try to learn the policy function that maps the state to the action directly. This method learns from past trajectories, increasing the probability of actions which in the past returned good results for the agent.
 
+Figure \ref{framework} briefly illustrates the the approach described above. From the VAE shown on the left hand side, we seek to derive a shared latent representation of several source tasks. We are interested in whether a target task could also be represented in this latent state and benefit from previously learned knowledge on the source tasks, as shown on the right hand side of the figure.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{framework.pdf}
+	\caption{An illustration of transfer learning framework.}
+	\label{framework}
+\end{figure}
 
 
 % Concepts:

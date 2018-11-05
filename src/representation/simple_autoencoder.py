@@ -12,7 +12,7 @@ class Autoencoder(nn.Module):
         self.encoder = nn.Linear(8, 3)
         self.decoder = nn.Linear(3, 8)
 
-        self.activation = F.logsigmoid
+        self.activation = torch.sigmoid
 
     def forward(self, vinput):
         out = self.activation(self.encoder(vinput))
@@ -24,16 +24,16 @@ class Autoencoder(nn.Module):
 if __name__ == "__main__":
     net = Autoencoder()
     optimizer = optim.SGD(net.parameters(), lr=0.999)
-    criterion = nn.MSELoss
+    criterion = nn.MSELoss()
 
     data = [torch.Tensor([0 if j != i else 1 for j in range(8)]).view(1, -1) for i in range(8)]
     print(data)
 
-    for epoch in range(1000):
-        optimizer.zero_grad()
+    for epoch in range(10000):
         for sample in data:
-            out = net(torch.randn(1, 8))
-            loss = criterion(out, torch.randn(8).view(1, -1))
+            optimizer.zero_grad()
+            out = net(sample)
+            loss = criterion(out, sample)
             loss.backward()
             optimizer.step()
 

@@ -1,0 +1,24 @@
+Notes meeting with Kurtivisor Friday, 28th Oct 2018:
+
+- Anonymous paper "Decouplind dynamics and reward for transfer learning" --> feedback mechanisms
+    encoding of state-space should be everything that is needed. Using the sPrime they are able to predict which action was taken
+
+decide what we want to transfer:
+    - toy applications? atari games? scrolling games? platformer?
+        --> put in same state-space
+
+cross-domain?!
+mountain car, car pole, acrobat <--> atari games?
+or already different atari games
+
+jumpstart with zero-shot?
+
+decide:
+do we encode state or state-action pairs?
+
+states and policy defined at level of latent-space
+
+q-values are encoded with decay --> not good for generalization
+--> learn policy directly (policy gradient technique) (is that possible?) advantage function
+OR limit reward function --> clear goal at the end (1 for win, -1 for loss) <-- "but that's cheating" - Tonio
+            --> limiting the tasks is useful for this paper "we're not building a human"

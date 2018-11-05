@@ -1,7 +1,8 @@
 import gym
 import numpy as np
 
-env = gym.make("Taxi-v2")
+# env = gym.make("Taxi-v2")
+env = gym.make("Cartpole-v1")
 env.reset()  # returns initial state
 
 # We can determine the total number of possible states using the following command:

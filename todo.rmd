@@ -1,0 +1,20 @@
+# Block 2 ToDos
+
+### Week 1
+- Kurting
+
+### Week 2
+- Implement simple tabular RL
+- Generalize for other tasks
+- Setting up first architectures for Architectures
+  
+### Week 3
+
+### Week 4
+
+### Week 5
+
+### Week 6
+
+### Week 7
+-

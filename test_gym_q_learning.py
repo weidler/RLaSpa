@@ -2,7 +2,7 @@ import gym
 import numpy as np
 
 env = gym.make("Taxi-v2")
-env.reset() # returns initial state
+env.reset()  # returns initial state
 
 # We can determine the total number of possible states using the following command:
 env.observation_space.n
@@ -15,18 +15,18 @@ qValues = np.zeros([env.observation_space.n, env.action_space.n])
 totalReward = 0
 alpha = 0.618
 
-for episode in range(1,1001):
+for episode in range(1, 1001):
     done = False
-    totalReward, reward = 0,0
+    totalReward, reward = 0, 0
     state = env.reset()
-    while done != True:
-            action = np.argmax(qValues[state]) #1
-            state2, reward, done, info = env.step(action) #2
-            qValues[state,action] += alpha * (reward + np.max(qValues[state2]) - qValues[state,action]) #3
+    while not done:
+            action = np.argmax(qValues[state])  # 1
+            state2, reward, done, info = env.step(action)  # 2
+            qValues[state, action] += alpha * (reward + np.max(qValues[state2]) - qValues[state, action])  # 3
             totalReward += reward
             state = state2
     if episode % 50 == 0:
-        print('Episode {} Total Reward: {}'.format(episode,totalReward))
+        print('Episode {} Total Reward: {}'.format(episode, totalReward))
 
 
 done = False

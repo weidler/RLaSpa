@@ -7,7 +7,11 @@
 - Implement simple tabular RL
 - Generalize for other tasks
 - Setting up first architectures for Architectures
-  
+    - simple AE
+    - fancy big a lot of subnetworks
+- Explorer for state-action-reward pairs for Encoder
+    - seperate RL Agent so it can exploit?
+
 ### Week 3
 - Use tabular RL with 
 

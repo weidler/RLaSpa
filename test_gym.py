@@ -11,8 +11,10 @@ episode_Length = []
 
 best_weights = np.zeros(4)
 
+f = open("data/cartpole.data", "w")
 for i in range(100):
     new_weights = np.random.uniform(-1.0, 1.0, 4)
+    epoch_history = ""
 
     length = []
     for j in range(100):
@@ -26,9 +28,13 @@ for i in range(100):
             count += 1
             action = 1 if np.dot(observation, new_weights) > 0 else 0
             observation, reward, done, _ = env.step(action)
+            epoch_history += "{0}\t{1}\t{2}\n".format(observation, action, reward)
+        epoch_history += "YOU ARE A FAILURE"
 
         length.append(count)
     average_length = float(sum(length) / len(length))
+
+    f.write(epoch_history)
 
     if average_length > bestLength:
         bestLength = average_length
@@ -36,6 +42,8 @@ for i in range(100):
     episode_Length.append(average_length)
     if i % 10 == 0:
         print("Best length is ", bestLength)
+
+f.close()
 
 # Learning finished --> play with the best weights
 done = False

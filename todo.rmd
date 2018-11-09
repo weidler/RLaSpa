@@ -9,12 +9,14 @@
 - Setting up first architectures for Architectures
   
 ### Week 3
+- Use tabular RL with 
 
 ### Week 4
 
 ### Week 5
+- Layman's website
 
 ### Week 6
 
 ### Week 7
--
+- Presentation

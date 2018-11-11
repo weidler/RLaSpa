@@ -2,6 +2,7 @@ import gym
 import numpy as np
 from sklearn.utils.extmath import cartesian
 
+
 # env = gym.make("Taxi-v2")
 env = gym.make("CartPole-v0")
 env.reset()  # returns initial state
@@ -34,12 +35,13 @@ def getState(allStates, stateBins, features):
     stateIndex = int(np.sum(bin * np.power(len(stateBins[0]), np.linspace(len(features)-1, 0, len(features)))))
     return stateIndex
 
-
-print(env.observation_space.low)
-print(env.observation_space.high)
-bins = 10
-stateBins = binThese(env.observation_space.low, env.observation_space.high, bins=bins, cutOffInf=2.4)
-allStates = cartesian(stateBins)
+# in CartPole-v0, parameters are:
+# [position of cart, velocity of cart, angle of pole, rotation rate of pole]
+print('low', env.observation_space.low)
+print('high', env.observation_space.high)
+bins = 50
+stateBins = binThese(env.observation_space.low, env.observation_space.high, bins=bins, cutOffInf=5)
+allStates = cartesian(stateBins)  # round
 numFeatures = len(env.observation_space.low)
 
 # print(stateBins)
@@ -48,12 +50,14 @@ print(allStates[0, :])
 qValues = np.zeros([len(allStates), env.action_space.n])
 totalReward = 0
 alpha = 0.618
+total_episode = 1000
 print(f'qValues.shape: {qValues.shape}')
 
-for episode in range(1, 10001):
+for episode in range(1, total_episode):
     done = False
     totalReward, reward = 0, 0
     state = env.reset()
+    explore_rate = (1 - episode / total_episode) / 10 + 0.1
     # here we need to find the state of all states
     stateInd = getState(allStates, stateBins, state)
     # stateInd = np.where(allStates == state)[0][0]
@@ -62,30 +66,35 @@ for episode in range(1, 10001):
     # break
     # TODO map features to state
     while not done:
-            action = np.argmax(qValues[stateInd])  # 1
+            if np.random.rand() > explore_rate:  # exploit
+                action = np.argmax(qValues[stateInd])  # 1
+            else:  # explore
+                action = np.random.randint(0, len(qValues[0]))
             # print(f'action: {action}')
             internalRepr, reward, done, info = env.step(action)  # 2
             # print(reward)
-            indState2 = getState(allStates, stateBins, internalRepr)
+            indState2 = getState(allStates, stateBins, internalRepr)  # find the state bin
             # indState2 = np.where(allStates == state2)[0][0]
             qValues[stateInd, action] += alpha * (reward + np.max(qValues[indState2]) - qValues[stateInd, action])  # 3
             totalReward += reward
             stateInd = indState2
             # print(stateInd)
     if episode % 50 == 0:
-        print('Episode {} Total Reward: {}'.format(episode, totalReward))
+        print('Episode {}, explore rate {}, Total Reward: {}'.format(episode, round(explore_rate, 2), totalReward))
 
 print(np.sum(qValues)/np.count_nonzero(qValues))
 
 done = False
 state = env.reset()
+test_total_reward = 0
 while not done:
     env.render()
     stateInd = getState(allStates, stateBins, state)
     # stateInd = np.where(allStates == state)[0][0]
     action = np.argmax(qValues[stateInd])
     state, reward, done, _ = env.step(action)
-print("Ended with reward: ", reward)
+    test_total_reward += reward
+print("Ended with reward: ", test_total_reward)
 
 env.close()
 # # Random aka Stupid algorithm:

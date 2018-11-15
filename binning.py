@@ -15,7 +15,7 @@ def binThese(lowerBound, upperBound, bins=10, cutOffInf=10000):
 
 def getState(stateBins, features):
     assert len(stateBins) == len(features)
-    bin = [np.where(stateBins[i] <= f)[0][-1] for i, f in enumerate(randomState)]
+    bin = [np.where(stateBins[i] <= f)[0][-1] for i, f in enumerate(features)]
     return [stateBins[i, f] for i, f in enumerate(bin)]
 
 

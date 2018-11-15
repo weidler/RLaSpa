@@ -11,7 +11,6 @@ episode_Length = []
 
 best_weights = np.zeros(4)
 
-# f = open("data/cartpole.data", "w")
 with open("data/cartpole.data", "w") as f:
     for i in range(100):
         new_weights = np.random.uniform(-1.0, 1.0, 4)

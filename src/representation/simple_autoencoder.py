@@ -1,3 +1,5 @@
+import random
+
 import torch
 import numpy as np
 import torch.nn as nn
@@ -9,8 +11,8 @@ class Autoencoder(nn.Module):
     def __init__(self):
         super(Autoencoder, self).__init__()
 
-        self.encoder = nn.Linear(8, 3)
-        self.decoder = nn.Linear(3, 9)
+        self.encoder = nn.Linear(5, 3)
+        self.decoder = nn.Linear(3, 4)
 
         self.activation = torch.sigmoid
 
@@ -22,23 +24,25 @@ class Autoencoder(nn.Module):
 
 
 if __name__ == "__main__":
+    with open("../../data/cartpole.data") as f:
+        data = [list(map(eval, l[:-1].split("\t"))) for l in f.readlines()]
+    print("READ FILE")
+
     net = Autoencoder()
     optimizer = optim.SGD(net.parameters(), lr=1)
     criterion = nn.MSELoss()
 
-    data = [torch.Tensor([0 if j != i else 1 for j in range(8)]).view(1, -1) for i in range(8)]
-    print(data)
+    for epoch in range(10):
+        for i in range(10000):
+            sample_id = random.randint(0, len(data) - 1)
+            vinput = torch.tensor(data[sample_id][0] + [data[sample_id][1]])
+            vtarget = torch.tensor(data[sample_id + 1][0])
 
-    for epoch in range(100000):
-        for sample in data:
             optimizer.zero_grad()
-            out = net(sample)
-            a = (torch.argmax(sample, dim=1)).view(1, -1)
-            loss = criterion(out, torch.cat((sample.float(), torch.argmax(sample, dim=1).view(1, -1).float()), dim=1))
+            out = net(vinput)
+            loss = criterion(out, vtarget)
             loss.backward()
             optimizer.step()
-        if (epoch % 1000 == 0): print(epoch)
+        if (epoch % 1 == 0): print(epoch)
 
-    for sample in data:
-        print(sample)
-        print(net(sample))
+    torch.save(net, "../../models/simple.model")

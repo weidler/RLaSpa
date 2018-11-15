@@ -28,8 +28,8 @@ for i in range(100):
             count += 1
             action = 1 if np.dot(observation, new_weights) > 0 else 0
             observation, reward, done, _ = env.step(action)
-            epoch_history += "{0}\t{1}\t{2}\n".format(observation, action, reward)
-        epoch_history += "YOU ARE A FAILURE"
+            epoch_history += "{0}\t{1}\t{2}\n".format(list(observation), action, reward)
+        # epoch_history += "YOU ARE A FAILURE\n"
 
         length.append(count)
     average_length = float(sum(length) / len(length))

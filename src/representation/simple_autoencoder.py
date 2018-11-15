@@ -45,4 +45,4 @@ if __name__ == "__main__":
             optimizer.step()
         if (epoch % 1 == 0): print(epoch)
 
-    torch.save(net, "../../models/very-simple.model")
+    torch.save(net.state_dict(), "../../models/very-simple.model")

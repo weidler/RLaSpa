@@ -1,17 +1,14 @@
-from gym import wrappers
 import gym
 import numpy as np
 
 gym.logger.set_level(40)
 env = gym.make('CartPole-v1')
 
-
 bestLength = 0
 episode_Length = []
 
 best_weights = np.zeros(4)
 
-# f = open("data/cartpole.data", "w")
 with open("../../data/cartpole.data", "w") as f:
     for i in range(100):
         new_weights = np.random.uniform(-1.0, 1.0, 4)

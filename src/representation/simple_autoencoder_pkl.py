@@ -1,3 +1,4 @@
+import pickle
 import random
 
 import torch
@@ -7,10 +8,8 @@ import torch.optim as optim
 from src.representation.autoencoder import Autoencoder
 
 if __name__ == "__main__":
-    with open("../../data/cartpole.data") as f:
-        for l in f.readlines():
-            print(l)
-            data = [list(map(eval, l[:-1].split("\t"))) for l in f.readlines()]
+    with open("../../data/cartpole.pkl", "rb") as f:
+        data = pickle.load(f)
     print("READ FILE")
 
     net = Autoencoder()
@@ -20,8 +19,9 @@ if __name__ == "__main__":
     for epoch in range(10):
         for i in range(10000):
             sample_id = random.randint(0, len(data) - 1)
-            vinput = torch.tensor(data[sample_id][0])  # + [data[sample_id][1]])
-            vtarget = torch.tensor(data[sample_id][0])
+            # Transform the tensor to float32
+            vinput = torch.tensor(data[sample_id][0]).float()  # + [data[sample_id][1]])
+            vtarget = torch.tensor(data[sample_id][0]).float()
 
             optimizer.zero_grad()
             out = net(vinput)

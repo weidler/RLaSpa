@@ -12,7 +12,7 @@ episode_Length = []
 best_weights = np.zeros(4)
 
 # f = open("data/cartpole.data", "w")
-with open("data/cartpole.data", "w") as f:
+with open("../../data/cartpole.data", "w") as f:
     for i in range(100):
         new_weights = np.random.uniform(-1.0, 1.0, 4)
         epoch_history = ""
@@ -29,8 +29,8 @@ with open("data/cartpole.data", "w") as f:
                 count += 1
                 action = 1 if np.dot(observation, new_weights) > 0 else 0
                 observation, reward, done, _ = env.step(action)
-                epoch_history += "{0}\t{1}\t{2}\n".format(observation, action, reward)
-            epoch_history += "YOU ARE A FAILURE"
+                epoch_history += f"{list(observation)}\t{action}\t{reward}\n"
+            # epoch_history += "YOU ARE A FAILURE"
 
             length.append(count)
         average_length = float(sum(length) / len(length))

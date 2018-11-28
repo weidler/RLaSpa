@@ -3,7 +3,6 @@ import math
 import pprint
 import random
 
-
 class SimplePathing(object):
 
     BACKGROUND_COLOR = "."
@@ -29,9 +28,18 @@ class SimplePathing(object):
         self.start_state = [width // 2, height // 2]
         self.current_state = self.start_state.copy()
 
+        self.state_trail = []
+
+        self.show_breadcrumbs = True
+
     def __repr__(self):
         representation = ""
-        for row in self._get_current_view():
+        if self.show_breadcrumbs:
+            view = self._get_current_view_with_trail()
+        else:
+            view = self._get_current_view()
+
+        for row in view:
             representation += " ".join(map(str, row)) + "\n"
         return representation
 
@@ -46,8 +54,16 @@ class SimplePathing(object):
         view[self.current_state[1]][self.current_state[0]] = "A"
         return view
 
+    def _get_current_view_with_trail(self):
+        view = self._get_current_view()
+        for step in range(-1, -len(self.state_trail), -1):
+            state = self.state_trail[step]
+            view[state[1]][state[0]] = "O"
+        return view
+
     def step(self, action: int):
         next_state = self.current_state.copy()
+        self.state_trail.append(self.current_state)
 
         if action == 0:
             next_state[1] = max(0, next_state[1] - 1)
@@ -74,7 +90,8 @@ class SimplePathing(object):
 if __name__ == "__main__":
     env = SimplePathing(30, 30)
 
-    s = [2,3]
-    for i in range(10):
-        s, _, _ = env.step(random.randint(0, 3))
-        print(env)
+    for dir in range(0, 4):
+        for i in range(10):
+            s, _, _ = env.step(dir)
+
+    print(env)

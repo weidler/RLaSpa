@@ -45,13 +45,16 @@ class SimplePathing(object):
 
     def _generate_static_map(self):
         static_map = [[SimplePathing.BACKGROUND_COLOR for _ in range(self.width)] for _ in range(self.height)]
-        static_map[self.target_coords[0]][self.target_coords[1]] = SimplePathing.TARGET_COLOR
+        static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_COLOR
 
         return static_map
 
     def _get_current_view(self):
         view = copy.deepcopy(self.static_map)
-        view[self.current_state[1]][self.current_state[0]] = "A"
+        if view[self.current_state[1]][self.current_state[0]] != "X":
+            view[self.current_state[1]][self.current_state[0]] = "A"
+        else:
+            view[self.current_state[1]][self.current_state[0]] = "Ä"
         return view
 
     def _get_current_view_with_trail(self):
@@ -86,6 +89,8 @@ class SimplePathing(object):
 
     def reset(self):
         self.current_state = self.start_state.copy()
+        self.state_trail = []
+        return self.current_state
 
 if __name__ == "__main__":
     env = SimplePathing(30, 30)

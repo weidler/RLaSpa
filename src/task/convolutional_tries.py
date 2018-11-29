@@ -1,13 +1,13 @@
+import time
+
 import numpy as np
 import torch
+import torch.nn.functional as F
+import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.autograd import Variable
-import torch.nn.functional as F
 from torch.utils.data.sampler import SubsetRandomSampler
-import torch.optim as optim
-import time
-
 
 # The compose function allows for multiple transforms
 # transforms.ToTensor() converts our PILImage to a tensor of shape (C x H x W) in the range [0,1]
@@ -22,17 +22,15 @@ test_set = torchvision.datasets.CIFAR10(root='./cifardata', train=False, downloa
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-
-
-#Training
+# Training
 n_training_samples = 20000
 train_sampler = SubsetRandomSampler(np.arange(n_training_samples, dtype=np.int64))
 
-#Validation
+# Validation
 n_val_samples = 5000
 val_sampler = SubsetRandomSampler(np.arange(n_training_samples, n_training_samples + n_val_samples, dtype=np.int64))
 
-#Test
+# Test
 n_test_samples = 5000
 test_sampler = SubsetRandomSampler(np.arange(n_test_samples, dtype=np.int64))
 
@@ -78,17 +76,16 @@ class SimpleCNN(torch.nn.Module):
 
 
 def outputSize(in_size, kernel_size, stride, padding):
+    output = int((in_size - kernel_size + 2 * (padding)) / stride) + 1
 
-    output = int((in_size - kernel_size + 2*(padding)) / stride) + 1
-
-    return(output)
+    return (output)
 
 
 # DataLoader takes in a dataset and a sampler for loading (num_workers deals with system level memory)
 def get_train_loader(batch_size):
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size,
-                                           sampler=train_sampler, num_workers=2)
-    return(train_loader)
+                                               sampler=train_sampler, num_workers=2)
+    return (train_loader)
 
 
 # Test and validation loaders have constant batch sizes, so we can define them directly
@@ -104,9 +101,6 @@ def createLossAndOptimizer(net, learning_rate=0.001):
     optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
     return (loss, optimizer)
-
-
-
 
 
 def trainNet(net, batch_size, n_epochs, learning_rate):
@@ -178,7 +172,6 @@ def trainNet(net, batch_size, n_epochs, learning_rate):
         print("Validation loss = {:.2f}".format(total_val_loss / len(val_loader)))
 
     print("Training finished, took {:.2f}s".format(time.time() - training_start_time))
-
 
 
 CNN = SimpleCNN()

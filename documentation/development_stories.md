@@ -15,11 +15,16 @@ The environments informations are:
 - [Pendulum](https://github.com/openai/gym/wiki/Pendulum-v0)
 - [Mountain Car](https://github.com/openai/gym/wiki/MountainCar-v0)
 - [Acrobot](https://github.com/openai/gym/blob/master/gym/envs/classic_control/acrobot.py)
+
 ## Pytorch
+
+- Using rectified linear units (ReLUs) [24] instead of sigmoid nonlinearities leads to faster conver-
+  gence and reduces the vanishing gradient problem that plagues traditional neural networks with
+  many layers
 
 ### GPU optimization
 
 - PyTorch needs an tensor of N x num_features, where N is the batch size. Unsqueeze, effectively, 
   turns `[0,1,2]` into `[[0,1,2]]` that is, a batch size of one, one action predicted, given the current
   state, at a time. Conceptually simple but probably something you’d want to optimize for production, 
-  otherwise GPU capacity is being wasted. 
+  otherwise GPU capacity is being wasted.

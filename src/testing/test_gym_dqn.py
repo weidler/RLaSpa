@@ -73,6 +73,7 @@ def main(arguments):
         model = model.cuda()
     optimizer = optim.Adam(model.parameters())
     train(env, model, optimizer=optimizer, iterations=args.iterations, batch_size=args.batch_size)
+    torch.save(model.state_dict(), "../../models/dqn.model")
 
 
 if __name__ == '__main__':

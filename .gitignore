@@ -1,6 +1,6 @@
 data/*.data
 data/*.pkl
-
+src/task/cifardata/*
 ###### PYTHON ######
 
 # Byte-compiled / optimized / DLL files

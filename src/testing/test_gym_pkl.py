@@ -3,17 +3,19 @@ import pickle
 import gym
 import numpy as np
 
+task_name = 'cartpole'
+task_dict = {'cartpole': 'CartPole-v0', 'mountain_car': 'MountainCar-v0'}
 gym.logger.set_level(40)
-env = gym.make('CartPole-v1')
-
+env = gym.make(task_dict[task_name])
+num_features = len(env.observation_space.low)
 bestLength = 0
 episode_Length = []
 
-best_weights = np.zeros(4)
+best_weights = np.zeros(num_features)
 
 history = []  # History with all the states, actions and rewards for the different epochs
 for i in range(100):
-    new_weights = np.random.uniform(-1.0, 1.0, 4)
+    new_weights = np.random.uniform(-1.0, 1.0, num_features)
 
     length = []
     for j in range(100):
@@ -25,6 +27,7 @@ for i in range(100):
             # comment this one out for real training
             # env.render()
             count += 1
+            # TODO: this works only when there are 2 discrete actions
             action = 1 if np.dot(observation, new_weights) > 0 else 0
             observation, reward, done, _ = env.step(action)
             history.append([observation, action, reward])
@@ -38,7 +41,7 @@ for i in range(100):
         print("Best length is ", bestLength)
 
 # Save list with epochs
-with open("../../data/cartpole.pkl", "wb") as f:
+with open("../../data/" + task_name + ".pkl", "wb") as f:
     pickle.dump(history, f)
 
 # Learning finished --> play with the best weights

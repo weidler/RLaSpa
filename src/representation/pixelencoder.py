@@ -13,11 +13,6 @@ class PixelEncoder(torch.nn.Module):
         self.conv = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=0)
         self.pool = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=1, return_indices=True)
 
-        # I tried, but this is not working.
-        # Always getting error:
-        #  in _unpool_output_size    kernel_size[d] - 2 * padding[d])
-        # IndexError: tuple index out of range
-
         self.encoder = torch.nn.Linear(225, 50)
         self.decoder = torch.nn.Linear(50, 225)
 

@@ -34,8 +34,17 @@ class DQN(nn.Module):
         x = F.relu(self.layer2(x))
         return self.layer3(x)
 
-    def act(self, state, epsilon):
-        if random.random() > epsilon:
+    def act(self, state, iteration: int, following_policy=False) -> int:
+        """
+        Method that returns the action the agent will do. This method uses the iteration value
+        to calculate epsilon and choose between exploration and exploitation.
+
+        :param state: actual state
+        :param iteration: number of the iteration
+        :param following_policy: true if exploration is not desired
+        :return:
+        """
+        if following_policy or random.random() > self.calculate_epsilon(iteration):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
             q_value = self.forward(state)
             action = torch.argmax(q_value).item()
@@ -46,7 +55,7 @@ class DQN(nn.Module):
     def calculate_epsilon(self, iteration):
         """
         Method that calculate epsilon depending of the training iteration number. It converges to
-        min_epsilon
+        min_epsilon as bigger the iteration number is
 
         :param iteration: iteration number
         :return: epsilon for the iteration

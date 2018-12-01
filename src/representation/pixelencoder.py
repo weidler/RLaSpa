@@ -10,7 +10,7 @@ class PixelEncoder(torch.nn.Module):
 
     def __init__(self):
         super(PixelEncoder, self).__init__()
-        self.conv = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1)
+        self.conv = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=0)
         self.pool = torch.nn.MaxPool2d(kernel_size=2, stride=2, padding=1, return_indices=True)
 
         # I tried, but this is not working.
@@ -18,21 +18,22 @@ class PixelEncoder(torch.nn.Module):
         #  in _unpool_output_size    kernel_size[d] - 2 * padding[d])
         # IndexError: tuple index out of range
 
-        # self.encoder = torch.nn.Linear(121, 50)
-        # self.decoder = torch.nn.Linear(50, 121)
+        self.encoder = torch.nn.Linear(225, 50)
+        self.decoder = torch.nn.Linear(50, 225)
 
         self.unpool = torch.nn.MaxUnpool2d(kernel_size=2, stride=2, padding=1)
-        self.unconv = torch.nn.ConvTranspose2d(1, 1, kernel_size=3, stride=1, padding=1)
+        self.unconv = torch.nn.ConvTranspose2d(1, 1, kernel_size=3, stride=1, padding=0)
 
     def forward(self, input_tensor):
         convoluted = self.conv(input_tensor)
-        # pooled, indices = self.pool(out)
+        pooled, indices = self.pool(convoluted)
+        original_shape = pooled.shape
 
-        # encoded = self.encoder(pooled.view(1, 121))
-        # decoded = self.decoder(encoded)
+        encoded = self.encoder(pooled.view(1, -1))
+        decoded = self.decoder(encoded)
+        deflattened = decoded.reshape(original_shape)
 
-        # unpooled = self.unpool(pooled, indices)
-        unpooled = convoluted
+        unpooled = self.unpool(deflattened, indices)
         unconved = self.unconv(unpooled)
 
         return unconved
@@ -51,7 +52,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.SGD(net.parameters(), lr=0.05)
     epochs = 100000
 
-    for epoch in range(100000):
+    for epoch in range(epochs):
         optimizer.zero_grad()
 
         out = net(img)

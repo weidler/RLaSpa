@@ -4,11 +4,11 @@ import torch.nn as nn
 
 class Autoencoder(nn.Module):
 
-    def __init__(self):
+    def __init__(self, inputNeurons=4, hiddenNeurons=3, outputNeurons=4):
         super(Autoencoder, self).__init__()
 
-        self.encoder = nn.Linear(4, 3)
-        self.decoder = nn.Linear(3, 4)
+        self.encoder = nn.Linear(inputNeurons, hiddenNeurons)
+        self.decoder = nn.Linear(hiddenNeurons, outputNeurons)
 
         self.activation = torch.sigmoid
 

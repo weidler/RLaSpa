@@ -3,26 +3,38 @@ import math
 import pprint
 import random
 
-class SimplePathing(object):
+import numpy
 
-    BACKGROUND_COLOR = "."
-    TARGET_COLOR = "X"
+from src.task.Task import Task
+
+class SimplePathing(Task):
+    BACKGROUND_SYMBOL = "."
+    BACKGROUND_PIXEL = 0
+
+    TARGET_SYMBOL = "X"
+    TARGET_PIXEL = 0.8
+
+    AGENT_SYMBOL = "A"
+    AGENT_PIXEL = 0.3
 
     PADDING = 10
 
     DEFAULT_REWARD = -10
     TARGET_REWARD = 10
 
-    def __init__(self, width: int, height:int ):
+    def __init__(self, width: int, height: int):
         if not (width > SimplePathing.PADDING * 2 and height > SimplePathing.PADDING * 2):
-            raise ValueError("Width and Height need to be larger than double the padding of the environment, hence > {0}.".format(SimplePathing.PADDING * 2))
+            raise ValueError(
+                "Width and Height need to be larger than double the padding of the environment, hence > {0}.".format(
+                    SimplePathing.PADDING * 2))
 
         self.width = width
         self.height = height
 
         self.action_space = [0, 1, 2, 3]  # UP, RIGHT, DOWN, LEFT
 
-        self.target_coords = [random.randint(SimplePathing.PADDING, self.width - SimplePathing.PADDING), random.randint(SimplePathing.PADDING, self.height - SimplePathing.PADDING)]
+        self.target_coords = [random.randint(SimplePathing.PADDING, self.width - SimplePathing.PADDING),
+                              random.randint(SimplePathing.PADDING, self.height - SimplePathing.PADDING)]
         self.static_map = self._generate_static_map()
 
         self.start_state = [width // 2, height // 2]
@@ -44,8 +56,8 @@ class SimplePathing(object):
         return representation
 
     def _generate_static_map(self):
-        static_map = [[SimplePathing.BACKGROUND_COLOR for _ in range(self.width)] for _ in range(self.height)]
-        static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_COLOR
+        static_map = [[SimplePathing.BACKGROUND_SYMBOL for _ in range(self.width)] for _ in range(self.height)]
+        static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
 
         return static_map
 
@@ -77,7 +89,6 @@ class SimplePathing(object):
         elif action == 3:
             next_state[0] = max(0, next_state[0] - 1)
 
-
         reward = SimplePathing.DEFAULT_REWARD
         done = False
         if next_state == self.target_coords:
@@ -92,6 +103,18 @@ class SimplePathing(object):
         self.state_trail = []
         return self.current_state
 
+    def get_pixelbased_representation(self):
+        view = self._get_current_view()
+        pixels = copy.deepcopy(view)
+        for y, row in enumerate(view):
+            for x, symbol in enumerate(row):
+                pixel = SimplePathing.BACKGROUND_PIXEL
+                if x == self.current_state[0] and y == self.current_state[1]: pixel = SimplePathing.AGENT_PIXEL
+                if symbol == SimplePathing.TARGET_SYMBOL: pixel = SimplePathing.TARGET_PIXEL
+                pixels[y][x] = pixel
+
+        return pixels
+
 if __name__ == "__main__":
     env = SimplePathing(30, 30)
 
@@ -99,4 +122,5 @@ if __name__ == "__main__":
         for i in range(10):
             s, _, _ = env.step(dir)
 
-    print(env)
+    numpy.set_printoptions(linewidth=150)
+    env.visualize()

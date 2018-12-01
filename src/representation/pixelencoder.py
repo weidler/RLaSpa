@@ -1,8 +1,9 @@
-import numpy
 import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
+
+from src.task.ObstaclePathing import ObstaclePathing
 
 
 class PixelEncoder(torch.nn.Module):
@@ -24,29 +25,33 @@ class PixelEncoder(torch.nn.Module):
         self.unconv = torch.nn.ConvTranspose2d(1, 1, kernel_size=3, stride=1, padding=1)
 
     def forward(self, input_tensor):
-        out = self.conv(input_tensor)
-        pooled, indices = self.pool(out)
+        convoluted = self.conv(input_tensor)
+        # pooled, indices = self.pool(out)
 
         # encoded = self.encoder(pooled.view(1, 121))
         # decoded = self.decoder(encoded)
 
-        unpooled = self.unpool(pooled, indices)
+        # unpooled = self.unpool(pooled, indices)
+        unpooled = convoluted
         unconved = self.unconv(unpooled)
 
         return unconved
 
 
-
 if __name__ == "__main__":
 
-    img = torch.from_numpy(np.eye(20))
-    img = img.view(1, 1, 20, 20).float()
+    task = ObstaclePathing(30, 30, [[4, 9, 3, 8], [14, 19, 20, 26]])
+    task.visualize()
+
+    img = torch.from_numpy(np.matrix(task.get_pixelbased_representation()))
+    img = img.view(1, 1, task.width, task.height).float()
 
     net = PixelEncoder()
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.05)
+    epochs = 100000
 
-    for epoch in range(10000):
+    for epoch in range(100000):
         optimizer.zero_grad()
 
         out = net(img)
@@ -55,6 +60,9 @@ if __name__ == "__main__":
         loss.backward()
         optimizer.step()
 
-    print(np.round(out.detach().numpy()))
+        if epoch % (epochs / 10) == 0:
+            print("{2}%; Epoch: {0}/{1}".format(epoch, epochs, round(epoch / epochs * 100, 0)))
+            task.visualize(img=out.tolist()[0][0])
 
-
+    out = net(img)
+    task.visualize(img=out.tolist()[0][0])

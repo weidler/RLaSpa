@@ -2,6 +2,8 @@ import gym
 import numpy as np
 import torch
 from src.representation.autoencoder import Autoencoder
+from src.representation.SiameseAutoencoder import SiameseAutoencoder
+
 from sklearn.utils.extmath import cartesian
 import matplotlib.pyplot as plt
 import pickle
@@ -49,8 +51,8 @@ def getState(stateBins, features):
     return stateIndex
 
 
-net = Autoencoder(4, 3, 4)
-net.load_state_dict(torch.load('../models/very-simple.model'))
+net = SiameseAutoencoder(4, 3, 4)
+net.load_state_dict(torch.load("siamese.model"))
 
 numFeatures = net.encoder.out_features
 

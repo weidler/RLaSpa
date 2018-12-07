@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from autoencoder import Autoencoder
+from src.representation.autoencoder import Autoencoder
 
 if __name__ == "__main__":
     with open("../../data/cartpole.data") as f:

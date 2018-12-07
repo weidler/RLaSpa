@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 import torch
-from representation.autoencoder import Autoencoder
+from src.representation.autoencoder import Autoencoder
 from sklearn.utils.extmath import cartesian
 import matplotlib.pyplot as plt
 import pickle

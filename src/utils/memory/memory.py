@@ -1,13 +1,9 @@
-import random
-from collections import deque
-
-import numpy as np
+import abc
 
 
-class ReplayMemory(object):
-    def __init__(self, capacity):
-        self.memory = deque(maxlen=capacity)
+class Memory(abc.ABC):
 
+    @abc.abstractmethod
     def push(self, state, action, reward, next_state, done):
         """
         Method to save the plays made by the agent in the memory
@@ -18,10 +14,9 @@ class ReplayMemory(object):
         :param next_state: state of the game after executing the action
         :param done: true if the game is finished after executing the action
         """
-        state = np.expand_dims(state, 0)
-        next_state = np.expand_dims(next_state, 0)
-        self.memory.append((state, action, reward, next_state, done))
+        return NotImplementedError
 
+    @abc.abstractmethod
     def sample(self, batch_size):
         """
         Method to obtain a sample of saved memories
@@ -29,8 +24,4 @@ class ReplayMemory(object):
         :param batch_size: number of memories to retrieve
         :return: batch of memories
         """
-        state, action, reward, next_state, done = zip(*random.sample(self.memory, batch_size))
-        return np.concatenate(state), action, reward, np.concatenate(next_state), done
-
-    def __len__(self):
-        return len(self.memory)
+        return NotImplementedError

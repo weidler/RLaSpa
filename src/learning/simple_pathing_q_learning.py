@@ -1,24 +1,26 @@
-from src.task.ObstaclePathing import ObstaclePathing
-from src.task.SimplePathing import SimplePathing
+from src.task.pathing import SimplePathing, ObstaclePathing
 from src.utils.exploration import boltzmann_explore
 
+# PARAMETERS
 OBSTACLES = True
+T = 3
+gamma = 0.999
+epochs = 10000
 
+# ENVIRONMENT
 if not OBSTACLES:
     env = SimplePathing(100, 100)
 else:
     env = ObstaclePathing(30, 30,
-        [[0, 18, 18, 21],
-         [21, 24, 10, 30]]
-    )
+                          [[0, 13, 18, 20],
+                           [16, 18, 11, 30],
+                           [0, 25, 6, 8]]
+                          )
 
     env.visualize()
 
+# TRAINING
 q_table = [[[0 for _ in range(len(env.action_space))] for _ in range(env.width)] for _ in range(env.height)]
-
-T = 3
-gamma = 0.999
-epochs = 10000
 for epoch in range(epochs):
     observation = env.reset()
 

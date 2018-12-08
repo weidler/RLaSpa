@@ -1,5 +1,8 @@
+""" Abstract class for custom tasks. """
+
 import abc
 import matplotlib.pyplot as plt
+
 
 class Task(abc.ABC):
 

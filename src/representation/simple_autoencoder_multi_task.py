@@ -4,8 +4,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
+import torch.utils.data as utils
 from src.representation.autoencoder import Autoencoder
+from src.utils.task_dictionary import task_dict
 
 # pass in numpy array (hence pass by reference)
 # TODO: currently this generates warnings (div by zero) for zero-padded features
@@ -32,40 +33,52 @@ if __name__ == "__main__":
         max_feat_dim = max(len(data[task][0][0]), max_feat_dim)
         total_num_instance += len(data[task])
 
-    for task in tasks:
+    for task_idx, task in enumerate(tasks):
         # normalize input to mean=0, variance=1
         # currently it's done not so efficiently to avoid changes in other parts of code
         normalized_input = np.zeros((len(data[task]), max_feat_dim))
         for i, instance in enumerate(data[task]):
             normalized_input[i, :len(instance[0])] = np.array(instance[0])
 
-        normalized_input = normalize(normalized_input)
+        # normalized_input = normalize(normalized_input)
 
         for i, instance in enumerate(data[task]):  # write back to the l
             data[task][i][0] = normalized_input[i]
+
         print("Finished normalizing features for", task)
 
+        print('Creating input tensor for', task)
+        # append this to get task index in task dict: list(task_dict.keys()).index(task)
+        data[task] = torch.stack([torch.Tensor(i[0]) for i in data[task]])
 
-    # input = np.zeros((total_num_instance, max_feat_dim))  # shape is num_instances * highest num feats among all tasks
+    tensor_x = torch.cat((data['cartpole'], data['mountain_car']), 0)
+    dataset = utils.TensorDataset(tensor_x, tensor_x)  # create dataset
+    train_loader = utils.DataLoader(dataset, batch_size=32, shuffle=True)
 
-    net = Autoencoder()
-    optimizer = optim.SGD(net.parameters(), lr=0.05)
+    net = Autoencoder(inputNeurons=4, hiddenNeurons=3, outputNeurons=4)
+    optimizer = optim.SGD(net.parameters(), lr=0.01)
     criterion = nn.MSELoss()
 
-    for epoch in range(20):
-        for i in range(10000):
-            for task in tasks:  # alternate between tasks
-                sample_id = random.randint(0, len(data) - 1)
-                # Transform the tensor to float32
-                vinput = torch.tensor(data[task][sample_id][0]).float()  # + [data[sample_id][1]])
-                vtarget = torch.tensor(data[task][sample_id][0]).float()
+    for epoch in range(10):
+        running_loss = 0.0
+        for i, data in enumerate(train_loader, 0):
+            # get the inputs
+            inputs, labels = data
 
-                optimizer.zero_grad()
-                out = net(vinput)
-                loss = criterion(out, vtarget)
-                loss.backward()
-                optimizer.step()
-        if epoch % 1 == 0:
-            print(epoch)
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            # print statistics
+            running_loss += loss.item()
+            if i % 2000 == 1999:  # print every 2000 mini-batches
+                print('epoch %d, instance %5d, loss: %.3f' %
+                      (epoch + 1, i + 1, running_loss / 2000))
+                running_loss = 0.0
 
     torch.save(net.state_dict(), "../../models/very-simple-multi-task.model")

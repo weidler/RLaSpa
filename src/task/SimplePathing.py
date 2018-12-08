@@ -17,7 +17,7 @@ class SimplePathing(Task):
     AGENT_SYMBOL = "A"
     AGENT_PIXEL = 0.3
 
-    PADDING = 10
+    PADDING = 5
 
     DEFAULT_REWARD = -10
     TARGET_REWARD = 10
@@ -35,9 +35,10 @@ class SimplePathing(Task):
 
         self.target_coords = [random.randint(SimplePathing.PADDING, self.width - SimplePathing.PADDING),
                               random.randint(SimplePathing.PADDING, self.height - SimplePathing.PADDING)]
+        self.target_coords = [width - SimplePathing.PADDING, SimplePathing.PADDING]
         self.static_map = self._generate_static_map()
 
-        self.start_state = [width // 2, height // 2]
+        self.start_state = [SimplePathing.PADDING, height - SimplePathing.PADDING]
         self.current_state = self.start_state.copy()
 
         self.state_trail = []
@@ -117,10 +118,4 @@ class SimplePathing(Task):
 
 if __name__ == "__main__":
     env = SimplePathing(30, 30)
-
-    for dir in range(0, 4):
-        for i in range(10):
-            s, _, _ = env.step(dir)
-
-    numpy.set_printoptions(linewidth=150)
     env.visualize()

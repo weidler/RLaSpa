@@ -3,7 +3,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-from src.task.ObstaclePathing import ObstaclePathing
+from src.task.pathing import ObstaclePathing
 
 
 class PixelEncoder(torch.nn.Module):

@@ -4,19 +4,14 @@ import torch
 from src.representation.autoencoder import Autoencoder
 from sklearn.utils.extmath import cartesian
 import matplotlib.pyplot as plt
+from src.utils.task_dictionary import task_dict
 import pickle
 
+task_name = 'cartpole'
+model_name = 'very-simple'  # which auto-encoder to use
 
-# env = gym.make("Taxi-v2")
-env = gym.make("CartPole-v1")
+env = gym.make(task_dict[task_name])
 env.reset()  # returns initial state
-
-# We can determine the total number of possible states using the following command:
-# env.observation_space.n
-# If you would like to visualize the current state, type the following:
-# env.render()
-# let's explore the actions available to the agent.
-# env.action_space.n
 
 
 def binThese(lowerBound, upperBound, bins=10, cutOffInf=10000):
@@ -49,10 +44,17 @@ def getState(stateBins, features):
     return stateIndex
 
 
-net = Autoencoder(4, 3, 4)
-net.load_state_dict(torch.load('../models/very-simple.model'))
+# get shape of saved weights
+net_weights = torch.load('../../models/' + model_name + '.model')
+encoder_shape = list(net_weights.values())[0].size()
+decoder_shape = list(net_weights.values())[len(net_weights)-1].size()
 
-numFeatures = net.encoder.out_features
+# init autoencoder according to size of loaded weights
+net = Autoencoder(encoder_shape[1], encoder_shape[0], decoder_shape[0])
+net.load_state_dict(torch.load('../../models/' + model_name + '.model'))
+
+
+num_features = net.encoder.out_features
 
 # in CartPole-v0, parameters are:
 # [position of cart, velocity of cart, angle of pole, rotation rate of pole]
@@ -60,7 +62,7 @@ numFeatures = net.encoder.out_features
 # print('high', env.observation_space.high)
 bins = 50
 # stateBins = binThese(env.observation_space.low, env.observation_space.high, bins=bins, cutOffInf=5)
-stateBins = binModel(0, 1, numFeatures, bins=bins)
+stateBins = binModel(0, 1, num_features, bins=bins)
 allStates = cartesian(stateBins)  # round
 
 # print(stateBins)
@@ -80,6 +82,7 @@ for episode in range(1, total_episode):
     explore_rate = (1 - episode / total_episode) / 10 + 0.01
     # here we need to find the state of all states
     # transform to encoder latent representation
+    # TODO: in case of sas.model, also need to append action
     state = net.activation(net.encoder(torch.tensor(state).float())).tolist()
     # print(f'latent: {state}')
     stateInd = getState(stateBins, state)
@@ -114,9 +117,12 @@ print(np.sum(qValues)/np.count_nonzero(qValues))
 
 print(np.max(qValues, axis=-1))
 
-with open('../data/qValues.pkl', 'wb') as f:
+print('Saving q-values...')
+with open('_'.join(['../../data/q_vals', task_name, model_name]) + '.pkl', 'wb') as f:
     pickle.dump(qValues, f)
 
+
+print('Testing...')
 done = False
 state = env.reset()
 test_total_reward = 0

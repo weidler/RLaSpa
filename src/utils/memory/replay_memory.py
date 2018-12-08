@@ -8,6 +8,11 @@ from src.utils.memory.memory import Memory
 
 class ReplayMemory(Memory):
     def __init__(self, capacity: int):
+        """
+        Create a replay memory.
+
+        :param capacity: number of memories that will be saved
+        """
         self.memory = deque(maxlen=capacity)
 
     def push(self, state, action, reward, next_state, done):

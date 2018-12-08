@@ -6,26 +6,26 @@ from torch import optim
 
 from src.agents.dqn_agent import DQN
 from src.utils.epsilon_calculator import EpsilonCalculator
-from src.utils.memory.replay_memory import ReplayMemory
+from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 
 
-def compute_td_loss(batch_size: int):
+def compute_td_loss(batch_size: int, beta: float):
     """
     Method that computes the loss of a batch. The batch is sample for memory to take in consideration
     situations that happens before.
 
-    :param model: deep q learning model
-    :param optimizer: optimizer used in the process
     :param batch_size: number of plays that will be used
+    :param beta: degree to use importance weights (0 - no corrections, 1 - full correction)
     :return: loss for the whole batch
     """
-    state, action, reward, next_state, done = memory.sample(batch_size)
+    state, action, reward, next_state, done, indices, weights = memory.sample(batch_size, beta)
 
     state = torch.tensor(state, dtype=torch.float32)
     next_state = torch.tensor(next_state, dtype=torch.float32)
     action = torch.tensor(action, dtype=torch.long)
     reward = torch.tensor(reward, dtype=torch.float32)
     done = torch.tensor(done, dtype=torch.float32)
+    weights = torch.tensor(weights, dtype=torch.float32)
 
     q_values = model(state)
     next_q_values = model(next_state)
@@ -37,10 +37,13 @@ def compute_td_loss(batch_size: int):
     # 0 if next state was 0
     expected_q_value = reward + model.gamma * next_q_value * (1 - done)
 
-    loss = (q_value - expected_q_value.data).pow(2).mean()
+    loss = (q_value - expected_q_value.data).pow(2) * weights
+    prios = loss + 1e-5
+    loss = loss.mean()
 
     optimizer.zero_grad()
     loss.backward()
+    memory.update_priorities(indices, prios.data.cpu().numpy())
     optimizer.step()
 
     return loss
@@ -68,7 +71,7 @@ def train(iterations: int, batch_size: int):
 
         if len(memory) > batch_size:
             # when saved plays are greater than the batch size calculate losses
-            loss = compute_td_loss(batch_size=batch_size)
+            loss = compute_td_loss(batch_size=batch_size, beta=1.0)
             losses.append(loss.item())
 
         if iteration % 200 == 0:
@@ -112,7 +115,7 @@ if __name__ == '__main__':
     number_of_actions = env.action_space.n
     model = DQN(num_features=number_of_observations, num_actions=number_of_actions, gamma=args.gamma)
     optimizer = optim.Adam(model.parameters())
-    memory = ReplayMemory(capacity=args.memory_size)
+    memory = PrioritizedReplayMemory(capacity=args.memory_size, alpha=1.0)
     epsilon_calculator = EpsilonCalculator(initial_epsilon=args.init_eps, min_epsilon=args.min_eps,
                                            epsilon_decay=args.eps_decay)
     train(iterations=args.iterations, batch_size=args.batch_size)

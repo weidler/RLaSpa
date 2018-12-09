@@ -50,7 +50,7 @@ def compute_td_loss(batch_size: int):
     return loss
 
 
-def train(epochs: int, batch_size: int, max_timesteps: int):
+def train(epochs: int, batch_size: int, max_timesteps: int, history_file=None):
     state = env.reset()
     losses = []
     all_rewards = []
@@ -65,6 +65,7 @@ def train(epochs: int, batch_size: int, max_timesteps: int):
         while not done and timesteps < max_timesteps:
             timesteps += 1
             action = model.act(state=state, epsilon=epsilon)
+            if history_file: history_file.write("{0}\t{1}\n".format(state, action))
 
             next_state, reward, done = env.step(action)
             memory.push(state, action, reward, next_state, done)
@@ -149,9 +150,11 @@ if __name__ == '__main__':
     epsilon_calculator = EpsilonCalculator(initial_epsilon=args.init_eps, min_epsilon=args.min_eps,
                                            epsilon_decay=args.eps_decay)
 
-    train_model = False
+    train_model = True
     if train_model:
-        train(epochs=args.epochs, batch_size=args.batch_size, max_timesteps=args.max_timesteps)
+        with open("../../data/pathing_history.his", "w") as f: pass  # clear
+        with open("../../data/pathing_history.his", "a") as f:
+            train(epochs=args.epochs, batch_size=args.batch_size, max_timesteps=args.max_timesteps, history_file=f)
         torch.save(model.state_dict(), f"../../models/dqn_pathing_{args.epochs}iter.model")
     else:
         model.load_state_dict(torch.load(f"../../models/dqn_pathing_{args.epochs}iter.model"))

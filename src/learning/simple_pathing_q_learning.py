@@ -2,7 +2,7 @@ from src.task.pathing import SimplePathing, ObstaclePathing
 from src.utils.exploration import boltzmann_explore
 
 # PARAMETERS
-OBSTACLES = True
+OBSTACLES = False
 T = 3
 gamma = 0.999
 epochs = 10000

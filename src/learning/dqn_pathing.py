@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=int, metavar='G', default=0.99, help='Gamma')
     parser.add_argument('--memory_size', type=int, metavar='S', default=1000, help='Memory size')
     parser.add_argument('--batch_size', type=int, metavar='B', default=32, help='Batch size')
-    parser.add_argument('--epochs', type=int, metavar='EP', default=500, help='Training epochs')
+    parser.add_argument('--epochs', type=int, metavar='EP', default=1000, help='Training epochs')
     parser.add_argument('--max_timesteps', type=int, metavar='TS', default=300, help='Maximal timesteps for epoch')
     args = parser.parse_args()
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     epsilon_calculator = EpsilonCalculator(initial_epsilon=args.init_eps, min_epsilon=args.min_eps,
                                            epsilon_decay=args.eps_decay)
 
-    train_model = True
+    train_model = False
     if train_model:
         train(epochs=args.epochs, batch_size=args.batch_size, max_timesteps=args.max_timesteps)
         torch.save(model.state_dict(), f"../../models/dqn_pathing_{args.epochs}iter.model")

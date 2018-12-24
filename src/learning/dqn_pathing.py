@@ -1,16 +1,14 @@
 import argparse
 
-import gym
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import torch
 from torch import optim
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 from src.agents.dqn_agent import DQN
-from src.utils.epsilon_calculator import EpsilonCalculator
-from src.utils.memory.replay_memory import ReplayMemory
 from src.task.pathing import ObstaclePathing
+from src.utils.memory.replay_memory import ReplayMemory
+from src.utils.schedules import ExponentialSchedule
 
 
 def compute_td_loss(batch_size: int):
@@ -18,8 +16,6 @@ def compute_td_loss(batch_size: int):
     Method that computes the loss of a batch. The batch is sample for memory to take in consideration
     situations that happens before.
 
-    :param model: deep q learning model
-    :param optimizer: optimizer used in the process
     :param batch_size: number of plays that will be used
     :return: loss for the whole batch
     """
@@ -51,12 +47,10 @@ def compute_td_loss(batch_size: int):
 
 
 def train(epochs: int, batch_size: int, max_timesteps: int, history_file=None):
-    state = env.reset()
     losses = []
     all_rewards = []
-    episode_reward = 0
     for epoch in range(1, epochs + 1):
-        epsilon = epsilon_calculator.calculate(iteration=epochs)
+        epsilon = epsilon_calculator.value(time_step=epoch)
         # run an episode
         state = env.reset()
         done = False
@@ -116,7 +110,7 @@ def play(epochs: int, max_timesteps: int, render=True):
             rewards.append(episode_reward)
         if render:
             ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True,
-                                repeat_delay=1000)
+                                            repeat_delay=1000)
             plt.show()
     # if render:
     #     env.close()
@@ -147,16 +141,15 @@ if __name__ == '__main__':
     model = DQN(num_features=number_of_observations, num_actions=number_of_actions, gamma=args.gamma)
     optimizer = optim.Adam(model.parameters())
     memory = ReplayMemory(capacity=args.memory_size)
-    epsilon_calculator = EpsilonCalculator(initial_epsilon=args.init_eps, min_epsilon=args.min_eps,
-                                           epsilon_decay=args.eps_decay)
+    epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)
 
     train_model = True
     if train_model:
-        with open("../../data/pathing_history.his", "w") as f: pass  # clear
+        with open("../../data/pathing_history.his", "w") as f:
+            pass  # clear
         with open("../../data/pathing_history.his", "a") as f:
             train(epochs=args.epochs, batch_size=args.batch_size, max_timesteps=args.max_timesteps, history_file=f)
         torch.save(model.state_dict(), f"../../models/dqn_pathing_{args.epochs}iter.model")
     else:
         model.load_state_dict(torch.load(f"../../models/dqn_pathing_{args.epochs}iter.model"))
     play(epochs=1, max_timesteps=args.max_timesteps, render=True)
-

@@ -4,20 +4,22 @@ import operator
 class SegmentTree(object):
     def __init__(self, capacity: int, operation, neutral_element):
         """
-        Build a Segment Tree data structure. https://en.wikipedia.org/wiki/Segment_tree
-        Can be used as regular array, but with two important differences:
-            - setting item's value is slightly slower. It is O(lg capacity) instead of O(1).
-            - user has access to an efficient `reduce` operation which reduces `operation` over
-                a contiguous subsequent of items in the array.
+        Build a Segment Tree data structure. (https://en.wikipedia.org/wiki/Segment_tree)
 
-        :param capacity: total size of the array - must be a power of two.
+        Can be used as regular array, but with two important differences:
+
+        a) setting item's value is slightly slower. It is O(lg capacity) instead of O(1).
+        b) user has access to an efficient (O(log segment size)) `reduce` operation which reduces `operation`
+           over a contiguous subsequence of items in the array.
+
+        :param capacity: Total size of the array - must be a power of two.
         :param operation: lambda obj, obj -> obj
-            and operation for combining elements (eg. sum, max)
-            must for a mathematical group together with the set of
-            possible values for array elements.
+                and operation for combining elements (eg. sum, max)
+                must form a mathematical group together with the set of
+                possible values for array elements (i.e. be associative)
         :param neutral_element: obj
-            neutral element for the operation above. eg. float('-inf')
-            for max and 0 for sum.
+                neutral element for the operation above. eg. float('-inf')
+                for max and 0 for sum.
         """
         assert capacity > 0 and capacity & (capacity - 1) == 0, "capacity must be positive and a power of 2."
         self._capacity = capacity
@@ -40,18 +42,16 @@ class SegmentTree(object):
                 )
 
     def reduce(self, start=0, end=None):
-        """Returns result of applying `self.operation`
-        to a contiguous subsequence of the array.
-            self.operation(arr[start], operation(arr[start+1], operation(... arr[end])))
-        Parameters
-        ----------
-        start: int
+        """
+        Returns result of applying `self.operation` to a contiguous subsequence of the array.
+
+        `self.operation(arr[start], operation(arr[start+1], operation(... arr[end])))`
+
+        :param start: int
             beginning of the subsequence
-        end: int
+        :param end: int
             end of the subsequences
-        Returns
-        -------
-        reduced: obj
+        :return reduced: obj
             result of reducing self.operation over the specified range of array elements.
         """
         if end is None:
@@ -80,24 +80,28 @@ class SegmentTree(object):
 
 class SumSegmentTree(SegmentTree):
     def __init__(self, capacity):
-        super(SumSegmentTree, self).__init__(capacity=capacity, operation=operator.add, neutral_element=0.0)
+        super(SumSegmentTree, self).__init__(
+            capacity=capacity,
+            operation=operator.add,
+            neutral_element=0.0
+        )
 
     def sum(self, start=0, end=None):
-        """
-        Returns arr[start] + ... + arr[end]
-        """
+        """Returns arr[start] + ... + arr[end]"""
         return super(SumSegmentTree, self).reduce(start, end)
 
-    def find_prefixsum_idx(self, prefixsum: float) -> int:
+    def find_prefixsum_idx(self, prefixsum: float):
         """
         Find the highest index `i` in the array such that
-            sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum
-        if array values are probabilities, this function
-        allows to sample indexes according to the discrete
+
+        `sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum`
+
+        if array values are probabilities, this function allows to sample indexes according to the discrete
         probability efficiently.
 
         :param prefixsum: upperbound on the sum of array prefix
-        :return: highest index satisfying the prefixsum constraint
+        :return idx: int
+            highest index satisfying the prefixsum constraint
         """
         assert 0 <= prefixsum <= self.sum() + 1e-5
         idx = 1

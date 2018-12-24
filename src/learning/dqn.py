@@ -5,8 +5,8 @@ import torch
 from torch import optim
 
 from src.agents.dqn_agent import DQN
-from src.utils.epsilon_calculator import EpsilonCalculator
 from src.utils.memory.replay_memory import ReplayMemory
+from src.utils.schedules import ExponentialSchedule
 
 
 def compute_td_loss(batch_size: int):
@@ -14,8 +14,6 @@ def compute_td_loss(batch_size: int):
     Method that computes the loss of a batch. The batch is sample for memory to take in consideration
     situations that happens before.
 
-    :param model: deep q learning model
-    :param optimizer: optimizer used in the process
     :param batch_size: number of plays that will be used
     :return: loss for the whole batch
     """
@@ -52,7 +50,7 @@ def train(iterations: int, batch_size: int):
     all_rewards = []
     episode_reward = 0
     for iteration in range(1, iterations + 1):
-        epsilon = epsilon_calculator.calculate(iteration=iteration)
+        epsilon = epsilon_calculator.value(time_step=iteration)
         action = model.act(state=state, epsilon=epsilon)
 
         next_state, reward, done, _ = env.step(action)
@@ -83,9 +81,10 @@ def play(iterations: int, render=True):
     for iteration in range(1, iterations + 1):
         if render:
             env.render()
-        action = model.act(state=state, epsilon=iteration)
+        action = model.act(state=state, epsilon=0)
         next_state, reward, done, _ = env.step(action)
         episode_reward += reward
+        state = next_state
         if done:
             state = env.reset()
             rewards.append(episode_reward)
@@ -113,8 +112,7 @@ if __name__ == '__main__':
     model = DQN(num_features=number_of_observations, num_actions=number_of_actions, gamma=args.gamma)
     optimizer = optim.Adam(model.parameters())
     memory = ReplayMemory(capacity=args.memory_size)
-    epsilon_calculator = EpsilonCalculator(initial_epsilon=args.init_eps, min_epsilon=args.min_eps,
-                                           epsilon_decay=args.eps_decay)
+    epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)
     train(iterations=args.iterations, batch_size=args.batch_size)
     play(iterations=10000, render=True)
     torch.save(model.state_dict(), "../../models/dqn.model")

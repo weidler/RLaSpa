@@ -136,6 +136,7 @@ if __name__ == '__main__':
                            [16, 18, 11, 30],
                            [0, 25, 6, 8]]
                           )
+    # number_of_observations = env.get_pixelbased_representation().reshape(-1)
     number_of_observations = 2
     number_of_actions = len(env.action_space)
     model = DQN(num_features=number_of_observations, num_actions=number_of_actions, gamma=args.gamma)
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     memory = ReplayMemory(capacity=args.memory_size)
     epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)
 
-    train_model = True
+    train_model = False
     if train_model:
         with open("../../data/pathing_history.his", "w") as f:
             pass  # clear

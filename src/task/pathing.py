@@ -1,5 +1,6 @@
 import copy
 import random
+import numpy as np
 
 from src.task.task import Task
 
@@ -54,24 +55,28 @@ class SimplePathing(Task):
         return representation
 
     def _generate_static_map(self):
-        static_map = [[SimplePathing.BACKGROUND_SYMBOL for _ in range(self.width)] for _ in range(self.height)]
-        static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
+        # static_map = [[SimplePathing.BACKGROUND_SYMBOL for _ in range(self.width)] for _ in range(self.height)]
+        # static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
+        static_map = np.full((self.height, self.width), SimplePathing.BACKGROUND_SYMBOL)
+        static_map[self.target_coords[1], self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
 
+        # print(static_map)
+        # print(static_map)
         return static_map
 
     def _get_current_view(self):
         view = copy.deepcopy(self.static_map)
-        if view[self.current_state[1]][self.current_state[0]] != "X":
-            view[self.current_state[1]][self.current_state[0]] = "A"
+        if view[self.current_state[1], self.current_state[0]] != "X":
+            view[self.current_state[1], self.current_state[0]] = "A"
         else:
-            view[self.current_state[1]][self.current_state[0]] = "Ä"
+            view[self.current_state[1], self.current_state[0]] = "Ä"
         return view
 
     def _get_current_view_with_trail(self):
         view = self._get_current_view()
         for step in range(-1, -len(self.state_trail), -1):
             state = self.state_trail[step]
-            view[state[1]][state[0]] = "O"
+            view[state[1], state[0]] = "O"
         return view
 
     def step(self, action: int):
@@ -103,14 +108,18 @@ class SimplePathing(Task):
 
     def get_pixelbased_representation(self):
         view = self._get_current_view()
-        pixels = copy.deepcopy(view)
-        for y, row in enumerate(view):
-            for x, symbol in enumerate(row):
-                pixel = SimplePathing.BACKGROUND_PIXEL
-                if x == self.current_state[0] and y == self.current_state[1]: pixel = SimplePathing.AGENT_PIXEL
-                if symbol == SimplePathing.TARGET_SYMBOL: pixel = SimplePathing.TARGET_PIXEL
-                pixels[y][x] = pixel
-
+        # pixels = copy.deepcopy(view)
+        pixels = np.zeros(view.shape)
+        pixels[self.current_state[1], self.current_state[0]] = SimplePathing.AGENT_PIXEL
+        pixels[view == SimplePathing.TARGET_SYMBOL] = SimplePathing.TARGET_PIXEL
+        # for y, row in enumerate(view):
+        #     for x, symbol in enumerate(row):
+        #         pixel = SimplePathing.BACKGROUND_PIXEL
+        #         if x == self.current_state[0] and y == self.current_state[1]:
+        #             pixel = SimplePathing.AGENT_PIXEL
+        #         if symbol == SimplePathing.TARGET_SYMBOL:
+        #             pixel = SimplePathing.TARGET_PIXEL
+        #         pixels[y][x] = pixel
         return pixels
 
 
@@ -171,7 +180,7 @@ class ObstaclePathing(SimplePathing):
         for obst in self.obstacles:
             for y in range(obst[2], obst[3]):
                 for x in range(obst[0], obst[1]):
-                    pixels[y][x] = ObstaclePathing.OBSTACLE_PIXEL
+                    pixels[y, x] = ObstaclePathing.OBSTACLE_PIXEL
 
         return pixels
 

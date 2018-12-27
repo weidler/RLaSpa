@@ -1,5 +1,6 @@
 data/*.data
 data/*.pkl
+data/*.his
 src/task/cifardata/*
 ###### PYTHON ######
 

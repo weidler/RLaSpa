@@ -33,9 +33,9 @@ def compute_td_loss(batch_size: int):
     # calculate the q-values of the next state
     next_q_value = torch.max(next_q_values, 1)[0]
     # 0 if next state was 0
-    expected_q_value = reward + model.gamma * next_q_value * (1 - done)
+    expected_q_value = reward + args.gamma * next_q_value * (1 - done)
 
-    loss = (q_value - expected_q_value.data).pow(2).mean()
+    loss = (q_value - expected_q_value.detach()).pow(2).mean()
 
     optimizer.zero_grad()
     loss.backward()
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     env = gym.make(args.env)
     number_of_observations = env.observation_space.shape[0]
     number_of_actions = env.action_space.n
-    model = DQN(num_features=number_of_observations, num_actions=number_of_actions, gamma=args.gamma)
+    model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
     optimizer = optim.Adam(model.parameters())
     memory = ReplayMemory(capacity=args.memory_size)
     epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)

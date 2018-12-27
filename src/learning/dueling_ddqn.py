@@ -6,6 +6,7 @@ from torch import optim
 
 from src.agents.dqn_agent import DQN
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
+from src.utils.model_handler import update_agent_model, save_model
 from src.utils.schedules import ExponentialSchedule
 
 
@@ -27,12 +28,12 @@ def compute_td_loss(batch_size: int, beta: float):
     done = torch.tensor(done, dtype=torch.float32)
     weights = torch.tensor(weights, dtype=torch.float32)
 
-    q_values = model(state)
-    next_q_values = model(next_state)
+    q_values = current_model(state)
+    next_q_values = target_model(next_state)
 
     # calculate the q-values of state with the action taken
     q_value = q_values.gather(1, action.unsqueeze(1)).squeeze(1)
-    # calculate the q-values of the next state
+    # calculate the state value using the target model
     next_q_value = torch.max(next_q_values, 1)[0]
     # 0 if next state was 0
     expected_q_value = reward + args.gamma * next_q_value * (1 - done)
@@ -56,7 +57,7 @@ def train(iterations: int, batch_size: int):
     episode_reward = 0
     for iteration in range(1, iterations + 1):
         epsilon = epsilon_calculator.value(time_step=iteration)
-        action = model.act(state=state, epsilon=epsilon)
+        action = current_model.act(state=state, epsilon=epsilon)
 
         next_state, reward, done, _ = env.step(action)
         memory.push(state, action, reward, next_state, done)
@@ -74,9 +75,13 @@ def train(iterations: int, batch_size: int):
             loss = compute_td_loss(batch_size=batch_size, beta=args.beta)
             losses.append(loss.item())
 
+        if iteration % 100 == 0:
+            update_agent_model(current=current_model, target=target_model)
+
         if iteration % 200 == 0:
             print('Iteration: {0}'.format(iteration))
             print('Rewards: {0}'.format(all_rewards[-9:]))
+    update_agent_model(current=current_model, target=target_model)
 
 
 def play(iterations: int, render=True):
@@ -86,7 +91,7 @@ def play(iterations: int, render=True):
     for iteration in range(1, iterations + 1):
         if render:
             env.render()
-        action = model.act(state=state, epsilon=0)
+        action = target_model.act(state=state, epsilon=0)
         next_state, reward, done, _ = env.step(action)
         episode_reward += reward
         state = next_state
@@ -119,11 +124,13 @@ if __name__ == '__main__':
     number_of_observations = env.observation_space.shape[0]
     number_of_actions = env.action_space.n
     # Agent creation and configuration
-    model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
-    optimizer = optim.Adam(model.parameters())
+    current_model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
+    target_model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
+    update_agent_model(current=current_model, target=target_model)
+    optimizer = optim.Adam(current_model.parameters())
     memory = PrioritizedReplayMemory(capacity=args.memory_size, alpha=args.alpha)
     epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)
     # Training
     train(iterations=args.iterations, batch_size=args.batch_size)
     play(iterations=10000, render=True)
-    torch.save(model.state_dict(), "../../models/dqn_replay.model")
+    save_model(target_model, "../../models/dueling_ddqn.model")

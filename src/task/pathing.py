@@ -26,22 +26,23 @@ class SimplePathing(Task):
                 "Width and Height need to be larger than double the padding of the environment, hence > {0}.".format(
                     SimplePathing.PADDING * 2))
 
+        # ATTRIBUTES
         self.width = width
         self.height = height
-
         self.action_space = [0, 1, 2, 3]  # UP, RIGHT, DOWN, LEFT
 
-        self.target_coords = [random.randint(SimplePathing.PADDING, self.width - SimplePathing.PADDING),
-                              random.randint(SimplePathing.PADDING, self.height - SimplePathing.PADDING)]
+        # STATES
         self.target_coords = [width - SimplePathing.PADDING, SimplePathing.PADDING]
-        self.static_map = self._generate_static_map()
-
         self.start_state = [SimplePathing.PADDING, height - SimplePathing.PADDING]
         self.current_state = self.start_state.copy()
 
+        # TRAIL
         self.state_trail = []
-
         self.show_breadcrumbs = True
+
+        # MAP
+        self.static_map = self._generate_static_map()
+        self.static_pixels = self._generate_pixelbased_representation()
 
     def __repr__(self):
         representation = ""
@@ -106,20 +107,17 @@ class SimplePathing(Task):
         self.state_trail = []
         return self.current_state
 
-    def get_pixelbased_representation(self):
+    def _generate_pixelbased_representation(self):
         view = self._get_current_view()
-        # pixels = copy.deepcopy(view)
         pixels = np.zeros(view.shape)
-        pixels[self.current_state[1], self.current_state[0]] = SimplePathing.AGENT_PIXEL
         pixels[view == SimplePathing.TARGET_SYMBOL] = SimplePathing.TARGET_PIXEL
-        # for y, row in enumerate(view):
-        #     for x, symbol in enumerate(row):
-        #         pixel = SimplePathing.BACKGROUND_PIXEL
-        #         if x == self.current_state[0] and y == self.current_state[1]:
-        #             pixel = SimplePathing.AGENT_PIXEL
-        #         if symbol == SimplePathing.TARGET_SYMBOL:
-        #             pixel = SimplePathing.TARGET_PIXEL
-        #         pixels[y][x] = pixel
+
+        return pixels
+
+    def get_pixelbased_representation(self):
+        pixels = self.static_pixels.copy()
+        pixels[self.current_state[1], self.current_state[0]] = SimplePathing.AGENT_PIXEL
+
         return pixels
 
 
@@ -134,12 +132,15 @@ class ObstaclePathing(SimplePathing):
         :param height:
         :param obstacles:       list of lists where each sublist is [x_from, x_to, y_from, y_to]
         """
+        self.obstacles = []
         super(ObstaclePathing, self).__init__(width, height)
 
         # create obstacles
-        self.obstacles = []
         self.blocked_coordinates = []
         self.add_obstacles(obstacles)
+
+        self.static_map = self._generate_static_map()
+        self.static_pixels = self._generate_pixelbased_representation()
 
     def add_obstacles(self, obstacles):
         self.obstacles.extend(obstacles)
@@ -175,8 +176,8 @@ class ObstaclePathing(SimplePathing):
         self.current_state = next_state.copy()
         return next_state, reward, done
 
-    def get_pixelbased_representation(self):
-        pixels = super(ObstaclePathing, self).get_pixelbased_representation()
+    def _generate_pixelbased_representation(self):
+        pixels = super(ObstaclePathing, self)._generate_pixelbased_representation()
         for obst in self.obstacles:
             for y in range(obst[2], obst[3]):
                 for x in range(obst[0], obst[1]):

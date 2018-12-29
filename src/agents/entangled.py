@@ -1,4 +1,4 @@
-from src.policy.tablebased import QTableOffPolicy, QTableSARSA
+from src.policy.tablebased import QTableSARSA
 from src.representation.autoencoder import Autoencoder
 from src.task.pathing import SimplePathing
 
@@ -27,7 +27,7 @@ class EntangledAgent(object):
         next_action = self.policy.choose_action(current_state)
 
         # update policy
-        self.policy.update(current_state, action, reward, observation, next_action)
+        self.policy.update(current_state, action, reward, observation, done, next_action)
 
         return observation, next_action, done
 

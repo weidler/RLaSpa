@@ -67,7 +67,8 @@ class QTableSARSA(QTableOffPolicy):
         super().__init__(features, n_actions)
 
     def update(self, state, action, reward, next_state, next_action=None):
-        if next_action == None: raise ValueError("SARSA needs next action for on-policy calculations.")
+        if next_action is None:
+            raise ValueError("SARSA needs next action for on-policy calculations.")
 
         state_value = self._get_entry(next_state)[next_action]  # on policy
         old_q_value = self._get_entry(state)[action]

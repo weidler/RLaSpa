@@ -1,12 +1,6 @@
-import copy
-
-import gym
-import numpy
-
-from src.policy.tablebased import QTable
+from src.policy.tablebased import QTableOffPolicy, QTableSARSA
 from src.representation.autoencoder import Autoencoder
 from src.task.pathing import SimplePathing
-from src.utils.exploration import boltzmann_explore
 
 
 class EntangledAgent(object):
@@ -19,16 +13,23 @@ class EntangledAgent(object):
     def train_representation_learner(self):
         pass
 
-    def train_policy(self, current_state):
-        action = self.policy.choose_action(current_state)
+    def train_policy(self, current_state, action=None):
+        """ Train the policy by performing a step in the environment and updating the policy.
+
+        :param current_state:   the state that the agent is currently in
+        :param action:          (default None) only specify if agent learns on-policy and needs next action
+        """
+        if action is None:
+            action = self.policy.choose_action(current_state)
 
         # observe
         observation, reward, done = self.env.step(action)
+        next_action = self.policy.choose_action(current_state)
 
         # update policy
-        self.policy.update(current_state, action, reward, observation)
+        self.policy.update(current_state, action, reward, observation, next_action)
 
-        return observation, done
+        return observation, next_action, done
 
     def act(self, state):
         action = self.policy.choose_action(state)
@@ -36,23 +37,25 @@ class EntangledAgent(object):
 
         return observation, done
 
+
 if __name__ == "__main__":
     env = SimplePathing(10, 10)
     repr_learner = Autoencoder()
-    policy = QTable([env.height, env.width], len(env.action_space))
+    policy = QTableSARSA([env.height, env.width], len(env.action_space))
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)
 
     # TRAIN
-    epochs = 10000
-    for epoch in range(epochs):
+    episodes = 10000
+    for episode in range(episodes):
         done = False
         state = env.reset()
+        action = None
         while not done:
-            state, done = agent.train_policy(state)
+            state, action, done = agent.train_policy(state)
 
-        print(epoch)
+        if (episode % 100) == 0: print(episode)
 
     # TEST
     max_steps = 1000
@@ -65,4 +68,3 @@ if __name__ == "__main__":
     env.show_breadcrumbs = True
     print(env.target_coords)
     print(env)
-

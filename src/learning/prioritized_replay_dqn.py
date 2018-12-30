@@ -108,7 +108,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=int, metavar='G', default=0.99, help='Gamma')
     parser.add_argument('--memory_size', type=int, metavar='S', default=10000, help='Memory size')
     parser.add_argument('--alpha', type=float, metavar='A', default=0.8,
-                        help='how much prioritization is used (0 - no prioritization, 1 - full prioritization)')
+                        help='How much prioritization is used (0 - no prioritization, 1 - full prioritization)')
     parser.add_argument('--beta', type=float, metavar='B', default=0.8,
                         help='Degree to use importance weights (0 - no corrections, 1 - full correction)')
     parser.add_argument('--batch_size', type=int, metavar='BS', default=32, help='Batch size')

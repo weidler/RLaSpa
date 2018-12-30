@@ -1,13 +1,14 @@
 """ Abstract class for custom tasks. """
 
 import abc
+
 import matplotlib.pyplot as plt
 
 
 class Task(abc.ABC):
 
     @abc.abstractmethod
-    def step(self):
+    def step(self, action):
         raise NotImplementedError
 
     @abc.abstractmethod

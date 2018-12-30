@@ -13,49 +13,53 @@ class EntangledAgent(object):
     def train_representation_learner(self):
         pass
 
-    def train_policy(self, current_state, action=None):
-        """ Train the policy by performing a step in the environment and updating the policy.
-
-        :param current_state:   the state that the agent is currently in
-        :param action:          (default None) only specify if agent learns on-policy and needs next action
+    def train_policy(self, current_state, iteration: int):
         """
-        if action is None:
-            action = self.policy.choose_action(current_state)
+        Train the policy by performing a step in the environment and updating the policy.
 
-        # observe
-        observation, reward, done = self.env.step(action)
-        next_action = self.policy.choose_action(current_state)
+        :param current_state: current state of the environment
+        :param iteration: iteration number
+        """
+        action = self.policy.choose_action(current_state, iteration)
+        next_state, step_reward, env_done = self.env.step(action)
 
-        # update policy
-        self.policy.update(current_state, action, reward, observation, done, next_action)
+        self.policy.update(current_state, action, step_reward, next_state, env_done)
 
-        return observation, next_action, done
+        return next_state, step_reward, env_done
 
-    def act(self, state):
-        action = self.policy.choose_action(state)
-        observation, reward, done = self.env.step(action)
-
-        return observation, done
+    def act(self, current_state):
+        action = self.policy.choose_action_policy(current_state)
+        next_state, step_reward, env_done = self.env.step(action)
+        return next_state, env_done
 
 
 if __name__ == "__main__":
     env = SimplePathing(10, 10)
     repr_learner = Autoencoder()
     policy = QTableSARSA([env.height, env.width], len(env.action_space))
+    # policy = DoubleDeepQNetwork(2, len(env.action_space))
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)
 
     # TRAIN
-    episodes = 10000
-    for episode in range(episodes):
-        done = False
-        state = env.reset()
-        action = None
-        while not done:
-            state, action, done = agent.train_policy(state)
+    episodes = 30000
 
-        if (episode % 100) == 0: print(episode)
+    rewards = []
+    episode_reward = 0
+
+    state = env.reset()
+    for episode in range(episodes):
+        state, reward, done = agent.train_policy(state, episode)
+        episode_reward += reward
+
+        if done:
+            state = env.reset()
+            rewards.append(episode_reward)
+            episode_reward = 0
+
+        if (episode % 100) == 0:
+            print(episode)
 
     # TEST
     max_steps = 1000

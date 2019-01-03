@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from src.representation.autoencoder import Autoencoder
+from src.representation.network.autoencoder import AutoencoderNetwork
 
 if __name__ == "__main__":
     with open("../../data/cartpole.data") as f:
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     print("READ FILE")
 
     # print(data[0])
-    net = Autoencoder(5, 3, 4)
+    net = AutoencoderNetwork(5, 3, 4)
     optimizer = optim.SGD(net.parameters(), lr=0.1)
     criterion = nn.MSELoss()
 

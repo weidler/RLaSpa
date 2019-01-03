@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 
 
-class Autoencoder(nn.Module):
+class AutoencoderNetwork(nn.Module):
 
     def __init__(self, inputNeurons=4, hiddenNeurons=3, outputNeurons=4):
-        super(Autoencoder, self).__init__()
+        super(AutoencoderNetwork, self).__init__()
 
         self.encoder = nn.Linear(inputNeurons, hiddenNeurons)
         self.decoder = nn.Linear(hiddenNeurons, outputNeurons)

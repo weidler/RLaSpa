@@ -1,4 +1,5 @@
-from src.policy.tablebased import QTableSARSA
+from src.policy.ddqn import DoubleDeepQNetwork
+from src.policy.tablebased import QTableSARSA, QTableOffPolicy
 from src.representation.autoencoder import Autoencoder
 from src.task.pathing import SimplePathing
 
@@ -36,8 +37,9 @@ class EntangledAgent(object):
 if __name__ == "__main__":
     env = SimplePathing(10, 10)
     repr_learner = Autoencoder()
-    policy = QTableSARSA([env.height, env.width], len(env.action_space))
-    # policy = DoubleDeepQNetwork(2, len(env.action_space))
+    # policy = QTableSARSA([env.height, env.width], len(env.action_space))
+    # policy = QTableOffPolicy([env.height, env.width], len(env.action_space))
+    policy = DoubleDeepQNetwork(2, len(env.action_space))
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)

@@ -1,12 +1,11 @@
 import pickle
-import random
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as utils
-from src.representation.autoencoder import Autoencoder
-from src.utils.task_dictionary import task_dict
+from src.representation.network.autoencoder import AutoencoderNetwork
+
 
 # pass in numpy array (hence pass by reference)
 # TODO: currently this generates warnings (div by zero) for zero-padded features
@@ -55,7 +54,7 @@ if __name__ == "__main__":
     dataset = utils.TensorDataset(tensor_x, tensor_x)  # create dataset
     train_loader = utils.DataLoader(dataset, batch_size=32, shuffle=True)
 
-    net = Autoencoder(inputNeurons=4, hiddenNeurons=3, outputNeurons=4)
+    net = AutoencoderNetwork(inputNeurons=4, hiddenNeurons=3, outputNeurons=4)
     optimizer = optim.SGD(net.parameters(), lr=0.01)
     criterion = nn.MSELoss()
 

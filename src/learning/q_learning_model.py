@@ -1,9 +1,8 @@
 import gym
 import numpy as np
 import torch
-from src.representation.autoencoder import Autoencoder
+from src.representation.network.autoencoder import AutoencoderNetwork
 from sklearn.utils.extmath import cartesian
-import matplotlib.pyplot as plt
 from src.utils.task_dictionary import task_dict
 from src.utils.exploration import boltzmann_explore
 import pickle
@@ -135,7 +134,7 @@ if __name__ == '__main__':
     decoder_shape = list(net_weights.values())[len(net_weights) - 1].size()
 
     # init autoencoder according to size of loaded weights
-    net = Autoencoder(encoder_shape[1], encoder_shape[0], decoder_shape[0])
+    net = AutoencoderNetwork(encoder_shape[1], encoder_shape[0], decoder_shape[0])
     net.load_state_dict(torch.load('../../models/' + model_name + '.model'))
     input_template = np.zeros(encoder_shape[1])
 

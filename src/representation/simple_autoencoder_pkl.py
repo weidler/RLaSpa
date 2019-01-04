@@ -1,11 +1,10 @@
 import pickle
 import random
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from src.representation.autoencoder import Autoencoder
+from src.representation.network.autoencoder import AutoencoderNetwork
 
 if __name__ == "__main__":
     with open("../../data/cartpole.pkl", "rb") as f:
@@ -27,7 +26,7 @@ if __name__ == "__main__":
     #     data[i][0] = normalized_input[i]
     # print('Finished normalization')
 
-    net = Autoencoder()
+    net = AutoencoderNetwork()
     optimizer = optim.SGD(net.parameters(), lr=0.1)
     criterion = nn.MSELoss()
 

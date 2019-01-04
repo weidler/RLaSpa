@@ -1,5 +1,5 @@
 import copy
-import random
+
 import numpy as np
 
 from src.task.task import Task

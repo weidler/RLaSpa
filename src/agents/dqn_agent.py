@@ -2,17 +2,21 @@ import random
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as f
 
 
 class DQN(nn.Module):
     def __init__(self, num_features, num_actions):
         super(DQN, self).__init__()
-        self.num_feature = num_features
+        self.num_features = num_features
         self.num_actions = num_actions
-        self.layer1 = nn.Linear(num_features, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, num_actions)
+        # Network structure
+        self.layers = nn.Sequential(
+            nn.Linear(self.num_features, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.num_actions)
+        )
 
     def forward(self, x):
         """
@@ -21,9 +25,7 @@ class DQN(nn.Module):
         :param x: network input
         :return: network output
         """
-        x = f.relu(self.layer1(x))
-        x = f.relu(self.layer2(x))
-        return self.layer3(x)
+        return self.layers(x)
 
     def act(self, state, epsilon: float) -> int:
         """

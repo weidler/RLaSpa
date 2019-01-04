@@ -4,7 +4,7 @@ import gym
 import torch
 from torch import optim
 
-from src.agents.dqn_agent import DQN
+from src.agents.dueling_dqn_agent import DuelingDQN
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 from src.utils.model_handler import update_agent_model, save_model
 from src.utils.schedules import ExponentialSchedule
@@ -109,11 +109,11 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, metavar='E', default='CartPole-v0', help='GYM environment')
     parser.add_argument('--init_eps', type=float, metavar='I', default=1.0, help='Initial epsilon')
     parser.add_argument('--min_eps', type=float, metavar='M', default=0.01, help='Minimum epsilon')
-    parser.add_argument('--eps_decay', type=int, metavar='D', default=5000, help='Epsilon decay')
+    parser.add_argument('--eps_decay', type=int, metavar='D', default=10000, help='Epsilon decay')
     parser.add_argument('--gamma', type=int, metavar='G', default=0.99, help='Gamma')
     parser.add_argument('--memory_size', type=int, metavar='S', default=10000, help='Memory size')
     parser.add_argument('--alpha', type=float, metavar='A', default=0.8,
-                        help='how much prioritization is used (0 - no prioritization, 1 - full prioritization)')
+                        help='How much prioritization is used (0 - no prioritization, 1 - full prioritization)')
     parser.add_argument('--beta', type=float, metavar='B', default=0.8,
                         help='Degree to use importance weights (0 - no corrections, 1 - full correction)')
     parser.add_argument('--batch_size', type=int, metavar='BS', default=32, help='Batch size')
@@ -124,8 +124,8 @@ if __name__ == '__main__':
     number_of_observations = env.observation_space.shape[0]
     number_of_actions = env.action_space.n
     # Agent creation and configuration
-    current_model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
-    target_model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
+    current_model = DuelingDQN(num_features=number_of_observations, num_actions=number_of_actions)
+    target_model = DuelingDQN(num_features=number_of_observations, num_actions=number_of_actions)
     update_agent_model(current=current_model, target=target_model)
     optimizer = optim.Adam(current_model.parameters())
     memory = PrioritizedReplayMemory(capacity=args.memory_size, alpha=args.alpha)

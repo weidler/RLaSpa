@@ -73,6 +73,9 @@ class DeepQNetwork(_Policy):
     def choose_action_policy(self, state) -> int:
         return self.model.act(state=state, epsilon=0)
 
+    def finish_training(self) -> None:
+        pass
+
 
 class PrioritizedDeepQNetwork(DeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, memory_size=10000, alpha=0.9, beta=0.9, batch_size=32,

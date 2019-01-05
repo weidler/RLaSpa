@@ -34,7 +34,7 @@ class DuelingDQN(nn.Module):
         x = self.feature(x)
         advantage = self.advantage(x)
         value = self.value(x)
-        return value + advantage - advantage.mean()
+        return value + (advantage - advantage.mean())
 
     def act(self, state, epsilon: float) -> int:
         """

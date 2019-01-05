@@ -1,6 +1,4 @@
 from src.policy.ddqn import DoubleDeepQNetwork
-from src.policy.tablebased import QTableSARSA, QTableOffPolicy
-from src.policy.tablebased import QTableSARSA
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.task.pathing import SimplePathing
 
@@ -40,14 +38,14 @@ if __name__ == "__main__":
     repr_learner = AutoencoderNetwork()
     # policy = QTableSARSA([env.height, env.width], len(env.action_space))
     # policy = QTableOffPolicy([env.height, env.width], len(env.action_space))
-    # policy = DoubleDeepQNetwork(2, len(env.action_space))
-    policy = QTableSARSA([env.height, env.width], len(env.action_space))
+    policy = DoubleDeepQNetwork(2, len(env.action_space))
+    # policy = DeepQNetwork(2, len(env.action_space))
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)
 
     # TRAIN
-    episodes = 30000
+    episodes = 10000
 
     rewards = []
     episode_reward = 0
@@ -64,6 +62,9 @@ if __name__ == "__main__":
 
         if (episode % 100) == 0:
             print(episode)
+
+    # Last update of the agent policy
+    agent.policy.finish_training()
 
     # TEST
     max_steps = 1000

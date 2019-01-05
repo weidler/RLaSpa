@@ -58,6 +58,9 @@ class QTableOffPolicy(_Policy):
             entry = entry[ind]
         return entry
 
+    def finish_training(self) -> None:
+        pass
+
 
 class QTableSARSA(QTableOffPolicy):
 

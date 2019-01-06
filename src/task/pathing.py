@@ -127,7 +127,6 @@ class ObstaclePathing(SimplePathing):
 
     def __init__(self, width: int, height: int, obstacles: list):
         """
-
         :param width:
         :param height:
         :param obstacles:       list of lists where each sublist is [x_from, x_to, y_from, y_to]
@@ -185,6 +184,38 @@ class ObstaclePathing(SimplePathing):
 
         return pixels
 
+
+class VisualObstaclePathing(ObstaclePathing):
+    def step(self, action: int):
+        next_state = self.current_state.copy()
+        self.state_trail.append(self.current_state)
+
+        if action == 0:
+            next_state[1] = max(0, next_state[1] - 1)
+        elif action == 1:
+            next_state[0] = min(next_state[0] + 1, self.width - 1)
+        elif action == 2:
+            next_state[1] = min(next_state[1] + 1, self.height - 1)
+        elif action == 3:
+            next_state[0] = max(0, next_state[0] - 1)
+
+        # get blocked at coordinates
+        if next_state in self.blocked_coordinates:
+            next_state = self.current_state.copy()
+
+        reward = SimplePathing.DEFAULT_REWARD
+        done = False
+        if next_state == self.target_coords:
+            reward = SimplePathing.TARGET_REWARD
+            done = True
+
+        self.current_state = next_state.copy()
+        return self.get_pixelbased_representation(), reward, done
+
+    def reset(self):
+        self.current_state = self.start_state.copy()
+        self.state_trail = []
+        return self.get_pixelbased_representation()
 
 if __name__ == "__main__":
     env = ObstaclePathing(30, 30,

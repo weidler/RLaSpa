@@ -6,7 +6,7 @@ import torch
 from torch import optim
 
 from src.agents.dqn_agent import DQN
-from src.task.pathing import ObstaclePathing
+from src.task.pathing import ObstaclePathing, VisualObstaclePathing
 from src.utils.memory.replay_memory import ReplayMemory
 from src.utils.schedules import ExponentialSchedule
 
@@ -52,7 +52,7 @@ def train(epochs: int, batch_size: int, max_timesteps: int, history_file=None):
     for epoch in range(1, epochs + 1):
         epsilon = epsilon_calculator.value(time_step=epoch)
         # run an episode
-        state = env.reset()
+        state = env.reset().reshape(-1)
         done = False
         timesteps = 0
         episode_reward = 0
@@ -62,13 +62,14 @@ def train(epochs: int, batch_size: int, max_timesteps: int, history_file=None):
             if history_file: history_file.write("{0}\t{1}\n".format(state, action))
 
             next_state, reward, done = env.step(action)
+            next_state = next_state.reshape(-1)
             memory.push(state, action, reward, next_state, done)
 
             state = next_state
             episode_reward += reward
 
             if done:
-                state = env.reset()
+                state = env.reset().reshape(-1)
                 all_rewards.append(episode_reward)
 
             if len(memory) > batch_size:
@@ -87,7 +88,7 @@ def play(epochs: int, max_timesteps: int, render=True):
         if render:
             fig = plt.figure(figsize=(10, 6))
         ims = []
-        state = env.reset()
+        state = env.reset().reshape(-1)
         done = False
         episode_reward = 0
         timesteps = 0
@@ -99,10 +100,11 @@ def play(epochs: int, max_timesteps: int, render=True):
 
             action = model.act(state=state, epsilon=0)
             next_state, reward, done = env.step(action)
+            next_state = next_state.reshape(-1)
             state = next_state
             episode_reward += reward
             if done:
-                state = env.reset()
+                state = env.reset().reshape(-1)
                 rewards.append(episode_reward)
                 episode_reward = 0
         if not done:
@@ -130,26 +132,26 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     size = 30
-    env = ObstaclePathing(size, size,
+    env = VisualObstaclePathing(size, size,
                           [[0, 13, 18, 20],
                            [16, 18, 11, 30],
                            [0, 25, 6, 8]]
                           )
-    # number_of_observations = len(env.get_pixelbased_representation().reshape(-1))
-    number_of_observations = 2
+    number_of_observations = len(env.get_pixelbased_representation().reshape(-1))
+    # number_of_observations = 2
     number_of_actions = len(env.action_space)
     model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
     optimizer = optim.Adam(model.parameters())
     memory = ReplayMemory(capacity=args.memory_size)
     epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)
 
-    train_model = False
+    train_model = True
     if train_model:
-        with open("../../data/pathing_history.his", "w") as f:
+        with open("../../data/pathing_visual_history.his", "w") as f:
             pass  # clear
-        with open("../../data/pathing_history.his", "a") as f:
+        with open("../../data/pathing_visual_history.his", "a") as f:
             train(epochs=args.epochs, batch_size=args.batch_size, max_timesteps=args.max_timesteps, history_file=f)
-        torch.save(model.state_dict(), f"../../models/dqn_pathing_{args.epochs}iter.model")
+        torch.save(model.state_dict(), f"../../models/dqn_pathing_visual_{args.epochs}iter.model")
     else:
-        model.load_state_dict(torch.load(f"../../models/dqn_pathing_{args.epochs}iter.model"))
+        model.load_state_dict(torch.load(f"../../models/dqn_pathing_visual_{args.epochs}iter.model"))
     play(epochs=1, max_timesteps=args.max_timesteps, render=True)

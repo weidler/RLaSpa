@@ -2,12 +2,12 @@ import random
 
 import numpy
 import torch
-from torch import nn, optim
 from numpy.core.multiarray import ndarray
+from torch import nn, optim
 
+from src.playground.siamese_autoencoder import SiameseAutoencoder
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
-from src.representation.siamese_autoencoder import SiameseAutoencoder
 
 
 def cast_float_tensor(o: object):

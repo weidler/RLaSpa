@@ -36,3 +36,10 @@ class _Policy(abc.ABC):
         :param state: current state of the environment
         """
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def finish_training(self) -> None:
+        """
+        Method that executes the agent necessary routine (if needed) after finishing the training
+        """
+        raise NotImplementedError

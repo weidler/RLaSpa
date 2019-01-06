@@ -1,14 +1,13 @@
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
+from src.policy.dqn import DeepQNetwork
 from src.policy.tablebased import QTableSARSA, QTableOffPolicy
-from src.policy.tablebased import QTableSARSA
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
-from src.task.pathing import SimplePathing
+from src.task.pathing import SimplePathing, ObstaclePathing
 
 
 class EntangledAgent:
-
     policy: _Policy
     representation_learner: _RepresentationLearner
 
@@ -42,33 +41,40 @@ class EntangledAgent:
 
 if __name__ == "__main__":
     env = SimplePathing(10, 10)
+    # env = ObstaclePathing(30, 30,
+    #                       [[0, 18, 18, 21],
+    #                        [21, 24, 10, 30]]
+    #                       )
     repr_learner = AutoencoderNetwork()
-    # policy = QTableSARSA([env.height, env.width], len(env.action_space))
+    policy = QTableSARSA([env.height, env.width], len(env.action_space))
     # policy = QTableOffPolicy([env.height, env.width], len(env.action_space))
-    policy = DoubleDeepQNetwork(2, len(env.action_space))
-    # policy = QTableSARSA([env.height, env.width], len(env.action_space))
+    # policy = DoubleDeepQNetwork(2, len(env.action_space))
+    # policy = DeepQNetwork(2, len(env.action_space))
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)
 
     # TRAIN
-    episodes = 30000
-
+    episodes = 10000
+    max_steps = 1000
     rewards = []
-    episode_reward = 0
 
-    state = env.reset()
     for episode in range(episodes):
-        state, reward, done = agent.train_policy(state, episode)
-        episode_reward += reward
+        done = False
+        state = env.reset()
+        episode_reward = 0
+        steps = 0
+        while not done and steps < max_steps:
+            state, reward, done = agent.train_policy(state, episode)
+            episode_reward += reward
+            steps += 1
+        rewards.append(episode_reward)
 
-        if done:
-            state = env.reset()
-            rewards.append(episode_reward)
-            episode_reward = 0
+        if (episode % 10) == 0:
+            print(episode, " Rewards: ", rewards[-10:])
 
-        if (episode % 100) == 0:
-            print(episode)
+    # Last update of the agent policy
+    agent.policy.finish_training()
 
     # TEST
     max_steps = 1000

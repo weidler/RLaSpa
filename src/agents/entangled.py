@@ -1,19 +1,24 @@
 from src.policy.ddqn import DoubleDeepQNetwork
+from src.policy.policy import _Policy
 from src.policy.tablebased import QTableSARSA, QTableOffPolicy
 from src.policy.tablebased import QTableSARSA
 from src.representation.network.autoencoder import AutoencoderNetwork
+from src.representation.representation import _RepresentationLearner
 from src.task.pathing import SimplePathing
 
 
-class EntangledAgent(object):
+class EntangledAgent:
 
-    def __init__(self, representation_learner, policy, environment):
+    policy: _Policy
+    representation_learner: _RepresentationLearner
+
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment):
         self.representation_learner = representation_learner
         self.policy = policy
         self.env = environment
 
-    def train_representation_learner(self):
-        pass
+    def train_representation_learner(self, state):
+        self.representation_learner.learn(state)
 
     def train_policy(self, current_state, iteration: int):
         """
@@ -40,8 +45,8 @@ if __name__ == "__main__":
     repr_learner = AutoencoderNetwork()
     # policy = QTableSARSA([env.height, env.width], len(env.action_space))
     # policy = QTableOffPolicy([env.height, env.width], len(env.action_space))
-    # policy = DoubleDeepQNetwork(2, len(env.action_space))
-    policy = QTableSARSA([env.height, env.width], len(env.action_space))
+    policy = DoubleDeepQNetwork(2, len(env.action_space))
+    # policy = QTableSARSA([env.height, env.width], len(env.action_space))
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)

@@ -8,13 +8,15 @@ class _RepresentationLearner(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def learn(self, state):
+    def learn(self, state, action, reward, next_state, remember=True):
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def learn_many(self, states):
-        raise NotImplementedError
+    def learn_many(self, sars_tuples, remember=True):
+        total_loss = 0
+        for sample in sars_tuples:
+            total_loss += self.learn(*sample, remember=remember)
 
-    @abc.abstractmethod
+        return total_loss / len(sars_tuples)
+
     def learn_from_backup(self):
-        raise NotImplementedError
+        self.learn_many(self.backup_history, remember=False)

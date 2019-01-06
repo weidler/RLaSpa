@@ -1,3 +1,5 @@
+import random
+
 import numpy
 import torch
 from torch import nn, optim
@@ -5,6 +7,7 @@ from numpy.core.multiarray import ndarray
 
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
+from src.representation.siamese_autoencoder import SiameseAutoencoder
 
 
 def cast_float_tensor(o: object):
@@ -44,13 +47,12 @@ class SimpleAutoencoder(_RepresentationLearner):
 
     def encode(self, state):
         state = cast_float_tensor(state)
-
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state, remember=True):
+    def learn(self, state, action=None, reward=None, next_state=None, remember=True):
         # remember sample in history
         if remember:
-            self.backup_history.append(state)
+            self.backup_history.append((state, action, reward, next_state))
 
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
@@ -63,22 +65,56 @@ class SimpleAutoencoder(_RepresentationLearner):
         self.optimizer.step()
         return loss.data.item()
 
-    def learn_many(self, states, remember=True):
-        total_loss = 0
-        for state in states:
-            total_loss += self.learn(state, remember=remember)
 
-        return total_loss / len(states)
+class Janus(_RepresentationLearner):
 
-    def learn_from_backup(self):
-        self.learn_many(self.backup_history, remember=False)
+    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
+        # PARAMETERS
+        self.d_states = d_states
+        self.d_actions = d_actions
+        self.d_latent = d_latent
+
+        self.learning_rate = lr
+
+        # NETWORK
+        self.network = SiameseAutoencoder(d_states, d_latent, d_states, d_actions)
+
+        # TRAINING SAMPLES
+        self.backup_history = []
+
+        # PARTS
+        self.criterion = nn.MSELoss()
+        self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+
+    def encode(self, state):
+        state = cast_float_tensor(state)
+        return self.network.activation(self.network.encoder(state))
+
+    def learn(self, state, action, reward, next_state, remember=True):
+        # remember sample in history
+        if remember:
+            self.backup_history.append((state, action, reward, next_state))
+
+        # convert to tensor if necessary
+        state_tensor = cast_float_tensor(state)
+        action_tensor = cast_float_tensor([action])
+        next_state_tensor = cast_float_tensor(next_state)
+        target_tensor = torch.cat((state_tensor, next_state_tensor), 0)
+
+        self.optimizer.zero_grad()
+        out = self.network(state_tensor, action_tensor)
+        loss = self.criterion(out, target_tensor)
+        loss.backward()
+
+        self.optimizer.step()
+        return loss.data.item()
 
 
 if __name__ == "__main__":
-    ae = SimpleAutoencoder(5, 3, 2)
+    ae = Janus(5, 1, 3)
     print(ae.encode(numpy.array([1, 2, 3, 4, 5])))
 
     for i in range(10):
-        print(ae.learn(numpy.random.rand(5)))
+        print(ae.learn(numpy.random.rand(5), random.randint(0, 3), None, numpy.random.rand(5)))
 
     ae.learn_from_backup()

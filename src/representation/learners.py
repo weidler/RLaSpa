@@ -1,9 +1,8 @@
 import random
 
-import numpy
 import torch
-from torch import nn, optim
 from numpy.core.multiarray import ndarray
+from torch import nn, optim
 
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
@@ -27,7 +26,7 @@ def cast_float_tensor(o: object):
 
 class SimpleAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
+    def __init__(self, d_states, d_actions, d_latent, lr=0.05):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -111,10 +110,18 @@ class Janus(_RepresentationLearner):
 
 
 if __name__ == "__main__":
-    ae = Janus(5, 1, 3)
-    print(ae.encode(numpy.array([1, 2, 3, 4, 5])))
+    ae = SimpleAutoencoder(5, 5, 3)
+
+    for i in range(100000):
+        sample = [1, 2, 3, 4, 5]
+        random.shuffle(sample)
+        ae.learn(sample, 1, None, None)
+        if i % 1000 == 0: print(ae.learn(sample, 1, None, None))
+
 
     for i in range(10):
-        print(ae.learn(numpy.random.rand(5), random.randint(0, 3), None, numpy.random.rand(5)))
+        sample = [1, 2, 3, 4, 5]
+        random.shuffle(sample)
+        print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float()).tolist()]}")
 
-    ae.learn_from_backup()
+    print()

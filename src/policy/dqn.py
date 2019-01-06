@@ -11,7 +11,7 @@ from src.utils.schedules import ExponentialSchedule
 class DeepQNetwork(_Policy):
 
     def __init__(self, num_features: int, num_actions: int, memory_size=10000, batch_size=32, learning_rate=2e-3,
-                 gamma=0.9, init_eps=1.0, min_eps=0.01, eps_decay=5000) -> None:
+                 gamma=0.99, init_eps=1.0, min_eps=0.01, eps_decay=500) -> None:
         """
         Initializes a Deep Q-Network agent
 

@@ -100,7 +100,7 @@ class SimplePathing(Task):
             done = True
 
         self.current_state = next_state.copy()
-        return next_state, reward, done
+        return next_state, reward, done, None  # returns None at pos 4 to match gym envs
 
     def reset(self):
         self.current_state = self.start_state.copy()
@@ -174,7 +174,7 @@ class ObstaclePathing(SimplePathing):
             done = True
 
         self.current_state = next_state.copy()
-        return next_state, reward, done
+        return next_state, reward, done, None  # returns None at pos 4 to match gym envs
 
     def _generate_pixelbased_representation(self):
         pixels = super(ObstaclePathing, self)._generate_pixelbased_representation()

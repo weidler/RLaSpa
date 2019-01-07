@@ -1,9 +1,11 @@
 import pickle
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as utils
+
 from src.representation.network.autoencoder import AutoencoderNetwork
 
 
@@ -54,7 +56,7 @@ if __name__ == "__main__":
     dataset = utils.TensorDataset(tensor_x, tensor_x)  # create dataset
     train_loader = utils.DataLoader(dataset, batch_size=32, shuffle=True)
 
-    net = AutoencoderNetwork(inputNeurons=4, hiddenNeurons=3, outputNeurons=4)
+    net = AutoencoderNetwork(input_neurons=4, hidden_neurons=3, output_neurons=4)
     optimizer = optim.SGD(net.parameters(), lr=0.01)
     criterion = nn.MSELoss()
 

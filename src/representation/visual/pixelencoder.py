@@ -1,9 +1,4 @@
-import random
-
-import numpy as np
 import torch
-
-from src.task.pathing import ObstaclePathing, SimplePathing
 
 
 class PixelEncoder(torch.nn.Module):
@@ -94,7 +89,3 @@ class SiamesePixelEncoder(torch.nn.Module):
         deflattened_next_state = outNextState.reshape(original_shape)
 
         return deflattened_reconstruction, deflattened_next_state
-
-
-if __name__ == "__main__":
-    pass

@@ -217,6 +217,7 @@ class VisualObstaclePathing(ObstaclePathing):
         self.state_trail = []
         return self.get_pixelbased_representation()
 
+
 if __name__ == "__main__":
     env = ObstaclePathing(30, 30,
                           [[0, 18, 18, 21],

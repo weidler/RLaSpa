@@ -1,12 +1,14 @@
+import pickle
+import time
+
 import gym
 import numpy as np
 import torch
-from src.representation.network.autoencoder import AutoencoderNetwork
 from sklearn.utils.extmath import cartesian
-from src.utils.task_dictionary import task_dict
+
+from src.representation.network.autoencoder import AutoencoderNetwork
 from src.utils.exploration import boltzmann_explore
-import pickle
-import time
+from src.utils.task_dictionary import task_dict
 
 
 def binThese(lowerBound, upperBound, bins=10, cutOffInf=10000):

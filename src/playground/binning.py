@@ -1,6 +1,7 @@
+import time
+
 import numpy as np
 from sklearn.utils.extmath import cartesian
-import time
 
 
 def binThese(lowerBound, upperBound, bins=10, cutOffInf=10000):

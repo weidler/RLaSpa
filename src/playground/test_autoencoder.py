@@ -1,12 +1,11 @@
-import pickle
 import random
 
 import torch
 from torch import nn
 
-from autoencoder import Autoencoder
+from src.representation.network.autoencoder import AutoencoderNetwork
 
-net = Autoencoder(5, 3, 4)
+net = AutoencoderNetwork(5, 3, 4)
 #net.load_state_dict(torch.load('../../models/hidden-2-ae.model'))
 net.load_state_dict(torch.load('../../models/sas.model'))
 

@@ -61,7 +61,7 @@ class DeepQNetwork(_Policy):
         # 0 if next state was 0
         expected_q_value = reward + self.gamma * next_q_value * (1 - done)
 
-        loss = (q_value - expected_q_value.detach()).pow(2).mean()
+        loss = (q_value - expected_q_value.detach()).pow(2)
 
         self.optimizer.zero_grad()
         loss.backward()

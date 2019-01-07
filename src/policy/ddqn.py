@@ -58,17 +58,18 @@ class DoubleDeepQNetwork(_Policy):
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)
 
-        q_values = self.model(state)
-        next_q_values = self.model(next_state)
+        q_values = self.current_model(state)
+        next_q_values = self.current_model(next_state)
+        next_state_value = self.target_model(next_state)
 
         # calculate the q-values of state with the action taken
         q_value = q_values[action]
         # calculate the q-values of the next state
-        next_q_value = torch.max(next_q_values)
+        next_q_value = next_state_value[torch.argmax(next_q_values)]
         # 0 if next state was 0
         expected_q_value = reward + self.gamma * next_q_value * (1 - done)
 
-        loss = (q_value - expected_q_value.detach()).pow(2).mean()
+        loss = (q_value - expected_q_value.detach()).pow(2)
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -154,6 +155,38 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         self.current_model = DuelingDQN(num_features=num_features, num_actions=num_actions)
         self.target_model = DuelingDQN(num_features=num_features, num_actions=num_actions)
         update_agent_model(current=self.current_model, target=self.target_model)
+
+    def compute_td_loss(self, state, action, reward, next_state, done) -> None:
+        """
+        Method to compute the loss for a given iteration
+
+        :param state: initial state
+        :param action: action taken
+        :param reward: reward received
+        :param next_state: state after acting
+        :param done: flag that indicates if the episode has finished
+        """
+        state = torch.tensor(state, dtype=torch.float32)
+        next_state = torch.tensor(next_state, dtype=torch.float32)
+        action = torch.tensor(action, dtype=torch.long)
+        reward = torch.tensor(reward, dtype=torch.float32)
+        done = torch.tensor(done, dtype=torch.float32)
+
+        q_values = self.current_model(state)
+        next_q_values = self.target_model(next_state)
+
+        # calculate the q-values of state with the action taken
+        q_value = q_values[action]
+        # calculate the q-values of the next state
+        next_q_value = torch.max(next_q_values)
+        # 0 if next state was 0
+        expected_q_value = reward + self.gamma * next_q_value * (1 - done)
+
+        loss = (q_value - expected_q_value.detach()).pow(2)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
     def compute_td_loss_memory(self) -> None:
         """

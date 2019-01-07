@@ -10,7 +10,7 @@ class AutoencoderNetwork(nn.Module):
         self.encoder = nn.Linear(input_neurons, hidden_neurons)
         self.decoder = nn.Linear(hidden_neurons, output_neurons)
 
-        self.activation = torch.sigmoid
+        self.activation = torch.tanh
 
     def forward(self, vinput):
         out = self.activation(self.encoder(vinput))

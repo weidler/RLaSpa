@@ -1,4 +1,5 @@
 import abc
+import random
 
 
 class _RepresentationLearner(abc.ABC):
@@ -19,4 +20,8 @@ class _RepresentationLearner(abc.ABC):
         return total_loss / len(sars_tuples)
 
     def learn_from_backup(self):
+        random.shuffle(self.backup_history)
         self.learn_many(self.backup_history, remember=False)
+
+    def clear_backup(self):
+        self.backup_history = []

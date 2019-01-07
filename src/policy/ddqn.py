@@ -115,10 +115,10 @@ class DoubleDeepQNetwork(_Policy):
             if len(self.memory) > self.batch_size:
                 # when saved plays are greater than the batch size calculate losses
                 self.compute_td_loss_memory()
-            if self.num_policy_updates % 100:
-                update_agent_model(self.current_model, self.target_model)
         else:
             self.compute_td_loss(state, action, reward, next_state, done)
+        if self.num_policy_updates % 100:
+            update_agent_model(self.current_model, self.target_model)
 
     def choose_action(self, state, iteration: int) -> int:
         epsilon = self.epsilon_calculator.value(iteration)

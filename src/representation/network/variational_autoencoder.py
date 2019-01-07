@@ -22,10 +22,7 @@ class VariationalAutoencoderNetwork(nn.Module):
         eps = torch.randn_like(std)
         return eps.mul(std).add_(mu)
 
-    #TODO: use reparametrization in the forward step, check the sampling operation
-
-    # def forward(self, vinput):
-    #     out = self.activation(self.encoder(vinput))
-    #     out = (self.decoder(out))
-    #
-    #     return out
+    def forward(self, input):
+        mu, logvar = self.encode(input)
+        z = self.reparameterize(mu, logvar)
+        return self.decode(z), mu, logvar

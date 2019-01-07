@@ -1,13 +1,9 @@
 import gym
 
-from src.policy.ddqn import DoubleDeepQNetwork
-from src.policy.policy import _Policy
 from src.policy.dqn import DeepQNetwork
-from src.policy.tablebased import QTableSARSA, QTableOffPolicy
-from src.representation.learners import Janus, SimpleAutoencoder
-from src.representation.network.autoencoder import AutoencoderNetwork
+from src.policy.policy import _Policy
+from src.representation.learners import SimpleAutoencoder
 from src.representation.representation import _RepresentationLearner
-from src.task.pathing import SimplePathing, ObstaclePathing
 
 
 class EntangledAgent:
@@ -53,7 +49,7 @@ if __name__ == "__main__":
     # policy = QTableSARSA([env.height, env.width], len(env.action_space))
     # policy = QTableOffPolicy([env.height, env.width], len(env.action_space))
     # policy = DoubleDeepQNetwork(2, len(env.action_space))
-    policy = DeepQNetwork(4, 2)
+    policy = DeepQNetwork(env.observation_space.shape[0], env.action_space.n)
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)

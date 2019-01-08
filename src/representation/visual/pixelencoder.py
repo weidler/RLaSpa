@@ -54,17 +54,17 @@ class SimplePixelEncoder(torch.nn.Module):
         return deflattened
 
 
-class SiamesePixelEncoder(torch.nn.Module):
+class JanusPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width, height, n_actions, hidden=3):
-        super(SiamesePixelEncoder, self).__init__()
+    def __init__(self, width, height, n_actions, n_hidden=10):
+        super(JanusPixelEncoder, self).__init__()
 
-        self.encoder = torch.nn.Linear(width * height, hidden)
+        self.encoder = torch.nn.Linear(width * height, n_hidden)
 
         # decoderState decodes current state from state latent space
-        self.decoderState = torch.nn.Linear(hidden, width * height)
+        self.decoderState = torch.nn.Linear(n_hidden, width * height)
         # decoderNextState decodes next state from state latent space + action
-        self.decoderNextState = torch.nn.Linear(hidden + n_actions, width * height)
+        self.decoderNextState = torch.nn.Linear(n_hidden + n_actions, width * height)
 
         self.activation = torch.sigmoid
 
@@ -82,6 +82,7 @@ class SiamesePixelEncoder(torch.nn.Module):
         deflattened_reconstruction = outState.reshape(original_shape)
 
         # append action to latent space
+        action = torch.unsqueeze(action, 0)
         latent_space_action = torch.cat((latent_space, action), 1)
         # decode next state from latent space with action
         outNextState = self.decoderNextState(latent_space_action)

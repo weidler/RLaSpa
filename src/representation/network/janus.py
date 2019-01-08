@@ -5,10 +5,10 @@ import torch.nn as nn
 import torch.optim as optim
 
 
-class SiameseAutoencoder(nn.Module):
+class JanusAutoencoder(nn.Module):
 
     def __init__(self, inputNeurons=4, hiddenNeurons=3, outputNeurons=4, actionDim=1):
-        super(SiameseAutoencoder, self).__init__()
+        super(JanusAutoencoder, self).__init__()
 
         self.encoder = nn.Linear(inputNeurons, hiddenNeurons)
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     print("READ FILE")
 
     # print(data[0])
-    net = SiameseAutoencoder(4, 3, 4, 1)
+    net = JanusAutoencoder(4, 3, 4, 1)
     optimizer = optim.SGD(net.parameters(), lr=0.1)
     criterion = nn.MSELoss()
 

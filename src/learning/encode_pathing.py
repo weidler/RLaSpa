@@ -4,7 +4,7 @@ import random
 import numpy as np
 import torch
 
-from src.representation.visual.pixelencoder import SimplePixelEncoder, SiamesePixelEncoder
+from src.representation.visual.pixelencoder import SimplePixelEncoder, JanusPixelEncoder
 from src.task.pathing import ObstaclePathing, SimplePathing
 
 env = ObstaclePathing(30, 30,
@@ -39,7 +39,7 @@ def get_tensor(view: list):
     return img
 
 
-net = SiamesePixelEncoder(env.width, env.height, 4, 50)
+net = JanusPixelEncoder(env.width, env.height, 4, 50)
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.SGD(net.parameters(), lr=0.05)
 epochs = 100000  # in a 10 by 10 simple env it needs at least around 800,000 epochs to have an idea where the

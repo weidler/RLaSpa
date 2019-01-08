@@ -216,6 +216,7 @@ class JanusPixel(_RepresentationLearner):
             n_actions=self.n_actions,
             n_hidden=self.n_hidden
         )
+        self.one_hot_actions = numpy.eye(n_actions)
 
         # TRAINING SAMPLES
         self.backup_history = []
@@ -229,6 +230,7 @@ class JanusPixel(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action, reward, next_state, remember=True):
+        action = self.one_hot_actions[action]
         # remember sample in history
         if remember:
             self.backup_history.append((state, action, reward, next_state))
@@ -237,7 +239,6 @@ class JanusPixel(_RepresentationLearner):
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)
         next_state_tensor = cast_float_tensor(next_state)
-        target_tensor = torch.cat((state_tensor, next_state_tensor), 0)
 
         self.optimizer.zero_grad()
         reconstruction, next_state_construction = self.network(state_tensor, action_tensor)

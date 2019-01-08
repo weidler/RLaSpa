@@ -26,6 +26,30 @@ def cast_float_tensor(o: object):
     return o
 
 
+class PassThrough(_RepresentationLearner):
+     def __init__(self):
+         pass
+
+     def encode(self, state):
+         return state
+
+     def learn(self, state, action, reward, next_state, remember=True):
+         return 0
+
+
+class Flatten(_RepresentationLearner):
+
+    def __init__(self):
+        pass
+
+    def encode(self, state):
+        state_tensor = cast_float_tensor(state)
+        return state_tensor.view(-1)
+
+    def learn(self, state, action, reward, next_state, remember=True):
+        return 0
+
+
 class SimpleAutoencoder(_RepresentationLearner):
 
     def __init__(self, d_states, d_actions, d_latent, lr=0.05):

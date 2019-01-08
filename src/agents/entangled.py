@@ -4,10 +4,10 @@ from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.policy.dqn import DeepQNetwork
 from src.policy.tablebased import QTableSARSA, QTableOffPolicy
-from src.representation.learners import Janus, SimpleAutoencoder
+from src.representation.learners import Janus, SimpleAutoencoder, Flatten
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
-from src.task.pathing import SimplePathing, ObstaclePathing
+from src.task.pathing import SimplePathing, ObstaclePathing, VisualObstaclePathing
 
 
 class EntangledAgent:
@@ -32,7 +32,7 @@ class EntangledAgent:
         action = self.policy.choose_action(current_state, iteration)
         next_state, step_reward, env_done, _ = self.env.step(action)
 
-        self.policy.update(current_state, action, step_reward, next_state, env_done)
+        self.policy.update(current_state, action, step_reward, self.representation_learner.encode(next_state), env_done)
 
         return next_state, step_reward, env_done
 
@@ -43,24 +43,25 @@ class EntangledAgent:
 
 
 if __name__ == "__main__":
-    env = gym.make("CartPole-v0")
+    # env = gym.make("CartPole-v0")
     # env = SimplePathing(10, 10)
-    # env = ObstaclePathing(30, 30,
-    #                       [[0, 18, 18, 21],
-    #                        [21, 24, 10, 30]]
-    #                       )
-    repr_learner = SimpleAutoencoder(d_states=4, d_latent=4, d_actions=2)
+    env = VisualObstaclePathing(30, 30,
+                                [[0, 18, 18, 21],
+                                 [21, 24, 10, 30]]
+                                )
+    repr_learner = Flatten()
+    # repr_learner = SimpleAutoencoder(4, 2, 4)
     # policy = QTableSARSA([env.height, env.width], len(env.action_space))
     # policy = QTableOffPolicy([env.height, env.width], len(env.action_space))
     # policy = DoubleDeepQNetwork(2, len(env.action_space))
-    policy = DeepQNetwork(4, 2)
+    policy = DeepQNetwork(900, 2)
 
     # AGENT
     agent = EntangledAgent(repr_learner, policy, env)
 
     # TRAIN
     episodes = 10000
-    max_steps = 100000
+    max_steps = 300
     rewards = []
 
     for episode in range(episodes):
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         episode_reward = 0
         steps = 0
         while not done and steps < max_steps:
-            agent.representation_learner.learn(state)
+            agent.representation_learner.learn(state, None, None, None)
             state = agent.representation_learner.encode(state)
             state, reward, done = agent.train_policy(state.tolist(), episode)
             episode_reward += reward
@@ -78,7 +79,7 @@ if __name__ == "__main__":
         rewards.append(episode_reward)
 
         if (episode % 100) == 0:
-            print(episode, "Average Rewards: ", sum(rewards[-100:])/100)
+            print(episode, "Average Rewards: ", sum(rewards[-100:]) / 100)
 
     # Last update of the agent policy
     agent.policy.finish_training()

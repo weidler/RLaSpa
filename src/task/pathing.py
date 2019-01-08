@@ -210,7 +210,7 @@ class VisualObstaclePathing(ObstaclePathing):
             done = True
 
         self.current_state = next_state.copy()
-        return self.get_pixelbased_representation(), reward, done
+        return self.get_pixelbased_representation(), reward, done, None
 
     def reset(self):
         self.current_state = self.start_state.copy()

@@ -2,6 +2,7 @@ import random
 from collections import deque
 
 import numpy as np
+import torch
 
 from src.utils.memory.memory import Memory
 
@@ -25,8 +26,11 @@ class ReplayMemory(Memory):
         :param next_state: state of the game after executing the action
         :param done: true if the game is finished after executing the action
         """
-        state = np.expand_dims(state.detach(), 0)
-        next_state = np.expand_dims(next_state.detach(), 0)
+        if type(state) is torch.Tensor and type(next_state) is torch.Tensor:
+            state = state.detach()
+            next_state = next_state.detach()
+        state = np.expand_dims(state, 0)
+        next_state = np.expand_dims(next_state, 0)
         self.memory.append((state, action, reward, next_state, done))
 
     def sample(self, batch_size):

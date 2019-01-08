@@ -52,7 +52,8 @@ def train(epochs: int, batch_size: int, max_timesteps: int, history_file=None):
     for epoch in range(1, epochs + 1):
         epsilon = epsilon_calculator.value(time_step=epoch)
         # run an episode
-        state = env.reset().reshape(-1)
+        state = env.reset()
+        state = state.reshape(-1)
         done = False
         timesteps = 0
         episode_reward = 0
@@ -69,7 +70,8 @@ def train(epochs: int, batch_size: int, max_timesteps: int, history_file=None):
             episode_reward += reward
 
             if done:
-                state = env.reset().reshape(-1)
+                state = env.reset()
+                state = state.reshape(-1)
                 all_rewards.append(episode_reward)
 
             if len(memory) > batch_size:
@@ -88,7 +90,8 @@ def play(epochs: int, max_timesteps: int, render=True):
         if render:
             fig = plt.figure(figsize=(10, 6))
         ims = []
-        state = env.reset().reshape(-1)
+        state = env.reset()
+        state = state.reshape(-1)
         done = False
         episode_reward = 0
         timesteps = 0
@@ -123,11 +126,11 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, metavar='E', default='CartPole-v0', help='GYM environment')
     parser.add_argument('--init_eps', type=float, metavar='I', default=1.0, help='Initial epsilon')
     parser.add_argument('--min_eps', type=float, metavar='M', default=0.01, help='Minimum epsilon')
-    parser.add_argument('--eps_decay', type=int, metavar='D', default=50, help='Epsilon decay')
+    parser.add_argument('--eps_decay', type=int, metavar='D', default=500, help='Epsilon decay')
     parser.add_argument('--gamma', type=int, metavar='G', default=0.99, help='Gamma')
     parser.add_argument('--memory_size', type=int, metavar='S', default=1000, help='Memory size')
     parser.add_argument('--batch_size', type=int, metavar='B', default=32, help='Batch size')
-    parser.add_argument('--epochs', type=int, metavar='EP', default=1000, help='Training epochs')
+    parser.add_argument('--epochs', type=int, metavar='EP', default=2000, help='Training epochs')
     parser.add_argument('--max_timesteps', type=int, metavar='TS', default=300, help='Maximal timesteps for epoch')
     args = parser.parse_args()
 

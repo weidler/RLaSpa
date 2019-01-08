@@ -1,10 +1,29 @@
 \section{Introduction}
 \label{sec:introduction}
+Among machine learning methods, reinforcement learning (RL) distinguishes itself with the ability to solve complex tasks with minimal feedback \citep{taylor2007cross}, and has led to successful applications 
+in different areas such as game playing \citep{silver2016mastering}, robotics \citep{levine2016end} and resource management \citep{mao2016resource}. 
+RL in its original form, however, is task-specific.
+This means that when the agent is facing a new environment changes, learning has to restart.
+This limitation calls for transfer learning, which aims at transferring learned skills across tasks.
+Besides reducing time-consuming re-learning on new tasks, transfer learning can potentially enable RL agents to operate in environments where learning is otherwise too challenging \citep{barreto2018transfer}.
 
-\subsection{Research Questions}
+\begin{itemize}
+	\item deep networks to learn salient descriptions of raw input 
+	\item abstraction and latent space
+\end{itemize}
 
-\subsection{Approach}
+In this work, we seek to answer the following research questions:
+\begin{itemize}
+	\item How to create a latent space that captures commonalities of several similar yet different tasks, such that an RL agent can learn to perform all these tasks only based on the latent representation?
+	\item After learning a task based on the latent representation, can the agent learn to perform a previously unseen but similar task more easily, or even be able to do so without learning?
+\end{itemize}
 
+%\subsection{Research Questions}
+
+%\subsection{Approach}
+
+
+\iffalse
 \subsection{Related Work}
 \label{sec:related-work}
 
@@ -24,3 +43,4 @@ For tasks where the reward can not be found in few steps or were the search, \ci
 \citet{andrychowicz2017hindsight} say that one of the biggest challenges in RL are sparse rewards. They constructed an algorithm that learns from undesired results as well as from desired results. This way the agent can learn from more experiences and thus constructing a reward function is not necessary. Constructing a good reward function is challenging (\cite{ng1999policy}) and can be complicated (\cite{popov2017data}). They showed that with their approach tasks were able to be learned that previously were not possible. Furthermore, they proposed to train an agent "on multiple goals even if we care only about one of them." \citet{andrychowicz2017hindsight}.
 
 In the following sections ...
+\fi

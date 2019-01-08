@@ -8,7 +8,7 @@ from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
 from src.task.pathing import SimplePathing, ObstaclePathing, VisualObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
-from src.representation.learners import SimpleAutoencoder, JanusPixel
+from src.representation.learners import SimpleAutoencoder, JanusPixel, CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.task.pathing import ObstaclePathing, VisualObstaclePathing
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
                                 )
     # repr_learner = Flatten()
     # repr_learner = SimpleAutoencoder(4, 2, 4)
-    repr_learner = JanusPixel(width=size,
+    repr_learner = CerberusPixel(width=size,
                               height=size,
                               n_actions=len(env.action_space), # this is not the number of possible actions, but the length of the action itself
                               n_hidden=size)

@@ -2,8 +2,9 @@ import gym
 
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder
+from src.representation.learners import SimpleAutoencoder, JanusPixel, CerberusPixel
 from src.representation.representation import _RepresentationLearner
+from src.task.pathing import VisualObstaclePathing
 
 
 class ParallelAgent:
@@ -83,12 +84,21 @@ if __name__ == "__main__":
     env = gym.make("CartPole-v0")
     repr_learner = SimpleAutoencoder(4, 2, 3)
     policy = DoubleDeepQNetwork(3, 2)
-
+    # size = 30
+    # env = VisualObstaclePathing(size, size,
+    #                             [[0, 18, 18, 21],
+    #                              [21, 24, 10, 30]]
+    #                             )
+    # repr_learner = CerberusPixel(width=size,
+    #                              height=size,
+    #                              n_actions=len(env.action_space),
+    #                              n_hidden=size)
+    # policy = DoubleDeepQNetwork(size, len(env.action_space))
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(100)
+    agent.train_agent(1000, max_episode_length=300)
 
     # TEST
     agent.test()

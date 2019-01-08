@@ -37,7 +37,7 @@ class JanusAutoencoder(nn.Module):
 
 if __name__ == "__main__":
 
-    with open("../../data/cartpole.data") as f:
+    with open("../../../data/cartpole.data") as f:
         data = [list(map(eval, l[:-1].split("\t"))) for l in f.readlines()]
     print("READ FILE")
 

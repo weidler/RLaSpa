@@ -113,13 +113,14 @@ class VariationalAutoencoder(_RepresentationLearner):
         self.backup_history = []
 
         # PARTS
-        # self.criterion = nn.MSELoss()
+        self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def loss_function(self, recon_x, x, mu, logvar):
-        # BCE = nn.binary_cross_entropy(recon_x, x.view(-1, self.d_states), reduction='sum')
-        MSE = nn.MSELoss(recon_x, x.view(-1, self.d_states), reduction='sum')
+    def loss_function(self, recon_x, x_tens, mu, logvar):
+        # BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
+        # MSE = nn.MSELoss(recon_x, x_tens)
+        MSE = self.criterion(recon_x, x_tens)
 
         # see Appendix B from VAE paper:
         # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -127,6 +128,7 @@ class VariationalAutoencoder(_RepresentationLearner):
         # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
         KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
+        # return BCE + KLD
         return MSE + KLD
 
     def encode(self, state):
@@ -375,6 +377,7 @@ if __name__ == "__main__":
     for i in range(10):
         sample = [1, 2, 3, 4, 5]
         random.shuffle(sample)
-        print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float(), torch.Tensor([1,2]).float())[0].tolist()]}")
+        # print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float(), torch.Tensor([1,2]).float())[0].tolist()]}")
+        print(f"{sample} --> {[round(numpy.array(e.tolist())) for e in ae.network(torch.Tensor(sample).float())]}")
 
     print()

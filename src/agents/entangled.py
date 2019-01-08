@@ -8,7 +8,7 @@ from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
 from src.task.pathing import SimplePathing, ObstaclePathing, VisualObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
-from src.representation.learners import SimpleAutoencoder, JanusPixel
+from src.representation.learners import SimpleAutoencoder, JanusPixel, CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.task.pathing import ObstaclePathing, VisualObstaclePathing
 
@@ -53,9 +53,9 @@ if __name__ == "__main__":
                                 )
     # repr_learner = Flatten()
     # repr_learner = SimpleAutoencoder(4, 2, 4)
-    repr_learner = JanusPixel(width=size,
+    repr_learner = CerberusPixel(width=size,
                               height=size,
-                              n_actions=1, # this is not the number of possible actions, but the length of the action itself
+                              n_actions=len(env.action_space), # this is not the number of possible actions, but the length of the action itself
                               n_hidden=size)
     # NOTE the output of the representation learner is the input of the network
     policy = DoubleDeepQNetwork(size, len(env.action_space))
@@ -83,7 +83,6 @@ if __name__ == "__main__":
         while not done and steps < max_steps:
             next_state_original, reward, done, action = agent.train_policy(state.tolist(), episode)
             next_state = agent.representation_learner.encode(next_state_original)
-            # shouldn't this be train_representation_learner()? if so, the function needs the other arguments
             agent.train_representation_learner(state=state_original, next_state=next_state_original, reward=reward, action=action)
 
             # this needs to be here after the next state was encoded by the repr_learner

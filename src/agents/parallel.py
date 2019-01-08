@@ -63,7 +63,20 @@ class ParallelAgent:
         current_state = self.representation_learner.encode(current_state)
         action = self.policy.choose_action_policy(current_state)
         next_state, step_reward, env_done, _ = self.env.step(action)
-        return next_state, env_done
+        return next_state, step_reward, env_done
+
+    def test(self, max_episode_length=1000):
+        done = False
+        state = env.reset()
+        step = 0
+        total_reward = 0
+        while not done and step < max_episode_length:
+            env.render()
+            state, reward, done = agent.act(state)
+            step += 1
+            total_reward += reward
+
+        print(f"Episode finished after {step} steps with total reward of {total_reward}.")
 
 
 if __name__ == "__main__":
@@ -78,10 +91,5 @@ if __name__ == "__main__":
     agent.train_agent(100)
 
     # TEST
-    done = False
-    state = env.reset()
-    step = 0
-    while not done and step < 1000:
-        env.render()
-        state, done = agent.act(state)
-        step += 1
+    agent.test()
+    agent.env.close()

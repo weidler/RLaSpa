@@ -5,10 +5,11 @@ import torch
 from numpy.core.multiarray import ndarray
 from torch import nn, optim
 
-from src.playground.siamese_autoencoder import SiameseAutoencoder
+from src.representation.network.janus import JanusAutoencoder
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.network.cerberus import CerberusNetwork
 from src.representation.network.variational_autoencoder import VariationalAutoencoderNetwork
+from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder
 from src.representation.representation import _RepresentationLearner
 
 
@@ -19,12 +20,39 @@ def cast_float_tensor(o: object):
     # if state is given as ndarray, convert to required tensor
     elif isinstance(o, ndarray):
         o = torch.from_numpy(o).float()
+    # if object is an int
+    elif isinstance(o, int):
+        o = torch.Tensor([o]).float()
 
     # check unknown cases
     if not isinstance(o, torch.Tensor):
         raise ValueError(f"Cannot cast Tensor on type {type(o)}")
 
     return o
+
+
+class PassThrough(_RepresentationLearner):
+     def __init__(self):
+         pass
+
+     def encode(self, state):
+         return state
+
+     def learn(self, state, action, reward, next_state, remember=True):
+         return 0
+
+
+class Flatten(_RepresentationLearner):
+
+    def __init__(self):
+        pass
+
+    def encode(self, state):
+        state_tensor = cast_float_tensor(state)
+        return state_tensor.view(-1)
+
+    def learn(self, state, action, reward, next_state, remember=True):
+        return 0
 
 
 class SimpleAutoencoder(_RepresentationLearner):
@@ -133,7 +161,7 @@ class Janus(_RepresentationLearner):
         self.learning_rate = lr
 
         # NETWORK
-        self.network = SiameseAutoencoder(
+        self.network = JanusAutoencoder(
             inputNeurons=d_states,
             hiddenNeurons=d_latent,
             outputNeurons=d_states,
@@ -171,6 +199,60 @@ class Janus(_RepresentationLearner):
         return loss.data.item()
 
 
+class JanusPixel(_RepresentationLearner):
+    def __init__(self, width, height, n_actions, n_hidden, lr=0.1):
+        # PARAMETERS
+        self.width = width
+        self.height = height
+        self.n_actions = n_actions
+        self.n_hidden = n_hidden
+
+        self.learning_rate = lr
+
+        # NETWORK
+        self.network = JanusPixelEncoder(
+            width=self.width,
+            height=self.height,
+            n_actions=self.n_actions,
+            n_hidden=self.n_hidden
+        )
+        self.one_hot_actions = numpy.eye(n_actions)
+
+        # TRAINING SAMPLES
+        self.backup_history = []
+
+        # PARTS
+        self.criterion = nn.MSELoss()
+        self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+
+    def encode(self, state):
+        state = cast_float_tensor(state.reshape(-1))
+        return self.network.activation(self.network.encoder(state))
+
+    def learn(self, state, action, reward, next_state, remember=True):
+        action = self.one_hot_actions[action]
+        # remember sample in history
+        if remember:
+            self.backup_history.append((state, action, reward, next_state))
+
+        # convert to tensor if necessary
+        state_tensor = cast_float_tensor(state)
+        action_tensor = cast_float_tensor(action)
+        next_state_tensor = cast_float_tensor(next_state)
+
+        self.optimizer.zero_grad()
+        reconstruction, next_state_construction = self.network(state_tensor, action_tensor)
+
+        # Loss
+        reconstruction_loss = self.criterion(reconstruction, state_tensor)
+        next_state_loss = self.criterion(next_state_construction, next_state_tensor)
+        total_loss = sum([reconstruction_loss, next_state_loss])
+        total_loss.backward()
+
+        self.optimizer.step()
+        return total_loss.data.item()
+
+
 class Cerberus(_RepresentationLearner):
 
     def __init__(self, d_states, d_actions, d_latent, lr=0.1):
@@ -199,7 +281,7 @@ class Cerberus(_RepresentationLearner):
         state = cast_float_tensor(state)
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state, action, reward, next_state, remember=True):
+    def learn(self, state, action=None, reward=None, next_state=None, remember=True):
         # remember sample in history
         if remember:
             self.backup_history.append((state, action, reward, next_state))
@@ -219,6 +301,62 @@ class Cerberus(_RepresentationLearner):
         difference_prediction_loss = self.criterion(difference_prediction, difference_tensor)
         total_loss = sum([reconstruction_loss, next_state_prediction_loss, difference_prediction_loss])
 
+        total_loss.backward()
+
+        self.optimizer.step()
+        return total_loss.data.item()
+
+
+class CerberusPixel(_RepresentationLearner):
+    def __init__(self, width, height, n_actions, n_hidden, lr=0.1):
+        # PARAMETERS
+        self.width = width
+        self.height = height
+        self.n_actions = n_actions
+        self.n_hidden = n_hidden
+
+        self.learning_rate = lr
+
+        # NETWORK
+        self.network = CerberusPixelEncoder(
+            width=self.width,
+            height=self.height,
+            n_actions=self.n_actions,
+            n_hidden=self.n_hidden
+        )
+        self.one_hot_actions = numpy.eye(n_actions)
+
+        # TRAINING SAMPLES
+        self.backup_history = []
+
+        # PARTS
+        self.criterion = nn.MSELoss()
+        self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+
+    def encode(self, state):
+        state = cast_float_tensor(state.reshape(-1))
+        return self.network.activation(self.network.encoder(state))
+
+    def learn(self, state, action, reward, next_state, remember=True):
+        action = self.one_hot_actions[action]
+        # remember sample in history
+        if remember:
+            self.backup_history.append((state, action, reward, next_state))
+
+        # convert to tensor if necessary
+        state_tensor = cast_float_tensor(state)
+        action_tensor = cast_float_tensor(action)
+        next_state_tensor = cast_float_tensor(next_state)
+        difference_tensor = cast_float_tensor((numpy.array(state) != numpy.array(next_state)).astype(int))
+
+        self.optimizer.zero_grad()
+        reconstruction, next_state_construction, difference = self.network(state_tensor, action_tensor)
+
+        # Loss
+        reconstruction_loss = self.criterion(reconstruction, state_tensor)
+        next_state_loss = self.criterion(next_state_construction, next_state_tensor)
+        difference_loss = self.criterion(difference, difference_tensor)
+        total_loss = sum([reconstruction_loss, next_state_loss, difference_loss])
         total_loss.backward()
 
         self.optimizer.step()

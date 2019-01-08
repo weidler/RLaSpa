@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+import torch
 
 from src.utils.memory.memory import Memory
 from src.utils.segment_tree import SumSegmentTree, MinSegmentTree
@@ -41,6 +42,9 @@ class PrioritizedReplayMemory(Memory):
         :param done: true if the game is finished after executing the action
         """
         idx = self._next_idx
+        if type(state) is torch.Tensor and type(next_state) is torch.Tensor:
+            state = state.detach()
+            next_state = next_state.detach()
         state = np.expand_dims(state, 0)
         next_state = np.expand_dims(next_state, 0)
         data = (state, action, reward, next_state, done)

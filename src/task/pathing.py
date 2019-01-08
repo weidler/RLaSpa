@@ -2,10 +2,10 @@ import copy
 
 import numpy as np
 
-from src.task.task import Task
+from src.task.task import _Task
 
 
-class SimplePathing(Task):
+class SimplePathing(_Task):
     BACKGROUND_SYMBOL = "."
     BACKGROUND_PIXEL = 0
 
@@ -105,6 +105,7 @@ class SimplePathing(Task):
     def reset(self):
         self.current_state = self.start_state.copy()
         self.state_trail = []
+
         return self.current_state
 
     def _generate_pixelbased_representation(self):
@@ -210,7 +211,7 @@ class VisualObstaclePathing(ObstaclePathing):
             done = True
 
         self.current_state = next_state.copy()
-        return self.get_pixelbased_representation(), reward, done
+        return self.get_pixelbased_representation(), reward, done, None
 
     def reset(self):
         self.current_state = self.start_state.copy()

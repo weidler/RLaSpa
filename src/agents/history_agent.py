@@ -70,7 +70,7 @@ class HistoryAgent:
             rewards.append(episode_reward)
 
             if episode % (episodes // 20) == 0: print(
-                f"... {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
 
         exploring_policy.finish_training()
 
@@ -85,7 +85,7 @@ class HistoryAgent:
 
     def train_agent(self, episodes: int, max_episode_length=1000):
         print("Training Agent.")
-        print("[WARNING]: You are using an untrained representation learner!")
+        if not self.is_pretrained: print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
         for episode in range(episodes):
             current_state = self.env.reset()
@@ -108,7 +108,7 @@ class HistoryAgent:
             rewards.append(episode_reward)
 
             if episode % (episodes // 20) == 0: print(
-                f"... {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
 
         self.policy.finish_training()
 
@@ -120,13 +120,13 @@ class HistoryAgent:
 
 if __name__ == "__main__":
     env = gym.make("CartPole-v0")
-    repr_learner = SimpleAutoencoder(4, 2, 2)
-    policy = DeepQNetwork(2, 2)
+    repr_learner = SimpleAutoencoder(4, 2, 3)
+    policy = DeepQNetwork(3, 2)
     pretraining_policy = DeepQNetwork(4, 2)
 
     agent = HistoryAgent(repr_learner, policy, env)
 
-    load = False
+    load = True
 
     if not load:
         agent.gather_history(pretraining_policy, 10000)

@@ -25,8 +25,8 @@ class ReplayMemory(Memory):
         :param next_state: state of the game after executing the action
         :param done: true if the game is finished after executing the action
         """
-        state = np.expand_dims(state, 0)
-        next_state = np.expand_dims(next_state, 0)
+        state = np.expand_dims(state.detach(), 0)
+        next_state = np.expand_dims(next_state.detach(), 0)
         self.memory.append((state, action, reward, next_state, done))
 
     def sample(self, batch_size):

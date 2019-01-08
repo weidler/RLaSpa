@@ -41,8 +41,8 @@ class PrioritizedReplayMemory(Memory):
         :param done: true if the game is finished after executing the action
         """
         idx = self._next_idx
-        state = np.expand_dims(state, 0)
-        next_state = np.expand_dims(next_state, 0)
+        state = np.expand_dims(state.detach(), 0)
+        next_state = np.expand_dims(next_state.detach(), 0)
         data = (state, action, reward, next_state, done)
         if self._next_idx >= len(self._storage):
             self._storage.append(data)

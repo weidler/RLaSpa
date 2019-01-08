@@ -2,10 +2,10 @@ import copy
 
 import numpy as np
 
-from src.task.task import Task
+from src.task.task import _Task
 
 
-class SimplePathing(Task):
+class SimplePathing(_Task):
     BACKGROUND_SYMBOL = "."
     BACKGROUND_PIXEL = 0
 
@@ -105,6 +105,7 @@ class SimplePathing(Task):
     def reset(self):
         self.current_state = self.start_state.copy()
         self.state_trail = []
+
         return self.current_state
 
     def _generate_pixelbased_representation(self):

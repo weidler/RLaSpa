@@ -1,6 +1,8 @@
 import abc
 import random
 
+from src.utils.container import SARSTuple
+
 
 class _RepresentationLearner(abc.ABC):
 
@@ -14,8 +16,9 @@ class _RepresentationLearner(abc.ABC):
 
     def learn_many(self, sars_tuples, remember=True):
         total_loss = 0
+        sample: SARSTuple
         for sample in sars_tuples:
-            total_loss += self.learn(*sample, remember=remember)
+            total_loss += self.learn(sample.state, sample.action, sample.reward, sample.next_state, remember=remember)
 
         return total_loss / len(sars_tuples)
 

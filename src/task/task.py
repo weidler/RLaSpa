@@ -5,7 +5,7 @@ import abc
 import matplotlib.pyplot as plt
 
 
-class Task(abc.ABC):
+class _Task(abc.ABC):
 
     @abc.abstractmethod
     def step(self, action):

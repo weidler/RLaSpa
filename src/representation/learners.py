@@ -98,7 +98,7 @@ class SimpleAutoencoder(_RepresentationLearner):
 
 class VariationalAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.05): # 1e-3 is the one originally used
+    def __init__(self, d_states, d_actions, d_latent, lr=0.005): # 1e-3 is the one originally used
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -113,14 +113,15 @@ class VariationalAutoencoder(_RepresentationLearner):
         self.backup_history = []
 
         # PARTS
-        self.criterion = nn.MSELoss()
+        # self.criterion = nn.MSELoss()
+        # self.criterion = nn.functional.binary_cross_entropy()
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
     def loss_function(self, recon_x, x_tens, mu, logvar):
-        # BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
-        # MSE = nn.MSELoss(recon_x, x_tens)
-        MSE = self.criterion(recon_x, x_tens)
+        BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
+        # BCE = self.criterion(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
+        # MSE = self.criterion(recon_x, x_tens)
 
         # see Appendix B from VAE paper:
         # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
@@ -128,8 +129,8 @@ class VariationalAutoencoder(_RepresentationLearner):
         # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
         KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-        # return BCE + KLD
-        return MSE + KLD
+        return BCE + KLD
+        # return MSE + KLD
 
     def encode(self, state):
         state = cast_float_tensor(state)
@@ -367,17 +368,24 @@ class CerberusPixel(_RepresentationLearner):
 
 if __name__ == "__main__":
     # ae = Cerberus(d_states=5, d_actions=2, d_latent=5)
-    ae = VariationalAutoencoder(d_states=5, d_actions=2, d_latent=5)
-    for i in range(100000):
-        sample = [1, 2, 3, 4, 5]
-        random.shuffle(sample)
-        loss = ae.learn(sample, [1, 2], 1, sample)
+    ae = VariationalAutoencoder(d_states=8, d_actions=2, d_latent=8)
+    for i in range(200000):
+        # sample = [1, 2, 3, 4, 5]
+
+        # Use one hot encoded vector from a shuffled identity matrix as input
+        samples = numpy.eye(8, dtype=int)
+        random.shuffle(samples)
+        sample = samples[random.randint(0, 7)]
+        loss = ae.learn(sample)
         if i % 1000 == 0: print(loss)
 
     for i in range(10):
-        sample = [1, 2, 3, 4, 5]
+        # sample = [1, 2, 3, 4, 5]
         random.shuffle(sample)
+        samples = numpy.eye(8, dtype=int)
+        random.shuffle(samples)
+        sample = samples[random.randint(0, 7)]
         # print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float(), torch.Tensor([1,2]).float())[0].tolist()]}")
-        print(f"{sample} --> {[round(numpy.array(e.tolist())) for e in ae.network(torch.Tensor(sample).float())]}")
+        print(f"{sample} --> {[e for e in ae.network(torch.Tensor(sample).float())]}")
 
     print()

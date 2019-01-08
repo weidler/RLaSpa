@@ -27,4 +27,4 @@ class VariationalAutoencoderNetwork(nn.Module):
         mu = self.activation(self.encoderMean(input))
         logvar = self.activation(self.encoderStDev(input))
         z = self.reparameterize(mu, logvar)
-        return self.activation(self.decoder(z)), mu, logvar
+        return torch.sigmoid(self.decoder(z)), mu, logvar

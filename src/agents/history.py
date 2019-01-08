@@ -2,6 +2,7 @@ from typing import List
 
 import gym
 
+from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder
@@ -112,16 +113,32 @@ class HistoryAgent:
 
         self.policy.finish_training()
 
+    # TESTING #
+
     def act(self, current_state):
+        current_state = self.representation_learner.encode(current_state)
         action = self.policy.choose_action_policy(current_state)
         next_state, step_reward, env_done, _ = self.env.step(action)
-        return next_state, env_done
+        return next_state, step_reward, env_done
+
+    def test(self, max_episode_length=1000):
+        done = False
+        state = self.env.reset()
+        step = 0
+        total_reward = 0
+        while not done and step < max_episode_length:
+            state, reward, done = self.act(state)
+            step += 1
+            total_reward += reward
+            env.render()
+
+        print(f"Tested episode took {step} steps and gatherd a reward of {total_reward}.")
 
 
 if __name__ == "__main__":
     env = gym.make("CartPole-v0")
     repr_learner = SimpleAutoencoder(4, 2, 3)
-    policy = DeepQNetwork(3, 2)
+    policy = DoubleDeepQNetwork(3, 2)
     pretraining_policy = DeepQNetwork(4, 2)
 
     agent = HistoryAgent(repr_learner, policy, env)
@@ -136,3 +153,6 @@ if __name__ == "__main__":
 
     agent.pretrain()
     agent.train_agent(1000)
+
+    agent.test()
+    agent.env.close()

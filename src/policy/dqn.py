@@ -27,7 +27,7 @@ class DeepQNetwork(_Policy):
         :param memory_delay: Number of steps until the memory is used.
         """
         self.gamma = gamma
-        self.num_policy_updates = 0  # Counter to control the memory activation
+        self.total_steps_done = 0  # Counter to control the memory activation
         self.batch_size = batch_size
         self.memory_delay = memory_delay
         self.memory = ReplayMemory(capacity=memory_size)
@@ -96,8 +96,8 @@ class DeepQNetwork(_Policy):
         self.optimizer.step()
 
     def update(self, state, action, reward, next_state, done) -> None:
-        self.num_policy_updates += 1
-        if self.num_policy_updates > self.memory_delay:
+        self.total_steps_done += 1
+        if self.total_steps_done > self.memory_delay:
             self.memory.push(state, action, reward, next_state, done)
             if len(self.memory) > self.batch_size:
                 # when saved plays are greater than the batch size calculate losses
@@ -105,15 +105,15 @@ class DeepQNetwork(_Policy):
         else:
             self.compute_td_loss(state, action, reward, next_state, done)
 
-    def choose_action(self, state, iteration: int) -> int:
-        epsilon = self.epsilon_calculator.value(iteration)
+    def choose_action(self, state) -> int:
+        epsilon = self.epsilon_calculator.value(self.total_steps_done)
         return self.model.act(state=state, epsilon=epsilon)
 
     def choose_action_policy(self, state) -> int:
         return self.model.act(state=state, epsilon=0)
 
     def finish_training(self) -> None:
-        pass
+        self.total_steps_done = 0
 
 
 class PrioritizedDeepQNetwork(DeepQNetwork):

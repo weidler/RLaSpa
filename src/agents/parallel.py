@@ -28,7 +28,7 @@ class ParallelAgent:
             steps = 0
             while not done and steps < max_episode_length:
                 # choose action
-                action = self.policy.choose_action(latent_state, episode)
+                action = self.policy.choose_action(latent_state)
 
                 # step and observe
                 observation, reward, done, _ = self.env.step(action)

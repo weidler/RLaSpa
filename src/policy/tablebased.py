@@ -42,7 +42,7 @@ class QTableOffPolicy(_Policy):
         new_q_value = old_q_value * (1 - self.learning_rate) + self.learning_rate * (reward + self.gamma * state_value)
         self.q_table = _change_entry_at(self.q_table, state + [action], new_q_value)
 
-    def choose_action(self, state, iteration):
+    def choose_action(self, state):
         entry = self._get_entry(state)
         action = boltzmann_explore(entry, self.temperature)  # Here depending of the iteration calculate the temperature
         return action

@@ -32,7 +32,7 @@ class DoubleDeepQNetwork(_Policy):
         self.beta = beta
         self.alpha = alpha
         self.gamma = gamma
-        self.num_policy_updates = 0  # Counter used to update the target model
+        self.total_steps_done = 0
         self.batch_size = batch_size
         self.memory_delay = memory_delay
         self.current_model = DQN(num_features=num_features, num_actions=num_actions)
@@ -110,25 +110,26 @@ class DoubleDeepQNetwork(_Policy):
         self.optimizer.step()
 
     def update(self, state, action, reward, next_state, done) -> None:
-        self.num_policy_updates += 1
-        if self.num_policy_updates > self.memory_delay:
+        self.total_steps_done += 1
+        if self.total_steps_done > self.memory_delay:
             self.memory.push(state, action, reward, next_state, done)
             if len(self.memory) > self.batch_size:
                 # when saved plays are greater than the batch size calculate losses
                 self.compute_td_loss_memory()
         else:
             self.compute_td_loss(state, action, reward, next_state, done)
-        if self.num_policy_updates % 100:
+        if self.total_steps_done % 100:
             update_agent_model(self.current_model, self.target_model)
 
-    def choose_action(self, state, iteration: int) -> int:
-        epsilon = self.epsilon_calculator.value(iteration)
+    def choose_action(self, state) -> int:
+        epsilon = self.epsilon_calculator.value(self.total_steps_done)
         return self.current_model.act(state=state, epsilon=epsilon)
 
     def choose_action_policy(self, state) -> int:
         return self.current_model.act(state=state, epsilon=0)
 
     def finish_training(self) -> None:
+        self.total_steps_done = 0
         update_agent_model(self.current_model, self.target_model)
 
 

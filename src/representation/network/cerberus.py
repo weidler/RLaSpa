@@ -18,10 +18,13 @@ class CerberusNetwork(nn.Module):
         self.activation = torch.tanh
 
     def forward(self, state, action):
+        if state.dim() <= 1 or action.dim() <= 1:
+            raise ValueError(
+                "Networks expect any input to be given as a batch. For single input, provide a batch of size 1.")
 
         # encode current state and create latent space
         representation = self.activation(self.encoder(state))
-        representation_plus_action = torch.cat((representation, action), 0)
+        representation_plus_action = torch.cat((representation, action), 1)
 
         # decode heads
         reconstruction = self.activation(self.decoder_reconstruction(representation))

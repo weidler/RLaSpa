@@ -6,7 +6,7 @@ import gym
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder
+from src.representation.learners import SimpleAutoencoder, Cerberus
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 
@@ -77,7 +77,7 @@ class ParallelAgent(_Agent):
 
 if __name__ == "__main__":
     env = gym.make("CartPole-v1")
-    repr_learner = SimpleAutoencoder(4, 2, 3)
+    repr_learner = Cerberus(4, 2, 3)
     policy = DoubleDeepQNetwork(3, 2)
     # size = 30
     # env = VisualObstaclePathing(size, size,

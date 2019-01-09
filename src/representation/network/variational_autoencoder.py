@@ -26,7 +26,7 @@ class VariationalAutoencoderNetwork(nn.Module):
         return eps.mul(std).add_(mu)
 
     def forward(self, input):
-        z1 = self.activation(self.fullyConnected(input))
+        z1 = self.activation(self.fullyConnected(input.reshape(-1)))
         mu = self.encoderMean(z1)
         logvar = self.encoderStDev(z1)
         z2 = self.reparameterize(mu, logvar)

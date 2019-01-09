@@ -4,7 +4,7 @@ import gym
 import torch
 from torch import optim
 
-from src.agents.dueling_dqn_agent import DuelingDQN
+from src.policy.network.dueling_dqn_agent import DuelingDQN
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 from src.utils.model_handler import update_agent_model, save_model
 from src.utils.schedules import ExponentialSchedule

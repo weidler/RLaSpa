@@ -1,12 +1,13 @@
 import gym
 
+from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder
 from src.representation.representation import _RepresentationLearner
 
 
-class ParallelAgent:
+class ParallelAgent(_Agent):
     policy: _Policy
     representation_learner: _RepresentationLearner
 
@@ -56,27 +57,6 @@ class ParallelAgent:
 
         # Last update of the agent policy
         self.policy.finish_training()
-
-    # TESTING #
-
-    def act(self, current_state):
-        current_state = self.representation_learner.encode(current_state)
-        action = self.policy.choose_action_policy(current_state)
-        next_state, step_reward, env_done, _ = self.env.step(action)
-        return next_state, step_reward, env_done
-
-    def test(self, max_episode_length=1000):
-        done = False
-        state = self.env.reset()
-        step = 0
-        total_reward = 0
-        while not done and step < max_episode_length:
-            env.render()
-            state, reward, done = self.act(state)
-            step += 1
-            total_reward += reward
-
-        print(f"Episode finished after {step} steps with total reward of {total_reward}.")
 
 
 if __name__ == "__main__":

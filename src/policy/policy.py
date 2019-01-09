@@ -42,3 +42,18 @@ class _Policy(abc.ABC):
         Method that executes the agent necessary routine (if needed) after finishing the training
         """
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def restore_from_state(self, state) -> None:
+        """
+        Method that resumes training from a dictionary specifying training status
+        :param state: dictionary specifying training status
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_current_training_state(self) -> {}:
+        """
+        Method that saves current training status a in dictionary for resuming later.
+        """
+        raise NotImplementedError

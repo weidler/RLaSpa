@@ -82,7 +82,7 @@ class SimpleAutoencoder(_RepresentationLearner):
 
         self.optimizer.zero_grad()
         out = self.network(state_tensor)
-        loss = self.criterion(out, state_tensor)  # TODO not sure if it is ok to use same tensor or if we need to copy
+        loss = self.criterion(out, state_tensor)
         loss.backward()
 
         self.optimizer.step()
@@ -198,7 +198,6 @@ class JanusPixel(_RepresentationLearner):
             n_actions=self.n_actions,
             n_hidden=self.n_hidden
         )
-        self.one_hot_actions = numpy.eye(n_actions)
 
         # PARTS
         self.criterion = nn.MSELoss()
@@ -209,8 +208,6 @@ class JanusPixel(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action, reward, next_state, remember=True):
-        action = self.one_hot_actions[action]
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)
@@ -293,7 +290,6 @@ class CerberusPixel(_RepresentationLearner):
             n_actions=self.n_actions,
             n_hidden=self.n_hidden
         )
-        self.one_hot_actions = numpy.eye(n_actions)
 
         # PARTS
         self.criterion = nn.MSELoss()
@@ -304,8 +300,6 @@ class CerberusPixel(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action, reward, next_state, remember=True):
-        action = self.one_hot_actions[action]
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)

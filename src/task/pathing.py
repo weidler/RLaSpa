@@ -30,6 +30,8 @@ class SimplePathing(_Task):
         self.width = width
         self.height = height
         self.action_space = [0, 1, 2, 3]  # UP, RIGHT, DOWN, LEFT
+        self.max_steps = width*height
+        self.steps = 0
 
         # STATES
         self.target_coords = [width - SimplePathing.PADDING, SimplePathing.PADDING]
@@ -94,7 +96,8 @@ class SimplePathing(_Task):
             next_state[0] = max(0, next_state[0] - 1)
 
         reward = SimplePathing.DEFAULT_REWARD
-        done = False
+        self.steps += 1
+        done = self.steps >= self.max_steps
         if next_state == self.target_coords:
             reward = SimplePathing.TARGET_REWARD
             done = True
@@ -105,6 +108,7 @@ class SimplePathing(_Task):
     def reset(self):
         self.current_state = self.start_state.copy()
         self.state_trail = []
+        self.steps = 0
 
         return self.current_state
 
@@ -168,7 +172,8 @@ class ObstaclePathing(SimplePathing):
             next_state = self.current_state.copy()
 
         reward = SimplePathing.DEFAULT_REWARD
-        done = False
+        self.steps += 1
+        done = self.steps >= self.max_steps
         if next_state == self.target_coords:
             reward = SimplePathing.TARGET_REWARD
             done = True
@@ -205,7 +210,8 @@ class VisualObstaclePathing(ObstaclePathing):
             next_state = self.current_state.copy()
 
         reward = SimplePathing.DEFAULT_REWARD
-        done = False
+        self.steps += 1
+        done = self.steps >= self.max_steps
         if next_state == self.target_coords:
             reward = SimplePathing.TARGET_REWARD
             done = True
@@ -216,6 +222,7 @@ class VisualObstaclePathing(ObstaclePathing):
     def reset(self):
         self.current_state = self.start_state.copy()
         self.state_trail = []
+        self.steps = 0
         return self.get_pixelbased_representation()
 
 

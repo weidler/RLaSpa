@@ -1,5 +1,6 @@
 import abc
 import random
+import torch
 from typing import List
 
 from src.utils.container import SARSTuple
@@ -8,11 +9,11 @@ from src.utils.container import SARSTuple
 class _RepresentationLearner(abc.ABC):
 
     @abc.abstractmethod
-    def encode(self, state):
+    def encode(self, state) -> torch.Tensor:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def learn(self, state, action, reward, next_state, remember=True):
+    def learn(self, state, action, reward, next_state, remember=True) -> float:
         raise NotImplementedError
 
     def learn_batch_of_tuples(self, batch: List[SARSTuple]):

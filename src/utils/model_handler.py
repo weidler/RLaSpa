@@ -1,5 +1,5 @@
 import torch
-
+import os, datetime
 
 def update_agent_model(current, target):
     """
@@ -31,3 +31,50 @@ def load_model(model, config_file: str):
     """
     config = torch.load(config_file)
     model.load_state_dict(config)
+
+
+def save_checkpoint(state: {}, out_dir: str, filename: str) -> None:
+    """
+    Method that saves a dictionary to checkpoint in output directory/file
+
+    :param state:
+    :param out_dir:
+    :param filename:
+    :return:
+    """
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    torch.save(state, os.path.join(out_dir, filename))
+
+
+def load_checkpoint(policy, ckpt_path: str) -> int:
+    """
+    Method that loads training status stored in checkpoint to policy
+
+    :param policy: a subclass extending from policy
+    :param ckpt_path: path to checkpoint
+    :return: starting episode (episode stored in check point)
+    """
+    if os.path.isfile(ckpt_path):
+        print("=> loading checkpoint '{}'".format(ckpt_path))
+        checkpoint = torch.load(ckpt_path)
+        policy.restore_from_state(checkpoint)
+        start_episode = checkpoint["episode"]
+        print("=> loaded checkpoint '{}' (episode {})".format(ckpt_path, start_episode))
+        return start_episode
+    else:
+        print("=> cannot find checkpoint '{}', aborting".format(ckpt_path))
+        exit()
+
+
+def get_checkpoint_dir(config: str) -> str:
+    """
+    Method that generates check point directory name based on agent type, representation learner type,
+    policy type, and current time stamp
+
+    :param config: configuration description (agent type, representation learner type, policy type)
+    :return: directory name
+    """
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+    return os.path.join(os.getcwd(), "ckpt", config, timestamp)

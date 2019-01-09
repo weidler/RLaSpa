@@ -1,3 +1,6 @@
+import random
+from typing import List, Any, Union
+
 import gym
 
 from src.agents.agent import _Agent
@@ -5,6 +8,7 @@ from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder
 from src.representation.representation import _RepresentationLearner
+from src.utils.container import SARSTuple
 
 
 class ParallelAgent(_Agent):
@@ -18,9 +22,13 @@ class ParallelAgent(_Agent):
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int, max_episode_length=1000):
+    def train_agent(self, episodes: int, max_episode_length=1000, batch_size=32, max_batch_memory_size=1024):
         print("Starting parallel training process.")
-        rewards = []
+
+        # introduce batch memory to store observations and learn in batches
+        batch_memory: List[SARSTuple] = []
+
+        rewards: List[int] = []
         for episode in range(episodes):
             done = False
             current_state = self.env.reset()
@@ -35,9 +43,30 @@ class ParallelAgent(_Agent):
                 observation, reward, done, _ = self.env.step(action)
                 latent_observation = self.representation_learner.encode(observation)
 
-                # train the REPRESENTATION learner
-                self.representation_learner.learn(state=current_state, next_state=observation, reward=reward,
-                                                  action=action)
+                # TRAIN REPRESENTATION LEARNER using batches
+                batch_memory.append(SARSTuple(current_state, action, reward, observation))
+                if len(batch_memory) >= batch_size:
+                    batch_tuples = batch_memory[:]
+                    random.shuffle(batch_tuples)
+                    batch_tuples = batch_tuples[:batch_size]
+
+                    state_batch, action_batch, reward_batch, next_state_batch = [], [], [], []
+                    for sars_tuple in batch_tuples:
+                        state_batch.append(sars_tuple.state)
+                        action_batch.append(sars_tuple.action)
+                        reward_batch.append(sars_tuple.reward)
+                        next_state_batch.append(sars_tuple.next_state)
+
+                    # learn
+                    self.representation_learner.learn(
+                        state=state_batch,
+                        action=action_batch,
+                        reward=reward_batch,
+                        next_state=next_state_batch
+                    )
+
+                    if len(batch_memory) > max_batch_memory_size:
+                        batch_memory = batch_memory[1:]
 
                 # train the POLICY
                 self.policy.update(latent_state, action, reward, latent_observation, done)

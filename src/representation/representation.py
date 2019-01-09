@@ -18,7 +18,7 @@ class _RepresentationLearner(abc.ABC):
         total_loss = 0
         sample: SARSTuple
         for sample in sars_tuples:
-            total_loss += self.learn(sample.state, sample.action, sample.reward, sample.next_state, remember=remember)
+            total_loss += self.learn(*sample.ordered_tuple(), remember=remember)
 
         return total_loss / len(sars_tuples)
 

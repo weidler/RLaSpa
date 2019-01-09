@@ -35,8 +35,8 @@ class ParallelAgent(_Agent):
                 latent_observation = self.representation_learner.encode(observation)
 
                 # train the REPRESENTATION learner
-                self.representation_learner.learn(state=current_state, next_state=observation, reward=reward,
-                                                  action=action)
+                self.representation_learner.learn(state=[current_state], next_state=[observation], reward=[reward],
+                                                  action=[action])
 
                 # train the POLICY
                 self.policy.update(latent_state, action, reward, latent_observation, done)
@@ -58,25 +58,25 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
-    # env = gym.make("CartPole-v0")
-    # repr_learner = SimpleAutoencoder(4, 2, 3)
-    # policy = DoubleDeepQNetwork(3, 2)
+    env = gym.make("CartPole-v0")
+    repr_learner = SimpleAutoencoder(4, 2, 3)
+    policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    size = 30
-    gym.envs.register(
-        id='VisualObstaclePathing-v1',
-        entry_point='src.gym_pathing.envs:VisualObstaclePathing',
-        kwargs={'width': size, 'height': size,
-                'obstacles': [[0, 18, 18, 21],
-                              [21, 24, 10, 30]]},
-    )
-    env = gym.make('VisualObstaclePathing-v1')
+    # size = 30
+    # gym.envs.register(
+    #     id='VisualObstaclePathing-v1',
+    #     entry_point='src.gym_pathing.envs:VisualObstaclePathing',
+    #     kwargs={'width': size, 'height': size,
+    #             'obstacles': [[0, 18, 18, 21],
+    #                           [21, 24, 10, 30]]},
+    # )
+    # env = gym.make('VisualObstaclePathing-v1')
 
-    repr_learner = CerberusPixel(width=size,
-                                 height=size,
-                                 n_actions=len(env.action_space),
-                                 n_hidden=size)
-    policy = DoubleDeepQNetwork(size, len(env.action_space))
+    # repr_learner = CerberusPixel(width=size,
+    #                              height=size,
+    #                              n_actions=len(env.action_space),
+    #                              n_hidden=size)
+    # policy = DoubleDeepQNetwork(size, len(env.action_space))
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)

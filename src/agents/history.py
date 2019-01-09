@@ -11,6 +11,7 @@ from src.representation.learners import SimpleAutoencoder
 from src.representation.representation import _RepresentationLearner
 from src.task.task import _Task
 from src.utils.container import SARSTuple
+from src.utils.functional import int_to_one_hot
 
 
 class HistoryAgent(_Agent):
@@ -64,9 +65,10 @@ class HistoryAgent(_Agent):
             episode_reward = 0
             while not done and step < max_episode_length:
                 action = exploring_policy.choose_action(current_state)
+                one_hot_action_vector = int_to_one_hot(action, self.env.action_space.n)
                 observation, reward, done, _ = env.step(action)
                 exploring_policy.update(current_state, action, reward, observation, done)
-                self.history.append(SARSTuple(current_state, action, reward, observation))
+                self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 step += 1
                 episode_reward += reward
                 current_state = observation
@@ -88,14 +90,14 @@ class HistoryAgent(_Agent):
         print("\t|-- Training")
         n_batches = len(self.history) // batch_size
         for epoch in range(epochs):
-            print(f"\t|-- Epoch {epoch + 1}")
+            print(f"\t\tEpoch {epoch + 1}")
             for i in range(n_batches):
                 batch_tuples = self.history[i * batch_size:(i + 1) * batch_size]
 
                 self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
                 if i % (n_batches // 3) == 0: print(
-                    f"\t|-- {round(i/n_batches * 100)}%")
+                    f"\t\t|-- {round(i/n_batches * 100)}%")
 
         self.is_pretrained = True
 
@@ -150,5 +152,5 @@ if __name__ == "__main__":
     agent.pretrain(5)
     agent.train_agent(1000)
 
-    agent.test()
+    for i in range(5): agent.test()
     agent.env.close()

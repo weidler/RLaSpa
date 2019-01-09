@@ -6,9 +6,11 @@ import gym
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, Cerberus
+from src.representation.learners import SimpleAutoencoder, Cerberus, Janus
 from src.representation.representation import _RepresentationLearner
+from src.task.task import _Task
 from src.utils.container import SARSTuple
+from src.utils.functional import int_to_one_hot
 
 
 class ParallelAgent(_Agent):
@@ -38,13 +40,14 @@ class ParallelAgent(_Agent):
             while not done and steps < max_episode_length:
                 # choose action
                 action = self.policy.choose_action(latent_state)
+                one_hot_action_vector = int_to_one_hot(action, self.env.action_space.n)
 
                 # step and observe
                 observation, reward, done, _ = self.env.step(action)
                 latent_observation = self.representation_learner.encode(observation)
 
                 # TRAIN REPRESENTATION LEARNER using batches
-                batch_memory.append(SARSTuple(current_state, action, reward, observation))
+                batch_memory.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 if len(batch_memory) >= batch_size:
                     batch_tuples = batch_memory[:]
                     random.shuffle(batch_tuples)
@@ -77,8 +80,8 @@ class ParallelAgent(_Agent):
 
 if __name__ == "__main__":
     env = gym.make("CartPole-v1")
-    repr_learner = Cerberus(4, 2, 3)
-    policy = DoubleDeepQNetwork(3, 2)
+    repr_learner = Janus(4, 2, 3)
+    policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
     # size = 30
     # env = VisualObstaclePathing(size, size,
     #                             [[0, 18, 18, 21],
@@ -96,5 +99,5 @@ if __name__ == "__main__":
     agent.train_agent(1000, max_episode_length=300)
 
     # TEST
-    agent.test()
+    for i in range(5): agent.test()
     agent.env.close()

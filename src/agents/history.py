@@ -86,7 +86,7 @@ class HistoryAgent(_Agent):
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int, max_episode_length=1000):
+    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None):
         print("Training Agent.")
         if not self.is_pretrained: print("[WARNING]: You are using an untrained representation learner!")
         rewards = []

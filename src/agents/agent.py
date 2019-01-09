@@ -10,7 +10,7 @@ class _Agent(abc.ABC):
         self.representation_learner = repr_learner
 
     @abc.abstractmethod
-    def train_agent(self, episodes: int):
+    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None):
         raise NotImplementedError
 
     def act(self, current_state):

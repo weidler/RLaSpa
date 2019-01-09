@@ -80,7 +80,7 @@ class ParallelAgent:
 
 
 if __name__ == "__main__":
-    env = gym.make("CartPole-v0")
+    env = gym.make("CartPole-v1")
     repr_learner = SimpleAutoencoder(4, 2, 3)
     policy = DoubleDeepQNetwork(3, 2)
     # size = 30

@@ -138,7 +138,7 @@ class HistoryAgent:
 if __name__ == "__main__":
     env = gym.make("CartPole-v0")
     repr_learner = SimpleAutoencoder(4, 2, 3)
-    policy = DoubleDeepQNetwork(3, 2)
+    policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
     pretraining_policy = DeepQNetwork(4, 2)
 
     agent = HistoryAgent(repr_learner, policy, env)

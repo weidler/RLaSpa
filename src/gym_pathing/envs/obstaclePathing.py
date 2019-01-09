@@ -5,14 +5,14 @@ class ObstaclePathing(SimplePathing):
     OBSTACLE_SYMBOL = "#"
     OBSTACLE_PIXEL = 1
 
-    def __init__(self, width: int, height: int, obstacles: list):
+    def __init__(self, width: int, height: int, obstacles: list, visual: bool):
         """
         :param width:
         :param height:
         :param obstacles:       list of lists where each sublist is [x_from, x_to, y_from, y_to]
         """
         self.obstacles = []
-        super(ObstaclePathing, self).__init__(width, height)
+        super(ObstaclePathing, self).__init__(width, height, visual)
 
         # create obstacles
         self.blocked_coordinates = []
@@ -54,7 +54,10 @@ class ObstaclePathing(SimplePathing):
             done = True
 
         self.current_state = next_state.copy()
-        return next_state, reward, done, None  # returns None at pos 4 to match gym envs
+        if self.visual:
+            return self.get_pixelbased_representation(), reward, done, None
+        else:
+            return next_state, reward, done, None  # returns None at pos 4 to match gym envs
 
     def _generate_pixelbased_representation(self):
         pixels = super(ObstaclePathing, self)._generate_pixelbased_representation()
@@ -62,7 +65,6 @@ class ObstaclePathing(SimplePathing):
             for y in range(obst[2], obst[3]):
                 for x in range(obst[0], obst[1]):
                     pixels[y, x] = ObstaclePathing.OBSTACLE_PIXEL
-
         return pixels
 
 

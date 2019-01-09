@@ -65,10 +65,11 @@ if __name__ == "__main__":
     size = 30
     gym.envs.register(
         id='VisualObstaclePathing-v1',
-        entry_point='src.gym_pathing.envs:VisualObstaclePathing',
+        entry_point='src.gym_pathing.envs:ObstaclePathing',
         kwargs={'width': size, 'height': size,
                 'obstacles': [[0, 18, 18, 21],
-                              [21, 24, 10, 30]]},
+                              [21, 24, 10, 30]],
+                'visual': True},
     )
     env = gym.make('VisualObstaclePathing-v1')
 

@@ -22,7 +22,7 @@ class SimplePathing(gym.Env):
     DEFAULT_REWARD = -10
     TARGET_REWARD = 10
 
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, visual: bool):
         if not (width > SimplePathing.PADDING * 2 and height > SimplePathing.PADDING * 2):
             raise ValueError(
                 "Width and Height need to be larger than double the padding of the environment, hence > {0}.".format(
@@ -34,6 +34,7 @@ class SimplePathing(gym.Env):
         self.action_space = [0, 1, 2, 3]  # UP, RIGHT, DOWN, LEFT
         self.max_steps = (width*height)  # Maybe reduce max_steps by dividing by 2?
         self.steps = 0
+        self.visual = visual
 
         # STATES
         self.target_coords = [width - SimplePathing.PADDING, SimplePathing.PADDING]
@@ -106,14 +107,20 @@ class SimplePathing(gym.Env):
             done = True
 
         self.current_state = next_state.copy()
-        return next_state, reward, done, None  # returns None at pos 4 to match gym envs
+        if self.visual:
+            return self.get_pixelbased_representation(), reward, done, None
+        else:
+            return next_state, reward, done, None  # returns None at pos 4 to match gym envs
 
     def reset(self):
         self.current_state = self.start_state.copy()
         self.state_trail = []
         self.steps = 0
 
-        return self.current_state
+        if self.visual:
+            return self.get_pixelbased_representation()
+        else:
+            return self.current_state
 
     def _generate_pixelbased_representation(self):
         view = self._get_current_view()

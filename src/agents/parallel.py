@@ -1,10 +1,12 @@
 import gym
+import os
 
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, CerberusPixel
 from src.representation.representation import _RepresentationLearner
+from src.utils.model_handler import save_checkpoint, load_checkpoint, get_checkpoint_dir
 
 
 class ParallelAgent(_Agent):
@@ -18,10 +20,18 @@ class ParallelAgent(_Agent):
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int):
+
+    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None):
+        start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
+        if ckpt_to_load:
+            start_episode = load_checkpoint(policy, ckpt_to_load)
+
+        if save_ckpt_per:  # if asked to save checkpoints
+            ckpt_dir = get_checkpoint_dir(agent.get_config_name())
+
         print("Starting parallel training process.")
         rewards = []
-        for episode in range(episodes):
+        for episode in range(start_episode, episodes):
             done = False
             current_state = self.env.reset()
             latent_state = self.representation_learner.encode(current_state)
@@ -52,6 +62,11 @@ class ParallelAgent(_Agent):
 
             if episode % (episodes // 100) == 0: print(
                 f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
+
+            if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
+                res = policy.get_current_training_state()
+                res["episode"] = episode  # append current episode
+                save_checkpoint(res, ckpt_dir, "ckpt_{}".format(episode))
 
         # Last update of the agent policy
         self.policy.finish_training()

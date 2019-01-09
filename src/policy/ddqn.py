@@ -133,6 +133,18 @@ class DoubleDeepQNetwork(_Policy):
         self.total_steps_done = 0
         update_agent_model(self.current_model, self.target_model)
 
+    def restore_from_state(self, input) -> None:
+        self.current_model.load_state_dict(input['current_model'])
+        self.target_model.load_state_dict(input['target_model'])
+        self.optimizer.load_state_dict(input['optimizer'])
+
+    def get_current_training_state(self):
+        return {
+            'current_model': self.current_model.state_dict(),
+            'target_model': self.target_model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+        }
+
 
 class DuelingDeepQNetwork(DoubleDeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, memory_size=10000, alpha=0.9, beta=0.9, batch_size=32,

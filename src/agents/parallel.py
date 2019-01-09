@@ -4,7 +4,7 @@ import os
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder
+from src.representation.learners import SimpleAutoencoder, CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.model_handler import save_checkpoint, load_checkpoint, get_checkpoint_dir
 
@@ -20,7 +20,8 @@ class ParallelAgent(_Agent):
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None):
+
+    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
             start_episode = load_checkpoint(policy, ckpt_to_load)
@@ -35,8 +36,7 @@ class ParallelAgent(_Agent):
             current_state = self.env.reset()
             latent_state = self.representation_learner.encode(current_state)
             episode_reward = 0
-            steps = 0
-            while not done and steps < max_episode_length:
+            while not done:
                 # choose action
                 action = self.policy.choose_action(latent_state)
 
@@ -57,12 +57,11 @@ class ParallelAgent(_Agent):
 
                 # trackers
                 episode_reward += reward
-                steps += 1
 
             rewards.append(episode_reward)
 
-            if episode % (episodes // 20) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
+            if episode % (episodes // 100) == 0: print(
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
 
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 res = policy.get_current_training_state()
@@ -77,21 +76,29 @@ if __name__ == "__main__":
     env = gym.make("CartPole-v0")
     repr_learner = SimpleAutoencoder(4, 2, 3)
     policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
+    # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
     # size = 30
-    # env = VisualObstaclePathing(size, size,
-    #                             [[0, 18, 18, 21],
-    #                              [21, 24, 10, 30]]
-    #                             )
+    # gym.envs.register(
+    #     id='VisualObstaclePathing-v1',
+    #     entry_point='src.gym_pathing.envs:ObstaclePathing',
+    #     kwargs={'width': size, 'height': size,
+    #             'obstacles': [[0, 18, 18, 21],
+    #                           [21, 24, 10, 30]],
+    #             'visual': True},
+    # )
+    # env = gym.make('VisualObstaclePathing-v1')
+
     # repr_learner = CerberusPixel(width=size,
     #                              height=size,
     #                              n_actions=len(env.action_space),
     #                              n_hidden=size)
     # policy = DoubleDeepQNetwork(size, len(env.action_space))
+
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(1000, max_episode_length=300)
+    agent.train_agent(episodes=1000)
 
     # TEST
     agent.test()

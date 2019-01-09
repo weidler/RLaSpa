@@ -10,7 +10,7 @@ class _Agent(abc.ABC):
         self.representation_learner = repr_learner
 
     @abc.abstractmethod
-    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None):
+    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None):
         raise NotImplementedError
 
     def act(self, current_state):
@@ -19,12 +19,12 @@ class _Agent(abc.ABC):
         next_state, step_reward, env_done, _ = self.env.step(action)
         return next_state, step_reward, env_done
 
-    def test(self, max_episode_length=1000):
+    def test(self):
         done = False
         state = self.env.reset()
         step = 0
         total_reward = 0
-        while not done and step < max_episode_length:
+        while not done:
             state, reward, done = self.act(state)
             step += 1
             total_reward += reward

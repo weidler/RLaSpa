@@ -1,3 +1,4 @@
+import random
 from typing import List
 
 import gym
@@ -76,11 +77,20 @@ class HistoryAgent(_Agent):
 
         exploring_policy.finish_training()
 
-    def pretrain(self):
+    def pretrain(self, iterations: int, batch_size=32):
         if len(self.history) == 0:
             raise RuntimeError("No history found. Add a history by using .gather_history() or .load_history()!")
         print(f"Training Representation Learner on {len(self.history)} samples ...")
-        self.representation_learner.learn_many(self.history)
+
+        for i in range(iterations):
+            random.shuffle(self.history)
+            batch_tuples = self.history[:batch_size]
+
+            self.representation_learner.learn_batch_of_tuples(batch_tuples)
+
+            if i % (iterations // 10) == 0: print(
+                f"\t|-- {round(i/iterations * 100)}%)")
+
         self.is_pretrained = True
 
     # REINFORCEMENT LEARNING #
@@ -131,7 +141,7 @@ if __name__ == "__main__":
     else:
         agent.load_history("cartpole-10000.data")
 
-    agent.pretrain()
+    agent.pretrain(100000)
     agent.train_agent(1000)
 
     agent.test()

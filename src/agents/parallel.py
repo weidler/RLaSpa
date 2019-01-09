@@ -50,20 +50,7 @@ class ParallelAgent(_Agent):
                     random.shuffle(batch_tuples)
                     batch_tuples = batch_tuples[:batch_size]
 
-                    state_batch, action_batch, reward_batch, next_state_batch = [], [], [], []
-                    for sars_tuple in batch_tuples:
-                        state_batch.append(sars_tuple.state)
-                        action_batch.append(sars_tuple.action)
-                        reward_batch.append(sars_tuple.reward)
-                        next_state_batch.append(sars_tuple.next_state)
-
-                    # learn
-                    self.representation_learner.learn(
-                        state=state_batch,
-                        action=action_batch,
-                        reward=reward_batch,
-                        next_state=next_state_batch
-                    )
+                    self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
                     if len(batch_memory) > max_batch_memory_size:
                         batch_memory = batch_memory[1:]

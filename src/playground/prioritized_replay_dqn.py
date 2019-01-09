@@ -4,7 +4,7 @@ import gym
 import torch
 from torch import optim
 
-from src.agents.dqn_agent import DQN
+from src.policy.network.dqn_agent import DQN
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 from src.utils.schedules import ExponentialSchedule
 

@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # env = gym.make("CartPole-v0")
     # repr_learner = SimpleAutoencoder(4, 2, 3)
     # policy = DoubleDeepQNetwork(3, 2)
-    # env = gym.make('VisualObstaclePathing-v0')
+    # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
     size = 30
     gym.envs.register(
         id='VisualObstaclePathing-v1',
@@ -77,6 +77,7 @@ if __name__ == "__main__":
                                  n_actions=len(env.action_space),
                                  n_hidden=size)
     policy = DoubleDeepQNetwork(size, len(env.action_space))
+
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
 

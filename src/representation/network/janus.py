@@ -19,21 +19,25 @@ class JanusAutoencoder(nn.Module):
 
         self.activation = torch.sigmoid
 
-    def forward(self, stateinput, action):
+    def forward(self, state: torch.Tensor, action: torch.Tensor):
+        if state.dim() <= 1 or action.dim() <= 1:
+            raise ValueError(
+                "Networks expect any input to be given as a batch. For single input, provide a batch of size 1.")
 
         # encode current state and create latent space
-        latent_space = self.activation(self.encoder(stateinput))
+        latent_space = self.activation(self.encoder(state))
 
         # decode current state
         outState = (self.decoderState(latent_space))
 
         # append action to latent space
-        latent_space_action = torch.cat((latent_space, action), 0)
+        latent_space_action = torch.cat((latent_space, action), 1)
 
         # decode next state from latent space with action
         outNextState = (self.decoderNextState(latent_space_action))
 
         return torch.cat((outState, outNextState), 0)
+
 
 if __name__ == "__main__":
 
@@ -71,7 +75,4 @@ if __name__ == "__main__":
             print(f"Epoch {epoch}: {total_loss/print_every}.")
             total_loss = 0
 
-
     torch.save(net.state_dict(), "../../models/siamese.model")
-
-

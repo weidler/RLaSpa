@@ -1,8 +1,8 @@
 import torch
 from torch import optim
 
-from src.agents.dqn_agent import DQN
-from src.agents.dueling_dqn_agent import DuelingDQN
+from src.policy.network.dqn_agent import DQN
+from src.policy.network.dueling_dqn_agent import DuelingDQN
 from src.policy.policy import _Policy
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 from src.utils.model_handler import update_agent_model

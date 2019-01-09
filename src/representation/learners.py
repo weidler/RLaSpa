@@ -57,7 +57,7 @@ class Flatten(_RepresentationLearner):
 
 class SimpleAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.05):
+    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions

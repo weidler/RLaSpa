@@ -4,10 +4,11 @@ from typing import List
 import gym
 
 from src.agents.agent import _Agent
+from src.gym_pathing.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder
+from src.representation.learners import SimpleAutoencoder, VariationalAutoencoder
 from src.representation.representation import _RepresentationLearner
 from src.task.task import _Task
 from src.utils.container import SARSTuple
@@ -36,7 +37,7 @@ class HistoryAgent(_Agent):
 
     def load_history(self, savefile: str):
         print(f"Loading from {savefile}.")
-        with open(f"../../data/{savefile}", "r") as f:  # write
+        with open(f"../data/{savefile}", "r") as f:  # write
             lines = f.readlines()
 
         tuples = 0
@@ -135,14 +136,39 @@ class HistoryAgent(_Agent):
 
 
 if __name__ == "__main__":
-    env = gym.make("CartPole-v0")
-    repr_learner = SimpleAutoencoder(4, 2, 3)
-    policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
-    pretraining_policy = DeepQNetwork(4, 2)
+    # env = gym.make("CartPole-v0")
+    # repr_learner = SimpleAutoencoder(4, 2, 3)
+    # policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
+    # pretraining_policy = DeepQNetwork(4, 2)
+    #
+    # agent = HistoryAgent(repr_learner, policy, env)
+    #
+    # load = False
+    #
+    # if not load:
+    #     agent.gather_history(pretraining_policy, 10000)
+    #     agent.save_history("cartpole-10000.data")
+    # else:
+    #     agent.load_history("cartpole-10000.data")
+    #
+    # agent.pretrain()
+    # agent.train_agent(1000)
+    #
+    # agent.test()
+    # agent.env.close()
+
+    env = ObstaclePathing(30, 30,
+                          [[0, 18, 18, 21],
+                           [21, 24, 10, 30]],
+                          True
+                          )
+    repr_learner = VariationalAutoencoder(900, 2, 400, 20)
+    policy = DoubleDeepQNetwork(20, 2, eps_decay=2000)
+    pretraining_policy = DeepQNetwork(900, 2)
 
     agent = HistoryAgent(repr_learner, policy, env)
 
-    load = True
+    load = False
 
     if not load:
         agent.gather_history(pretraining_policy, 10000)

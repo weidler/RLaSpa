@@ -75,6 +75,9 @@ class ObstaclePathing(SimplePathing):
 if __name__ == "__main__":
     env = ObstaclePathing(30, 30,
                           [[0, 18, 18, 21],
-                           [21, 24, 10, 30]]
+                           [21, 24, 10, 30]],
+                          True
                           )
-    env.visualize()
+    # env.visualize()
+    while True:
+        env.render(mode='human')

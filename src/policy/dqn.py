@@ -115,6 +115,12 @@ class DeepQNetwork(_Policy):
     def finish_training(self) -> None:
         self.total_steps_done = 0
 
+    def restore_from_state(self, input) -> None:
+        raise NotImplementedError("to be implemented")
+
+    def get_current_training_state(self):
+        raise NotImplementedError("to be implemented")
+
 
 class PrioritizedDeepQNetwork(DeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, memory_size=10000, alpha=0.9, beta=0.9, batch_size=32,

@@ -3,7 +3,7 @@ import torch
 
 from src.representation.learners import SimpleAutoencoder, Janus, Cerberus
 
-ae = Cerberus(d_states=5, d_actions=2, d_latent=5)
+ae = Janus(d_states=5, d_actions=2, d_latent=5)
 
 # LEARN
 for i in range(10000):
@@ -24,7 +24,7 @@ tests = 1000
 for i in range(tests):
     sample = [1, 2, 3, 4, 5]
     random.shuffle(sample)
-    output = ae.network(torch.Tensor([sample]).float(), torch.Tensor([[0, 1]]))[0][0].tolist()
+    output = ae.network(torch.Tensor([sample]).float(), torch.Tensor([[0, 1]]))[0].tolist()
     output = [round(e) for e in output]
     msg = f"{sample} --> {output}"
     if sample != output:

@@ -57,7 +57,7 @@ class Flatten(_RepresentationLearner):
 
 class SimpleAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.05):
+    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -89,7 +89,7 @@ class SimpleAutoencoder(_RepresentationLearner):
 
         self.optimizer.zero_grad()
         out = self.network(state_tensor)
-        loss = self.criterion(out, state_tensor)  # TODO not sure if it is ok to use same tensor or if we need to copy
+        loss = self.criterion(out, state_tensor)
         loss.backward()
 
         self.optimizer.step()

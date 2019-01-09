@@ -1,8 +1,8 @@
 import torch
 from torch import optim
 
-from src.agents.dqn_agent import DQN
-from src.agents.dueling_dqn_agent import DuelingDQN
+from src.policy.network.dqn_agent import DQN
+from src.policy.network.dueling_dqn_agent import DuelingDQN
 from src.policy.policy import _Policy
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 from src.utils.model_handler import update_agent_model
@@ -118,6 +118,7 @@ class DoubleDeepQNetwork(_Policy):
                 self.compute_td_loss_memory()
         else:
             self.compute_td_loss(state, action, reward, next_state, done)
+            if self.total_steps_done == self.memory_delay: print("\tPolicy-DQN begins memorizing now.")
         if self.total_steps_done % 100:
             update_agent_model(self.current_model, self.target_model)
 

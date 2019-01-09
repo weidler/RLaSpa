@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim
 
-from src.agents.dqn_agent import DQN
+from src.policy.network.dqn_agent import DQN
 from src.task.pathing import ObstaclePathing
 from src.utils.memory.replay_memory import ReplayMemory
 from src.utils.schedules import ExponentialSchedule

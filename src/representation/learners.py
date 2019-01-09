@@ -374,7 +374,7 @@ class CerberusPixel(_RepresentationLearner):
 if __name__ == "__main__":
     # ae = Cerberus(d_states=5, d_actions=2, d_latent=5)
     ae = VariationalAutoencoder(d_states=900, d_actions=2, d_middle=400, d_latent=20)
-    for i in range(1000):
+    for i in range(2500):
         # sample = [1, 2, 3, 4, 5]
 
         # Use one hot encoded vector from a shuffled identity matrix as input
@@ -392,7 +392,7 @@ if __name__ == "__main__":
         if i % 100 == 0:
             print("Epoch ", i, " loss: ", loss)
 
-    for i in range(10):
+    for i in range(1):
         # sample = [1, 2, 3, 4, 5]
         # random.shuffle(sample)
         # samples = numpy.eye(8, dtype=int)
@@ -407,7 +407,8 @@ if __name__ == "__main__":
                               )
         sample = env.static_pixels
         out, mu, std = ae.network(torch.Tensor(sample))
-        print(out.round())
+        print("input: ", sample)
+        print("output: ", out.round())
 
 
 

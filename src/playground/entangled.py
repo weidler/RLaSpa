@@ -1,16 +1,8 @@
-import gym
-
-from src.policy.dqn import DeepQNetwork
-from src.policy.tablebased import QTableSARSA, QTableOffPolicy
-from src.policy.policy import _Policy
-from src.representation.learners import Janus, SimpleAutoencoder, Flatten
-from src.representation.network.autoencoder import AutoencoderNetwork
-from src.representation.representation import _RepresentationLearner
-from src.task.pathing import SimplePathing, ObstaclePathing, VisualObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
-from src.representation.learners import SimpleAutoencoder, JanusPixel, CerberusPixel
+from src.policy.policy import _Policy
+from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
-from src.task.pathing import ObstaclePathing, VisualObstaclePathing
+from src.task.pathing import VisualObstaclePathing
 
 
 class EntangledAgent:
@@ -32,7 +24,7 @@ class EntangledAgent:
         :param current_state: current state of the environment
         :param iteration: iteration number
         """
-        action = self.policy.choose_action(current_state, iteration)
+        action = self.policy.choose_action(current_state)
         next_state, step_reward, env_done, _ = self.env.step(action)
 
         return next_state, step_reward, env_done, action

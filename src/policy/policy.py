@@ -17,13 +17,12 @@ class _Policy(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def choose_action(self, state, iteration: int) -> int:
+    def choose_action(self, state) -> int:
         """
         Choose an action for the given state based on current policy. The iteration number is included
         to use it for exploration/exploitation decisions.
 
         :param state: current state of the environment
-        :param iteration: iteration number in the game
         """
         raise NotImplementedError
 

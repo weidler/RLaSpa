@@ -61,7 +61,7 @@ class HistoryAgent:
             step = 0
             episode_reward = 0
             while not done and step < max_episode_length:
-                action = exploring_policy.choose_action(current_state, episode)
+                action = exploring_policy.choose_action(current_state)
                 observation, reward, done, _ = env.step(action)
                 exploring_policy.update(current_state, action, reward, observation, done)
                 self.history.append(SARSTuple(current_state, action, reward, observation))
@@ -95,7 +95,7 @@ class HistoryAgent:
             episode_reward = 0
             while not done and step < max_episode_length:
                 latent_state = self.representation_learner.encode(current_state)
-                action = self.policy.choose_action(latent_state, episode)
+                action = self.policy.choose_action(latent_state)
 
                 observation, reward, done, _ = env.step(action)
                 latent_observation = self.representation_learner.encode(observation)

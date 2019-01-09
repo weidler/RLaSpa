@@ -7,7 +7,7 @@ import src.gym_pathing
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, CerberusPixel
+from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.functional import int_to_one_hot
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     )
     env = gym.make('VisualObstaclePathing-v1')
 
-    repr_learner = CerberusPixel(width=size,
+    repr_learner = JanusPixel(width=size,
                                  height=size,
                                  n_actions=env.action_space.n,
                                  n_hidden=size)

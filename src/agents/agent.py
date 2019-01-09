@@ -31,3 +31,10 @@ class _Agent(abc.ABC):
             self.env.render()
 
         print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
+
+    def get_config_name(self):
+        return "_".join(
+            [self.__class__.__name__,
+             self.env.__class__.__name__,
+             self.representation_learner.__class__.__name__,
+             self.policy.__class__.__name__])

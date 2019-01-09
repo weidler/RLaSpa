@@ -2,9 +2,8 @@ import gym
 
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, JanusPixel, CerberusPixel
+from src.representation.learners import SimpleAutoencoder
 from src.representation.representation import _RepresentationLearner
-from src.task.pathing import VisualObstaclePathing
 
 
 class ParallelAgent:
@@ -23,7 +22,7 @@ class ParallelAgent:
         rewards = []
         for episode in range(episodes):
             done = False
-            current_state = env.reset()
+            current_state = self.env.reset()
             latent_state = self.representation_learner.encode(current_state)
             episode_reward = 0
             steps = 0
@@ -68,12 +67,12 @@ class ParallelAgent:
 
     def test(self, max_episode_length=1000):
         done = False
-        state = env.reset()
+        state = self.env.reset()
         step = 0
         total_reward = 0
         while not done and step < max_episode_length:
             env.render()
-            state, reward, done = agent.act(state)
+            state, reward, done = self.act(state)
             step += 1
             total_reward += reward
 

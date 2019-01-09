@@ -45,8 +45,8 @@ class ParallelAgent(_Agent):
                 latent_observation = self.representation_learner.encode(observation)
 
                 # train the REPRESENTATION learner
-                self.representation_learner.learn(state=current_state, next_state=observation, reward=reward,
-                                                  action=action)
+                self.representation_learner.learn(state=[current_state], next_state=[observation], reward=[reward],
+                                                  action=[action])
 
                 # train the POLICY
                 self.policy.update(latent_state, action, reward, latent_observation, done)
@@ -74,9 +74,9 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
-    env = gym.make("CartPole-v1")
+    env = gym.make("CartPole-v0")
     repr_learner = SimpleAutoencoder(4, 2, 3)
-    policy = DoubleDeepQNetwork(3, 2)
+    policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
     # size = 30
     # env = VisualObstaclePathing(size, size,
     #                             [[0, 18, 18, 21],

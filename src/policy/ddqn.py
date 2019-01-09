@@ -118,6 +118,7 @@ class DoubleDeepQNetwork(_Policy):
                 self.compute_td_loss_memory()
         else:
             self.compute_td_loss(state, action, reward, next_state, done)
+            if self.total_steps_done == self.memory_delay: print("\tPolicy-DQN begins memorizing now.")
         if self.total_steps_done % 100:
             update_agent_model(self.current_model, self.target_model)
 

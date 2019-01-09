@@ -79,6 +79,7 @@ class HistoryAgent(_Agent):
     def pretrain(self):
         if len(self.history) == 0:
             raise RuntimeError("No history found. Add a history by using .gather_history() or .load_history()!")
+
         print(f"Training Representation Learner on {len(self.history)} samples ...")
         self.representation_learner.learn_many(self.history)
         self.is_pretrained = True

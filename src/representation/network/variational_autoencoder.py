@@ -4,12 +4,14 @@ import torch.nn as nn
 
 class VariationalAutoencoderNetwork(nn.Module):
 
-    def __init__(self, inputNeurons=4, hiddenNeurons=3, outputNeurons=4):
+    def __init__(self, inputNeurons=4, midNeurons=3, hiddenNeurons=2, outputNeurons=4):
         super(VariationalAutoencoderNetwork, self).__init__()
 
-        self.encoderMean = nn.Linear(inputNeurons, hiddenNeurons)
-        self.encoderStDev = nn.Linear(inputNeurons, hiddenNeurons)
-        self.decoder = nn.Linear(hiddenNeurons, outputNeurons)
+        self.fullyConnected = nn.Linear(inputNeurons, midNeurons)
+        self.encoderMean = nn.Linear(midNeurons, hiddenNeurons)
+        self.encoderStDev = nn.Linear(midNeurons, hiddenNeurons)
+        self.decodeFc = nn.Linear(hiddenNeurons, midNeurons)
+        self.decoderOut = nn.Linear(midNeurons, outputNeurons)
 
         self.activation = torch.relu
 
@@ -24,7 +26,9 @@ class VariationalAutoencoderNetwork(nn.Module):
         return eps.mul(std).add_(mu)
 
     def forward(self, input):
-        mu = self.activation(self.encoderMean(input))
-        logvar = self.activation(self.encoderStDev(input))
-        z = self.reparameterize(mu, logvar)
-        return torch.sigmoid(self.decoder(z)), mu, logvar
+        z1 = self.activation(self.fullyConnected(input))
+        mu = self.encoderMean(z1)
+        logvar = self.encoderStDev(z1)
+        z2 = self.reparameterize(mu, logvar)
+        out = self.activation(self.decodeFc(z2))
+        return torch.sigmoid(self.decoderOut(out)), mu, logvar

@@ -89,7 +89,7 @@ class SimpleAutoencoder(_RepresentationLearner):
 
         self.optimizer.zero_grad()
         out = self.network(state_tensor)
-        loss = self.criterion(out, state_tensor)  # TODO not sure if it is ok to use same tensor or if we need to copy
+        loss = self.criterion(out, state_tensor)
         loss.backward()
 
         self.optimizer.step()

@@ -55,7 +55,7 @@ class ParallelAgent(_Agent):
                     if len(batch_memory) > max_batch_memory_size:
                         batch_memory = batch_memory[1:]
 
-                # train the POLICY
+                # TRAIN POLICY
                 self.policy.update(latent_state, action, reward, latent_observation, done)
 
                 # update states (both, to avoid redundant encoding)

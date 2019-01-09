@@ -77,19 +77,25 @@ class HistoryAgent(_Agent):
 
         exploring_policy.finish_training()
 
-    def pretrain(self, iterations: int, batch_size=32):
+    def pretrain(self, epochs: int, batch_size=32):
         if len(self.history) == 0:
             raise RuntimeError("No history found. Add a history by using .gather_history() or .load_history()!")
         print(f"Training Representation Learner on {len(self.history)} samples ...")
 
-        for i in range(iterations):
-            random.shuffle(self.history)
-            batch_tuples = self.history[:batch_size]
+        print("\t|-- Shuffling")
+        random.shuffle(self.history)
 
-            self.representation_learner.learn_batch_of_tuples(batch_tuples)
+        print("\t|-- Training")
+        n_batches = len(self.history) // batch_size
+        for epoch in range(epochs):
+            print(f"\t|-- Epoch {epoch + 1}")
+            for i in range(n_batches):
+                batch_tuples = self.history[i * batch_size:(i + 1) * batch_size]
 
-            if i % (iterations // 10) == 0: print(
-                f"\t|-- {round(i/iterations * 100)}%)")
+                self.representation_learner.learn_batch_of_tuples(batch_tuples)
+
+                if i % (n_batches // 3) == 0: print(
+                    f"\t|-- {round(i/n_batches * 100)}%")
 
         self.is_pretrained = True
 
@@ -141,7 +147,7 @@ if __name__ == "__main__":
     else:
         agent.load_history("cartpole-10000.data")
 
-    agent.pretrain(100000)
+    agent.pretrain(5)
     agent.train_agent(1000)
 
     agent.test()

@@ -2,9 +2,8 @@ import gym
 
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder
+from src.representation.learners import SimpleAutoencoder, CerberusPixel
 from src.representation.representation import _RepresentationLearner
-
 
 class ParallelAgent:
     policy: _Policy
@@ -17,7 +16,7 @@ class ParallelAgent:
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int, max_episode_length=1000):
+    def train_agent(self, episodes: int):
         print("Starting parallel training process.")
         rewards = []
         for episode in range(episodes):
@@ -25,8 +24,7 @@ class ParallelAgent:
             current_state = self.env.reset()
             latent_state = self.representation_learner.encode(current_state)
             episode_reward = 0
-            steps = 0
-            while not done and steps < max_episode_length:
+            while not done:
                 # choose action
                 action = self.policy.choose_action(latent_state)
 
@@ -47,12 +45,11 @@ class ParallelAgent:
 
                 # trackers
                 episode_reward += reward
-                steps += 1
 
             rewards.append(episode_reward)
 
-            if episode % (episodes // 20) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
+            if episode % (episodes // 100) == 0: print(
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
 
         # Last update of the agent policy
         self.policy.finish_training()
@@ -65,12 +62,12 @@ class ParallelAgent:
         next_state, step_reward, env_done, _ = self.env.step(action)
         return next_state, step_reward, env_done
 
-    def test(self, max_episode_length=1000):
+    def test(self):
         done = False
         state = self.env.reset()
         step = 0
         total_reward = 0
-        while not done and step < max_episode_length:
+        while not done:
             env.render()
             state, reward, done = self.act(state)
             step += 1
@@ -80,24 +77,30 @@ class ParallelAgent:
 
 
 if __name__ == "__main__":
-    env = gym.make("CartPole-v0")
-    repr_learner = SimpleAutoencoder(4, 2, 3)
-    policy = DoubleDeepQNetwork(3, 2)
-    # size = 30
-    # env = VisualObstaclePathing(size, size,
-    #                             [[0, 18, 18, 21],
-    #                              [21, 24, 10, 30]]
-    #                             )
-    # repr_learner = CerberusPixel(width=size,
-    #                              height=size,
-    #                              n_actions=len(env.action_space),
-    #                              n_hidden=size)
-    # policy = DoubleDeepQNetwork(size, len(env.action_space))
+    # env = gym.make("CartPole-v0")
+    # repr_learner = SimpleAutoencoder(4, 2, 3)
+    # policy = DoubleDeepQNetwork(3, 2)
+    # env = gym.make('VisualObstaclePathing-v0')
+    size = 30
+    gym.envs.register(
+        id='VisualObstaclePathing-v1',
+        entry_point='src.gym_pathing.envs:VisualObstaclePathing',
+        kwargs={'width': size, 'height': size,
+                'obstacles': [[0, 18, 18, 21],
+                              [21, 24, 10, 30]]},
+    )
+    env = gym.make('VisualObstaclePathing-v1')
+
+    repr_learner = CerberusPixel(width=size,
+                                 height=size,
+                                 n_actions=len(env.action_space),
+                                 n_hidden=size)
+    policy = DoubleDeepQNetwork(size, len(env.action_space))
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(1000, max_episode_length=300)
+    agent.train_agent(episodes=1000)
 
     # TEST
     agent.test()

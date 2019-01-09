@@ -1,11 +1,13 @@
 import copy
-
 import numpy as np
+import gym
+from gym import error, spaces, utils
+from gym.utils import seeding
 
-from src.task.task import _Task
+import matplotlib.pyplot as plt
 
 
-class SimplePathing(_Task):
+class SimplePathing(gym.Env):
     BACKGROUND_SYMBOL = "."
     BACKGROUND_PIXEL = 0
 
@@ -30,7 +32,7 @@ class SimplePathing(_Task):
         self.width = width
         self.height = height
         self.action_space = [0, 1, 2, 3]  # UP, RIGHT, DOWN, LEFT
-        self.max_steps = width*height
+        self.max_steps = (width*height)  # Maybe reduce max_steps by dividing by 2?
         self.steps = 0
 
         # STATES
@@ -45,6 +47,7 @@ class SimplePathing(_Task):
         # MAP
         self.static_map = self._generate_static_map()
         self.static_pixels = self._generate_pixelbased_representation()
+
 
     def __repr__(self):
         representation = ""
@@ -125,110 +128,10 @@ class SimplePathing(_Task):
 
         return pixels
 
-
-class ObstaclePathing(SimplePathing):
-    OBSTACLE_SYMBOL = "#"
-    OBSTACLE_PIXEL = 1
-
-    def __init__(self, width: int, height: int, obstacles: list):
-        """
-        :param width:
-        :param height:
-        :param obstacles:       list of lists where each sublist is [x_from, x_to, y_from, y_to]
-        """
-        self.obstacles = []
-        super(ObstaclePathing, self).__init__(width, height)
-
-        # create obstacles
-        self.blocked_coordinates = []
-        self.add_obstacles(obstacles)
-
-        self.static_map = self._generate_static_map()
-        self.static_pixels = self._generate_pixelbased_representation()
-
-    def add_obstacles(self, obstacles):
-        self.obstacles.extend(obstacles)
-        for obst in obstacles:
-            for y in range(obst[2], obst[3]):
-                for x in range(obst[0], obst[1]):
-                    self.static_map[y][x] = ObstaclePathing.OBSTACLE_SYMBOL
-                    self.blocked_coordinates.append([x, y])
-
-    def step(self, action: int):
-        next_state = self.current_state.copy()
-        self.state_trail.append(self.current_state)
-
-        if action == 0:
-            next_state[1] = max(0, next_state[1] - 1)
-        elif action == 1:
-            next_state[0] = min(next_state[0] + 1, self.width - 1)
-        elif action == 2:
-            next_state[1] = min(next_state[1] + 1, self.height - 1)
-        elif action == 3:
-            next_state[0] = max(0, next_state[0] - 1)
-
-        # get blocked at coordinates
-        if next_state in self.blocked_coordinates:
-            next_state = self.current_state.copy()
-
-        reward = SimplePathing.DEFAULT_REWARD
-        self.steps += 1
-        done = self.steps >= self.max_steps
-        if next_state == self.target_coords:
-            reward = SimplePathing.TARGET_REWARD
-            done = True
-
-        self.current_state = next_state.copy()
-        return next_state, reward, done, None  # returns None at pos 4 to match gym envs
-
-    def _generate_pixelbased_representation(self):
-        pixels = super(ObstaclePathing, self)._generate_pixelbased_representation()
-        for obst in self.obstacles:
-            for y in range(obst[2], obst[3]):
-                for x in range(obst[0], obst[1]):
-                    pixels[y, x] = ObstaclePathing.OBSTACLE_PIXEL
-
-        return pixels
-
-
-class VisualObstaclePathing(ObstaclePathing):
-    def step(self, action: int):
-        next_state = self.current_state.copy()
-        self.state_trail.append(self.current_state)
-
-        if action == 0:
-            next_state[1] = max(0, next_state[1] - 1)
-        elif action == 1:
-            next_state[0] = min(next_state[0] + 1, self.width - 1)
-        elif action == 2:
-            next_state[1] = min(next_state[1] + 1, self.height - 1)
-        elif action == 3:
-            next_state[0] = max(0, next_state[0] - 1)
-
-        # get blocked at coordinates
-        if next_state in self.blocked_coordinates:
-            next_state = self.current_state.copy()
-
-        reward = SimplePathing.DEFAULT_REWARD
-        self.steps += 1
-        done = self.steps >= self.max_steps
-        if next_state == self.target_coords:
-            reward = SimplePathing.TARGET_REWARD
-            done = True
-
-        self.current_state = next_state.copy()
-        return self.get_pixelbased_representation(), reward, done, None
-
-    def reset(self):
-        self.current_state = self.start_state.copy()
-        self.state_trail = []
-        self.steps = 0
-        return self.get_pixelbased_representation()
-
-
-if __name__ == "__main__":
-    env = ObstaclePathing(30, 30,
-                          [[0, 18, 18, 21],
-                           [21, 24, 10, 30]]
-                          )
-    env.visualize()
+    def render(self, mode='human', close=False):
+        img = self.get_pixelbased_representation()
+        plt.imshow(img, cmap="binary", origin="upper")
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.draw()
+        plt.pause(0.001)

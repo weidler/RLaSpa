@@ -61,6 +61,12 @@ class QTableOffPolicy(_Policy):
     def finish_training(self) -> None:
         pass
 
+    def restore_from_state(self, input) -> None:
+        pass
+
+    def get_current_training_state(self):
+        pass
+
 
 class QTableSARSA(QTableOffPolicy):
 

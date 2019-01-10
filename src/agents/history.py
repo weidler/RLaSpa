@@ -2,6 +2,7 @@ import random
 from typing import List
 
 import gym
+import torch
 
 from src.agents.agent import _Agent
 from src.gym_pathing.envs import ObstaclePathing
@@ -12,7 +13,6 @@ from src.representation.learners import SimpleAutoencoder, VariationalAutoencode
 from src.representation.representation import _RepresentationLearner
 from src.task.task import _Task
 from src.utils.container import SARSTuple
-from src.utils.functional import int_to_one_hot
 
 
 class HistoryAgent(_Agent):
@@ -26,6 +26,7 @@ class HistoryAgent(_Agent):
         self.representation_learner = representation_learner
         self.policy = policy
         self.env = environment
+        self.one_hot_actions = torch.eye(self.env.action_space.n)
 
         # quick check ups
         # TODO check if policy input size matches representation encoding size
@@ -66,7 +67,7 @@ class HistoryAgent(_Agent):
             episode_reward = 0
             while not done and step < max_episode_length:
                 action = exploring_policy.choose_action(current_state)
-                one_hot_action_vector = int_to_one_hot(action, self.env.action_space.n)
+                one_hot_action_vector = self.one_hot_actions[action]
                 observation, reward, done, _ = env.step(action)
                 exploring_policy.update(current_state, action, reward, observation, done)
                 self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))

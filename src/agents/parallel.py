@@ -2,7 +2,7 @@ import random
 from typing import List
 
 import gym
-import src.gym_pathing
+import torch
 
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
@@ -10,7 +10,6 @@ from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.functional import int_to_one_hot
 from src.utils.model_handler import save_checkpoint, load_checkpoint, get_checkpoint_dir
 
 
@@ -22,6 +21,7 @@ class ParallelAgent(_Agent):
         self.representation_learner = representation_learner
         self.policy = policy
         self.env = environment
+        self.one_hot_actions = torch.eye(self.env.action_space.n)
 
     # REINFORCEMENT LEARNING #
 
@@ -48,7 +48,7 @@ class ParallelAgent(_Agent):
             while not done:
                 # choose action
                 action = self.policy.choose_action(latent_state)
-                one_hot_action_vector = int_to_one_hot(action, self.env.action_space.n)
+                one_hot_action_vector = self.one_hot_actions[action]
 
                 # step and observe
                 observation, reward, done, _ = self.env.step(action)
@@ -78,8 +78,8 @@ class ParallelAgent(_Agent):
 
             rewards.append(episode_reward)
 
-            if episode % (episodes // 10) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//10):])/(episodes//10)})")
+            if episode % (episodes // 100) == 0: print(
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
 
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 res = policy.get_current_training_state()

@@ -1,11 +1,16 @@
+import random
+from typing import List
+
 import gym
-import os
+import src.gym_pathing
 
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, CerberusPixel
+from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel
 from src.representation.representation import _RepresentationLearner
+from src.utils.container import SARSTuple
+from src.utils.functional import int_to_one_hot
 from src.utils.model_handler import save_checkpoint, load_checkpoint, get_checkpoint_dir
 
 
@@ -20,8 +25,8 @@ class ParallelAgent(_Agent):
 
     # REINFORCEMENT LEARNING #
 
-
-    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None):
+    def train_agent(self, episodes: int, batch_size=32, max_batch_memory_size=1024, ckpt_to_load=None,
+                    save_ckpt_per=None):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
             start_episode = load_checkpoint(policy, ckpt_to_load)
@@ -30,6 +35,10 @@ class ParallelAgent(_Agent):
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
 
         print("Starting parallel training process.")
+
+        # introduce batch memory to store observations and learn in batches
+        batch_memory: List[SARSTuple] = []
+
         rewards = []
         for episode in range(start_episode, episodes):
             done = False
@@ -39,16 +48,25 @@ class ParallelAgent(_Agent):
             while not done:
                 # choose action
                 action = self.policy.choose_action(latent_state)
+                one_hot_action_vector = int_to_one_hot(action, self.env.action_space.n)
 
                 # step and observe
                 observation, reward, done, _ = self.env.step(action)
                 latent_observation = self.representation_learner.encode(observation)
 
-                # train the REPRESENTATION learner
-                self.representation_learner.learn(state=[current_state], next_state=[observation], reward=[reward],
-                                                  action=[action])
+                # TRAIN REPRESENTATION LEARNER using batches
+                batch_memory.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
+                if len(batch_memory) >= batch_size:
+                    batch_tuples = batch_memory[:]
+                    random.shuffle(batch_tuples)
+                    batch_tuples = batch_tuples[:batch_size]
 
-                # train the POLICY
+                    self.representation_learner.learn_batch_of_tuples(batch_tuples)
+
+                    if len(batch_memory) > max_batch_memory_size:
+                        batch_memory = batch_memory[1:]
+
+                # TRAIN POLICY
                 self.policy.update(latent_state, action, reward, latent_observation, done)
 
                 # update states (both, to avoid redundant encoding)
@@ -60,8 +78,8 @@ class ParallelAgent(_Agent):
 
             rewards.append(episode_reward)
 
-            if episode % (episodes // 100) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
+            if episode % (episodes // 10) == 0: print(
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//10):])/(episodes//10)})")
 
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 res = policy.get_current_training_state()
@@ -87,12 +105,12 @@ if __name__ == "__main__":
     #             'visual': True},
     # )
     # env = gym.make('VisualObstaclePathing-v1')
-
-    # repr_learner = CerberusPixel(width=size,
+    #
+    # repr_learner = JanusPixel(width=size,
     #                              height=size,
-    #                              n_actions=len(env.action_space),
+    #                              n_actions=env.action_space.n,
     #                              n_hidden=size)
-    # policy = DoubleDeepQNetwork(size, len(env.action_space))
+    # policy = DoubleDeepQNetwork(size, env.action_space.n)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
@@ -101,5 +119,5 @@ if __name__ == "__main__":
     agent.train_agent(episodes=1000)
 
     # TEST
-    agent.test()
+    for i in range(5): agent.test()
     agent.env.close()

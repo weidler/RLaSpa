@@ -1,3 +1,5 @@
+import gym
+
 from src.gym_pathing.envs.simplePathing import SimplePathing
 
 
@@ -13,6 +15,8 @@ class ObstaclePathing(SimplePathing):
         """
         self.obstacles = []
         super(ObstaclePathing, self).__init__(width, height, visual)
+
+        self.action_space = gym.spaces.Discrete(4)
 
         # create obstacles
         self.blocked_coordinates = []

@@ -5,12 +5,12 @@ import torch
 from numpy.core.multiarray import ndarray
 from torch import nn, optim
 
-from src.representation.network.janus import JanusAutoencoder
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.network.cerberus import CerberusNetwork
+from src.representation.network.janus import JanusAutoencoder
 from src.representation.network.variational_autoencoder import VariationalAutoencoderNetwork
-from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder
 from src.representation.representation import _RepresentationLearner
+from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder
 
 from src.task.pathing import ObstaclePathing
 
@@ -33,14 +33,14 @@ def cast_float_tensor(o: object):
 
 
 class PassThrough(_RepresentationLearner):
-     def __init__(self):
-         pass
+    def __init__(self):
+        pass
 
-     def encode(self, state):
-         return state
+    def encode(self, state):
+        return state
 
-     def learn(self, state, action, reward, next_state, remember=True):
-         return 0
+    def learn(self, state, action, reward, next_state, remember=True):
+        return 0
 
 
 class Flatten(_RepresentationLearner):
@@ -69,9 +69,6 @@ class SimpleAutoencoder(_RepresentationLearner):
         # NETWORK
         self.network = AutoencoderNetwork(d_states, d_latent, d_states)
 
-        # TRAINING SAMPLES
-        self.backup_history = []
-
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
@@ -81,10 +78,6 @@ class SimpleAutoencoder(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action=None, reward=None, next_state=None, remember=True):
-        # remember sample in history
-        if remember:
-            self.backup_history.append((state, action, reward, next_state))
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
 
@@ -99,6 +92,7 @@ class SimpleAutoencoder(_RepresentationLearner):
 
 class VariationalAutoencoder(_RepresentationLearner):
 
+
     def __init__(self, d_states, d_actions, d_middle, d_latent, lr=0.005): # 1e-3 is the one originally used
         # PARAMETERS
         self.d_states = d_states
@@ -109,9 +103,6 @@ class VariationalAutoencoder(_RepresentationLearner):
 
         # NETWORK
         self.network = VariationalAutoencoderNetwork(d_states, d_middle, d_latent, d_states)
-
-        # TRAINING SAMPLES
-        self.backup_history = []
 
         # PARTS
         # self.criterion = nn.MSELoss()
@@ -142,10 +133,6 @@ class VariationalAutoencoder(_RepresentationLearner):
         return self.activation(self.encoderMean(state)), self.activation(self.encoderStDev(state))
 
     def learn(self, state, action=None, reward=None, next_state=None, remember=True):
-        # remember sample in history
-        if remember:
-            self.backup_history.append((state, action, reward, next_state))
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
 
@@ -176,9 +163,6 @@ class Janus(_RepresentationLearner):
             actionDim=d_actions
         )
 
-        # TRAINING SAMPLES
-        self.backup_history = []
-
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
@@ -188,10 +172,6 @@ class Janus(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action, reward, next_state, remember=True):
-        # remember sample in history
-        if remember:
-            self.backup_history.append((state, action, reward, next_state))
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)
@@ -224,10 +204,6 @@ class JanusPixel(_RepresentationLearner):
             n_actions=self.n_actions,
             n_hidden=self.n_hidden
         )
-        self.one_hot_actions = numpy.eye(n_actions)
-
-        # TRAINING SAMPLES
-        self.backup_history = []
 
         # PARTS
         self.criterion = nn.MSELoss()
@@ -238,11 +214,6 @@ class JanusPixel(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action, reward, next_state, remember=True):
-        action = self.one_hot_actions[action]
-        # remember sample in history
-        if remember:
-            self.backup_history.append((state, action, reward, next_state))
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)
@@ -278,9 +249,6 @@ class Cerberus(_RepresentationLearner):
             d_actions=d_actions
         )
 
-        # TRAINING SAMPLES
-        self.backup_history = []
-
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
@@ -290,10 +258,6 @@ class Cerberus(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action=None, reward=None, next_state=None, remember=True):
-        # remember sample in history
-        if remember:
-            self.backup_history.append((state, action, reward, next_state))
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)
@@ -332,10 +296,6 @@ class CerberusPixel(_RepresentationLearner):
             n_actions=self.n_actions,
             n_hidden=self.n_hidden
         )
-        self.one_hot_actions = numpy.eye(n_actions)
-
-        # TRAINING SAMPLES
-        self.backup_history = []
 
         # PARTS
         self.criterion = nn.MSELoss()
@@ -346,11 +306,6 @@ class CerberusPixel(_RepresentationLearner):
         return self.network.activation(self.network.encoder(state))
 
     def learn(self, state, action, reward, next_state, remember=True):
-        action = self.one_hot_actions[action]
-        # remember sample in history
-        if remember:
-            self.backup_history.append((state, action, reward, next_state))
-
         # convert to tensor if necessary
         state_tensor = cast_float_tensor(state)
         action_tensor = cast_float_tensor(action)

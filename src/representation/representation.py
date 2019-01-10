@@ -16,16 +16,18 @@ class _RepresentationLearner(abc.ABC):
     def learn(self, state, action, reward, next_state, remember=True) -> float:
         raise NotImplementedError
 
-    def learn_many(self, sars_tuples: List[SARSTuple], remember=True) -> float:
-        total_loss = 0
-        for sample in sars_tuples:
-            total_loss += self.learn([sample.state], [sample.action], [sample.reward], [sample.next_state], remember=remember)
+    def learn_batch_of_tuples(self, batch: List[SARSTuple]):
+        state_batch, action_batch, reward_batch, next_state_batch = [], [], [], []
+        for sars_tuple in batch:
+            state_batch.append(sars_tuple.state)
+            action_batch.append(sars_tuple.action)
+            reward_batch.append(sars_tuple.reward)
+            next_state_batch.append(sars_tuple.next_state)
 
-        return total_loss / len(sars_tuples)
-
-    def learn_from_backup(self) -> None:
-        random.shuffle(self.backup_history)
-        self.learn_many(self.backup_history, remember=False)
-
-    def clear_backup(self) -> None:
-        self.backup_history = []
+        # learn
+        self.learn(
+            state=state_batch,
+            action=action_batch,
+            reward=reward_batch,
+            next_state=next_state_batch
+        )

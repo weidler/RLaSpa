@@ -1,5 +1,5 @@
 import torch
-
+import torch.nn as nn
 
 class PixelEncoder(torch.nn.Module):
 
@@ -54,6 +54,42 @@ class SimplePixelEncoder(torch.nn.Module):
         return deflattened
 
 
+class VariationalPixelEncoder(torch.nn.Module):
+
+    def __init__(self, width, height, n_middle, n_hidden=10):
+        super(VariationalPixelEncoder, self).__init__()
+
+        self.fullyConnected = nn.Linear(width * height, n_middle)
+        self.encoderMean = nn.Linear(n_middle, n_hidden)
+        self.encoderStDev = nn.Linear(n_middle, n_hidden)
+        self.decodeFc = nn.Linear(n_hidden, n_middle)
+        self.decoderOut = nn.Linear(n_middle, width * height)
+
+        self.activation = torch.relu
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return eps.mul(std).add_(mu)
+
+    def forward(self, state):
+        original_shape = state.shape
+
+        # Reshape IMAGE -> VECTOR
+        flattened = state.view(state.shape[0], -1)
+
+        z1 = self.activation(self.fullyConnected(flattened))
+        mu = self.encoderMean(z1)
+        logvar = self.encoderStDev(z1)
+        z2 = self.reparameterize(mu, logvar)
+        mid_out = self.activation(self.decodeFc(z2))
+        out = torch.sigmoid(self.decoderOut(mid_out))
+        # Reshape VECTOR -> IMAGE
+        deflattened_out = out.reshape(original_shape)
+
+        return deflattened_out, mu, logvar
+
+
 class JanusPixelEncoder(torch.nn.Module):
 
     def __init__(self, width, height, n_actions, n_hidden=10):
@@ -72,7 +108,7 @@ class JanusPixelEncoder(torch.nn.Module):
         original_shape = state.shape
 
         # Reshape IMAGE -> VECTOR
-        flattened = state.view(1, -1)
+        flattened = state.view(state.shape[0], -1)
 
         # encode current state and create latent space
         latent_space = self.activation(self.encoder(flattened))
@@ -82,7 +118,6 @@ class JanusPixelEncoder(torch.nn.Module):
         deflattened_reconstruction = outState.reshape(original_shape)
 
         # append action to latent space
-        action = torch.unsqueeze(action, 0)
         latent_space_action = torch.cat((latent_space, action), 1)
         # decode next state from latent space with action
         outNextState = self.decoderNextState(latent_space_action)
@@ -112,7 +147,7 @@ class CerberusPixelEncoder(torch.nn.Module):
         original_shape = state.shape
 
         # Reshape IMAGE -> VECTOR
-        flattened = state.view(1, -1)
+        flattened = state.view(state.shape[0], -1)
 
         # encode current state and create latent space
         latent_space = self.activation(self.encoder(flattened))
@@ -122,7 +157,6 @@ class CerberusPixelEncoder(torch.nn.Module):
         deflattened_reconstruction = outState.reshape(original_shape)
 
         # append action to latent space
-        action = torch.unsqueeze(action, 0)
         latent_space_action = torch.cat((latent_space, action), 1)
 
         # decode next state from latent space with action

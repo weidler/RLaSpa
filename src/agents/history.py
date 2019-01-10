@@ -1,15 +1,16 @@
+import random
 from typing import List
 
 import gym
+import torch
 
 from src.agents.agent import _Agent
 from src.gym_pathing.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, VariationalAutoencoder
+from src.representation.learners import SimpleAutoencoder, VariationalAutoencoder, JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
-from src.task.task import _Task
 from src.utils.container import SARSTuple
 
 
@@ -17,13 +18,14 @@ class HistoryAgent(_Agent):
     history: List[SARSTuple]
     representation_learner: _RepresentationLearner
     policy: _Policy
-    env: _Task
+    env: gym.Env
 
-    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment):
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment: gym.Env):
         # modules
         self.representation_learner = representation_learner
         self.policy = policy
         self.env = environment
+        self.one_hot_actions = torch.eye(self.env.action_space.n)
 
         # quick check ups
         # TODO check if policy input size matches representation encoding size
@@ -35,7 +37,7 @@ class HistoryAgent(_Agent):
 
     def load_history(self, savefile: str):
         print(f"Loading from {savefile}.")
-        with open(f"../data/{savefile}", "r") as f:  # write
+        with open(f"../../data/{savefile}", "r") as f:  # write
             lines = f.readlines()
 
         tuples = 0
@@ -56,17 +58,25 @@ class HistoryAgent(_Agent):
 
     def gather_history(self, exploring_policy: _Policy, episodes: int, max_episode_length=1000):
         print("Gathering history...")
+        # check if it is a visual task that needs flattening
+        is_visual = False
+        flattener = Flatten()
+        if len(self.env.observation_space.shape) == 2:
+            is_visual = True
+
+
         rewards = []
         for episode in range(episodes):
-            current_state = self.env.reset()
+            current_state = self.reset_env()
             done = False
             step = 0
             episode_reward = 0
             while not done and step < max_episode_length:
-                action = exploring_policy.choose_action(current_state)
-                observation, reward, done, _ = env.step(action)
-                exploring_policy.update(current_state, action, reward, observation, done)
-                self.history.append(SARSTuple(current_state, action, reward, observation))
+                action = exploring_policy.choose_action(flattener.encode(current_state))
+                one_hot_action_vector = self.one_hot_actions[action]
+                observation, reward, done, _ = self.step_env(action)
+                exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
+                self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 step += 1
                 episode_reward += reward
                 current_state = observation
@@ -77,12 +87,27 @@ class HistoryAgent(_Agent):
 
         exploring_policy.finish_training()
 
-    def pretrain(self):
+    def pretrain(self, epochs: int, batch_size=32):
         if len(self.history) == 0:
             raise RuntimeError("No history found. Add a history by using .gather_history() or .load_history()!")
 
         print(f"Training Representation Learner on {len(self.history)} samples ...")
-        self.representation_learner.learn_many(self.history)
+
+        print("\t|-- Shuffling")
+        random.shuffle(self.history)
+
+        print("\t|-- Training")
+        n_batches = len(self.history) // batch_size
+        for epoch in range(epochs):
+            print(f"\t\tEpoch {epoch + 1}")
+            for i in range(n_batches):
+                batch_tuples = self.history[i * batch_size:(i + 1) * batch_size]
+
+                self.representation_learner.learn_batch_of_tuples(batch_tuples)
+
+                if i % (n_batches // 3) == 0: print(
+                    f"\t\t|-- {round(i/n_batches * 100)}%")
+
         self.is_pretrained = True
 
     # REINFORCEMENT LEARNING #
@@ -125,7 +150,7 @@ if __name__ == "__main__":
     #
     # agent = HistoryAgent(repr_learner, policy, env)
     #
-    # load = False
+    # load = True
     #
     # if not load:
     #     agent.gather_history(pretraining_policy, 10000)
@@ -133,19 +158,27 @@ if __name__ == "__main__":
     # else:
     #     agent.load_history("cartpole-10000.data")
     #
-    # agent.pretrain()
+    # agent.pretrain(5)
     # agent.train_agent(1000)
     #
     # agent.test()
     # agent.env.close()
+
+
+    size=30
 
     env = ObstaclePathing(30, 30,
                           [[0, 18, 18, 21],
                            [21, 24, 10, 30]],
                           True
                           )
-    repr_learner = VariationalAutoencoder(900, 2, 400, 20)
-    policy = DoubleDeepQNetwork(20, 2, eps_decay=2000)
+
+    repr_learner = JanusPixel(width=size,
+                              height=size,
+                              n_actions=env.action_space.n,
+                              n_hidden=size)
+    policy = DoubleDeepQNetwork(30, 2, eps_decay=2000)
+
     pretraining_policy = DeepQNetwork(900, 2)
 
     agent = HistoryAgent(repr_learner, policy, env)
@@ -153,13 +186,15 @@ if __name__ == "__main__":
     load = False
 
     if not load:
-        agent.gather_history(pretraining_policy, 10000)
+
+        agent.gather_history(pretraining_policy, 100)
+
         agent.save_history("cartpole-10000.data")
     else:
         agent.load_history("cartpole-10000.data")
 
-    agent.pretrain()
+    agent.pretrain(5)
     agent.train_agent(1000)
 
-    agent.test()
+    for i in range(5): agent.test()
     agent.env.close()

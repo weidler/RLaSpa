@@ -1,8 +1,7 @@
-data/*.data
-data/*.pkl
-data/*.his
+data/*
 src/task/cifardata/*
 *.pdf
+models/*
 ###### PYTHON ######
 
 # Byte-compiled / optimized / DLL files
@@ -445,3 +444,5 @@ modules.xml
 documentation/report/report\.pdf
 
 documentation/project plan/project plan\.pdf
+
+src/agents/ckpt/*

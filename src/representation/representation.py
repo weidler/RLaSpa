@@ -1,6 +1,7 @@
 import abc
 import random
 import torch
+from torch import Tensor
 from typing import List
 
 from src.utils.container import SARSTuple
@@ -9,23 +10,37 @@ from src.utils.container import SARSTuple
 class _RepresentationLearner(abc.ABC):
 
     @abc.abstractmethod
-    def encode(self, state) -> torch.Tensor:
+    def encode(self, state: Tensor) -> Tensor:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def learn(self, state, action, reward, next_state, remember=True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
         raise NotImplementedError
 
-    def learn_many(self, sars_tuples: List[SARSTuple], remember=True) -> float:
-        total_loss = 0
-        for sample in sars_tuples:
-            total_loss += self.learn([sample.state], [sample.action], [sample.reward], [sample.next_state], remember=remember)
+    def learn_batch_of_tuples(self, batch: List[SARSTuple]):
+        # batch_size = len(batch)
+        # state_size = batch[0].state.shape
+        # action_size = batch[0].action.shape
 
-        return total_loss / len(sars_tuples)
+        state_batch = torch.stack([s.state for s in batch], 0)
+        action_batch = torch.stack([s.action for s in batch], 0)
+        reward_batch = torch.Tensor([s.reward for s in batch])
+        next_state_batch = torch.stack([s.next_state for s in batch], 0)
 
-    def learn_from_backup(self) -> None:
-        random.shuffle(self.backup_history)
-        self.learn_many(self.backup_history, remember=False)
+        # state_batch = torch.zeros((batch_size,) + state_size)
+        # action_batch = torch.zeros((batch_size,) + action_size)
+        # reward_batch = torch.zeros((batch_size, 1))
+        # next_state_batch = torch.zeros((batch_size,) + state_size)
+        # for i, sars_tuple in enumerate(batch):
+        #     state_batch.append(sars_tuple.state)
+        #     action_batch.append(sars_tuple.action)
+        #     reward_batch.append(sars_tuple.reward)
+        #     next_state_batch.append(sars_tuple.next_state)
 
-    def clear_backup(self) -> None:
-        self.backup_history = []
+        # learn
+        self.learn(
+            state=state_batch,
+            action=action_batch,
+            reward=reward_batch,
+            next_state=next_state_batch
+        )

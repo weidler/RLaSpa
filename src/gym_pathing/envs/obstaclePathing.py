@@ -1,3 +1,6 @@
+import gym
+import numpy
+
 from src.gym_pathing.envs.simplePathing import SimplePathing
 
 
@@ -14,6 +17,9 @@ class ObstaclePathing(SimplePathing):
         self.obstacles = []
         super(ObstaclePathing, self).__init__(width, height, visual)
 
+        self.action_space = gym.spaces.Discrete(4)
+        self.observation_space = gym.spaces.Box(low=0, high=max((width, height)), dtype=numpy.uint8, shape=(2,))
+        if visual: self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(width, height))
         # create obstacles
         self.blocked_coordinates = []
         self.add_obstacles(obstacles)

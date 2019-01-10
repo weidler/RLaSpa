@@ -67,14 +67,14 @@ class HistoryAgent(_Agent):
 
         rewards = []
         for episode in range(episodes):
-            current_state = self.env.reset()
+            current_state = self.reset_env()
             done = False
             step = 0
             episode_reward = 0
             while not done and step < max_episode_length:
                 action = exploring_policy.choose_action(flattener.encode(current_state))
                 one_hot_action_vector = self.one_hot_actions[action]
-                observation, reward, done, _ = env.step(action)
+                observation, reward, done, _ = self.step_env(action)
                 exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
                 self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 step += 1

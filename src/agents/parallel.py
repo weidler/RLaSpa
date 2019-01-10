@@ -47,7 +47,7 @@ class ParallelAgent(_Agent):
         for episode in range(start_episode, episodes):
             done = False
 
-            current_state = self.env.reset()
+            current_state = self.reset_env()
             latent_state = self.representation_learner.encode(current_state.reshape(-1))
 
             episode_reward = 0

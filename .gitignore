@@ -1,6 +1,4 @@
-data/*.data
-data/*.pkl
-data/*.his
+data/*
 src/task/cifardata/*
 *.pdf
 models/*

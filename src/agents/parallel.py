@@ -2,6 +2,8 @@ import random
 from typing import List
 
 import gym
+import torch
+
 import src.gym_pathing
 
 from src.agents.agent import _Agent
@@ -91,6 +93,9 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
+
+    # if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
+
     env = gym.make("CartPole-v0")
     repr_learner = SimpleAutoencoder(4, 2, 3)
     policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)

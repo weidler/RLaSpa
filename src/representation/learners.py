@@ -2,6 +2,7 @@ import random
 
 import numpy
 import torch
+from torch import Tensor
 from numpy.core.multiarray import ndarray
 from torch import nn, optim
 
@@ -13,33 +14,15 @@ from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder
 
 
-def cast_float_tensor(o: object):
-    # if state is given as list, convert to required tensor
-    if isinstance(o, list):
-        o = torch.Tensor(o).float()
-    # if state is given as ndarray, convert to required tensor
-    elif isinstance(o, ndarray):
-        o = torch.from_numpy(o).float()
-    # if object is an int
-    elif isinstance(o, int):
-        o = torch.Tensor([o]).float()
-
-    # check unknown cases
-    if not isinstance(o, torch.Tensor):
-        raise ValueError(f"Cannot cast Tensor on type {type(o)}")
-
-    return o
-
-
 class PassThrough(_RepresentationLearner):
     def __init__(self):
         pass
 
-    def encode(self, state):
+    def encode(self, state: Tensor) -> Tensor:
         return state
 
-    def learn(self, state, action, reward, next_state, remember=True):
-        return 0
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+        return 0.0
 
 
 class Flatten(_RepresentationLearner):
@@ -47,17 +30,16 @@ class Flatten(_RepresentationLearner):
     def __init__(self):
         pass
 
-    def encode(self, state):
-        state_tensor = cast_float_tensor(state)
-        return state_tensor.view(-1)
+    def encode(self, state: Tensor) -> Tensor:
+        return state.view(-1)
 
-    def learn(self, state, action, reward, next_state, remember=True):
-        return 0
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+        return 0.0
 
 
 class SimpleAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -72,17 +54,15 @@ class SimpleAutoencoder(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def encode(self, state):
-        state = cast_float_tensor(state)
+    def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state, action=None, reward=None, next_state=None, remember=True):
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
         # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
 
         self.optimizer.zero_grad()
-        out = self.network(state_tensor)
-        loss = self.criterion(out, state_tensor)
+        out = self.network(state)
+        loss = self.criterion(out, state)
         loss.backward()
 
         self.optimizer.step()
@@ -91,8 +71,7 @@ class SimpleAutoencoder(_RepresentationLearner):
 
 class VariationalAutoencoder(_RepresentationLearner):
 
-
-    def __init__(self, d_states, d_actions, d_middle, d_latent, lr=0.005): # 1e-3 is the one originally used
+    def __init__(self, d_states: int, d_actions: int, d_middle: int, d_latent: int, lr: float = 0.005): # 1e-3 is the one originally used
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -109,7 +88,7 @@ class VariationalAutoencoder(_RepresentationLearner):
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def loss_function(self, recon_x, x_tens, mu, logvar):
+    def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
         # BCE = self.criterion(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
         # MSE = self.criterion(recon_x, x_tens)
@@ -123,8 +102,7 @@ class VariationalAutoencoder(_RepresentationLearner):
         return BCE + KLD
         # return MSE + KLD
 
-    def encode(self, state):
-        state = cast_float_tensor(state)
+    def encode(self, state: Tensor) -> Tensor:
         # z1 = self.network.activation(self.network.fullyConnected(state.reshape(-1)))
         z1 = self.network.activation(self.network.fullyConnected(state))
         mu = self.network.encoderMean(z1)
@@ -132,13 +110,10 @@ class VariationalAutoencoder(_RepresentationLearner):
         z2 = self.network.reparameterize(mu, logvar)
         return z2
 
-    def learn(self, state, action=None, reward=None, next_state=None, remember=True):
-        # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
-
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
         self.optimizer.zero_grad()
-        out, mu, logvar = self.network(state_tensor)
-        loss = self.loss_function(out, state_tensor, mu, logvar)
+        out, mu, logvar = self.network(state)
+        loss = self.loss_function(out, state, mu, logvar)
         loss.backward()
 
         self.optimizer.step()
@@ -147,7 +122,7 @@ class VariationalAutoencoder(_RepresentationLearner):
 
 class VariationalAutoencoderPixel(_RepresentationLearner):
 
-    def __init__(self, width, height, n_middle, n_hidden, lr=1e-3): # 1e-3 is the one originally used
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int, lr: float = 1e-3): # 1e-3 is the one originally used
         # PARAMETERS
         self.width = width
         self.height = height
@@ -170,7 +145,7 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def loss_function(self, recon_x, x_tens, mu, logvar):
+    def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
         # BCE = self.criterion(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
         # MSE = self.criterion(recon_x, x_tens)
@@ -184,8 +159,7 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         return BCE + KLD
         # return MSE + KLD
 
-    def encode(self, state):
-        state = cast_float_tensor(state)
+    def encode(self, state: Tensor) -> Tensor:
         z1 = self.network.activation(self.network.fullyConnected(state.reshape(-1)))
         # z1 = self.network.activation(self.network.fullyConnected(state))
         mu = self.network.encoderMean(z1)
@@ -193,13 +167,10 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         z2 = self.network.reparameterize(mu, logvar)
         return z2
 
-    def learn(self, state, action=None, reward=None, next_state=None, remember=True):
-        # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
-
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
         self.optimizer.zero_grad()
-        out, mu, logvar = self.network(state_tensor)
-        loss = self.loss_function(out, state_tensor, mu, logvar)
+        out, mu, logvar = self.network(state)
+        loss = self.loss_function(out, state, mu, logvar)
         loss.backward()
 
         self.optimizer.step()
@@ -208,7 +179,7 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
 
 class Janus(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -228,19 +199,15 @@ class Janus(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def encode(self, state):
-        state = cast_float_tensor(state)
+    def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state, action, reward, next_state, remember=True):
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
         # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
-        action_tensor = cast_float_tensor(action)
-        next_state_tensor = cast_float_tensor(next_state)
-        target_tensor = torch.cat((state_tensor, next_state_tensor), 0)
+        target_tensor = torch.cat((state, next_state), 0)
 
         self.optimizer.zero_grad()
-        out = self.network(state_tensor, action_tensor)
+        out = self.network(state, action)
         loss = self.criterion(out, target_tensor)
         loss.backward()
 
@@ -249,7 +216,7 @@ class Janus(_RepresentationLearner):
 
 
 class JanusPixel(_RepresentationLearner):
-    def __init__(self, width, height, n_actions, n_hidden, lr=0.1):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1):
         # PARAMETERS
         self.width = width
         self.height = height
@@ -270,22 +237,16 @@ class JanusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def encode(self, state):
-        state = cast_float_tensor(state.reshape(-1))
-        return self.network.activation(self.network.encoder(state))
+    def encode(self, state: Tensor) -> Tensor:
+        return self.network.activation(self.network.encoder(state.view(-1)))
 
-    def learn(self, state, action, reward, next_state, remember=True):
-        # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
-        action_tensor = cast_float_tensor(action)
-        next_state_tensor = cast_float_tensor(next_state)
-
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
         self.optimizer.zero_grad()
-        reconstruction, next_state_construction = self.network(state_tensor, action_tensor)
+        reconstruction, next_state_construction = self.network(state, action)
 
         # Loss
-        reconstruction_loss = self.criterion(reconstruction, state_tensor)
-        next_state_loss = self.criterion(next_state_construction, next_state_tensor)
+        reconstruction_loss = self.criterion(reconstruction, state)
+        next_state_loss = self.criterion(next_state_construction, next_state)
         total_loss = sum([reconstruction_loss, next_state_loss])
         total_loss.backward()
 
@@ -295,7 +256,7 @@ class JanusPixel(_RepresentationLearner):
 
 class Cerberus(_RepresentationLearner):
 
-    def __init__(self, d_states, d_actions, d_latent, lr=0.1):
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -314,24 +275,19 @@ class Cerberus(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def encode(self, state):
-        state = cast_float_tensor(state)
+    def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state, action=None, reward=None, next_state=None, remember=True):
-        # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
-        action_tensor = cast_float_tensor(action)
-        next_state_tensor = cast_float_tensor(next_state)
-        difference_tensor = cast_float_tensor((numpy.array(state) != numpy.array(next_state)).astype(int))
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+        difference = state != next_state
 
         self.optimizer.zero_grad()
-        reconstruction, next_state_prediction, difference_prediction = self.network(state_tensor, action_tensor)
+        reconstruction, next_state_prediction, difference_prediction = self.network(state, action)
 
         # Loss
-        reconstruction_loss = self.criterion(reconstruction, state_tensor)
-        next_state_prediction_loss = self.criterion(next_state_prediction, next_state_tensor)
-        difference_prediction_loss = self.criterion(difference_prediction, difference_tensor)
+        reconstruction_loss = self.criterion(reconstruction, state)
+        next_state_prediction_loss = self.criterion(next_state_prediction, next_state)
+        difference_prediction_loss = self.criterion(difference_prediction, difference)
         total_loss = sum([reconstruction_loss, next_state_prediction_loss, difference_prediction_loss])
 
         total_loss.backward()
@@ -341,7 +297,7 @@ class Cerberus(_RepresentationLearner):
 
 
 class CerberusPixel(_RepresentationLearner):
-    def __init__(self, width, height, n_actions, n_hidden, lr=0.1):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1):
         # PARAMETERS
         self.width = width
         self.height = height
@@ -362,24 +318,19 @@ class CerberusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def encode(self, state):
-        state = cast_float_tensor(state.reshape(-1))
-        return self.network.activation(self.network.encoder(state))
+    def encode(self, state: Tensor) -> Tensor:
+        return self.network.activation(self.network.encoder(state.view(-1)))
 
-    def learn(self, state, action, reward, next_state, remember=True):
-        # convert to tensor if necessary
-        state_tensor = cast_float_tensor(state)
-        action_tensor = cast_float_tensor(action)
-        next_state_tensor = cast_float_tensor(next_state)
-        difference_tensor = cast_float_tensor((numpy.array(state) != numpy.array(next_state)).astype(int))
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+        difference_target = state != next_state
 
         self.optimizer.zero_grad()
-        reconstruction, next_state_construction, difference = self.network(state_tensor, action_tensor)
+        reconstruction, next_state_construction, difference = self.network(state, action)
 
         # Loss
-        reconstruction_loss = self.criterion(reconstruction, state_tensor)
-        next_state_loss = self.criterion(next_state_construction, next_state_tensor)
-        difference_loss = self.criterion(difference, difference_tensor)
+        reconstruction_loss = self.criterion(reconstruction, state)
+        next_state_loss = self.criterion(next_state_construction, next_state)
+        difference_loss = self.criterion(difference, difference_target)
         total_loss = sum([reconstruction_loss, next_state_loss, difference_loss])
         total_loss.backward()
 

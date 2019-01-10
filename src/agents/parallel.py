@@ -101,35 +101,6 @@ if __name__ == "__main__":
     # if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    # # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    # # size = 30
-    # # gym.envs.register(
-    # #     id='VisualObstaclePathing-v1',
-    # #     entry_point='src.gym_pathing.envs:ObstaclePathing',
-    # #     kwargs={'width': size, 'height': size,
-    # #             'obstacles': [[0, 18, 18, 21],
-    # #                           [21, 24, 10, 30]],
-    # #             'visual': True},
-    # # )
-    # # env = gym.make('VisualObstaclePathing-v1')
-    # #
-    # # repr_learner = JanusPixel(width=size,
-    # #                              height=size,
-    # #                              n_actions=env.action_space.n,
-    # #                              n_hidden=size)
-    # # policy = DoubleDeepQNetwork(size, env.action_space.n)
-    #
-    # # AGENT
-    # agent = ParallelAgent(repr_learner, policy, env)
-    #
-    # # TRAIN
-    # agent.train_agent(episodes=1000)
-    #
-    # # TEST
-    # for i in range(5): agent.test()
-    # agent.env.close()
-
-    # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
     size = 30
     gym.envs.register(
         id='VisualObstaclePathing-v1',
@@ -142,13 +113,13 @@ if __name__ == "__main__":
     env = gym.make('VisualObstaclePathing-v1')
 
     # REPRESENTATION
-    repr_learner = VariationalAutoencoderPixel(width=size,
-                                               height=size,
-                                               n_middle=400,
-                                               n_hidden=size)
+    repr_learner = JanusPixel(width=size,
+                                   height=size,
+                                   n_actions=env.action_space.n,
+                                   n_hidden=size)
 
     # POLICY
-    policy = DoubleDeepQNetwork(size, 2, eps_decay=2000)
+    policy = DoubleDeepQNetwork(size, env.action_space.n, eps_decay=2000)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)

@@ -26,7 +26,8 @@ class VariationalAutoencoderNetwork(nn.Module):
         return eps.mul(std).add_(mu)
 
     def forward(self, input: torch.Tensor):
-        z1 = self.activation(self.fullyConnected(input.reshape(-1)))
+        # z1 = self.activation(self.fullyConnected(input.reshape(-1)))
+        z1 = self.activation(self.fullyConnected(input))
         mu = self.encoderMean(z1)
         logvar = self.encoderStDev(z1)
         z2 = self.reparameterize(mu, logvar)

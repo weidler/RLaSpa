@@ -1,5 +1,5 @@
 import torch
-
+import torch.nn as nn
 
 class PixelEncoder(torch.nn.Module):
 
@@ -52,6 +52,42 @@ class SimplePixelEncoder(torch.nn.Module):
         deflattened = decoded.reshape(original_shape)
 
         return deflattened
+
+
+class VariationalPixelEncoder(torch.nn.Module):
+
+    def __init__(self, width, height, n_middle, n_hidden=10):
+        super(VariationalPixelEncoder, self).__init__()
+
+        self.fullyConnected = nn.Linear(width * height, n_middle)
+        self.encoderMean = nn.Linear(n_middle, n_hidden)
+        self.encoderStDev = nn.Linear(n_middle, n_hidden)
+        self.decodeFc = nn.Linear(n_hidden, n_middle)
+        self.decoderOut = nn.Linear(n_middle, width * height)
+
+        self.activation = torch.relu
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return eps.mul(std).add_(mu)
+
+    def forward(self, state):
+        original_shape = state.shape
+
+        # Reshape IMAGE -> VECTOR
+        flattened = state.view(state.shape[0], -1)
+
+        z1 = self.activation(self.fullyConnected(flattened))
+        mu = self.encoderMean(z1)
+        logvar = self.encoderStDev(z1)
+        z2 = self.reparameterize(mu, logvar)
+        mid_out = self.activation(self.decodeFc(z2))
+        out = torch.sigmoid(self.decoderOut(mid_out))
+        # Reshape VECTOR -> IMAGE
+        deflattened_out = out.reshape(original_shape)
+
+        return deflattened_out, mu, logvar
 
 
 class JanusPixelEncoder(torch.nn.Module):

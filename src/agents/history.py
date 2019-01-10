@@ -164,17 +164,21 @@ if __name__ == "__main__":
     # agent.test()
     # agent.env.close()
 
+
     size=30
+
     env = ObstaclePathing(30, 30,
                           [[0, 18, 18, 21],
                            [21, 24, 10, 30]],
                           True
                           )
+
     repr_learner = JanusPixel(width=size,
                               height=size,
                               n_actions=env.action_space.n,
                               n_hidden=size)
     policy = DoubleDeepQNetwork(30, 2, eps_decay=2000)
+
     pretraining_policy = DeepQNetwork(900, 2)
 
     agent = HistoryAgent(repr_learner, policy, env)
@@ -182,7 +186,9 @@ if __name__ == "__main__":
     load = False
 
     if not load:
+
         agent.gather_history(pretraining_policy, 100)
+
         agent.save_history("cartpole-10000.data")
     else:
         agent.load_history("cartpole-10000.data")

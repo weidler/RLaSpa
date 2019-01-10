@@ -70,27 +70,81 @@ This is especially useful when the changes between consecutive states are small 
 The network architecture is shown in Figure \ref{subfig:repr_learner_cerberus}.  
 
 \subsection{Policy Learners}
-Based on the latent space constructed by the representation learner (marked in purple), the policy learner is RL agent that...
-
-learn values of states.
+Based on the latent space constructed by the representation learner, the policy learner is RL agent that .
 
 \subsubsection{Table-based(?)}
+Include or not?
 
 \subsubsection{DQN}
-DQN \citep{DQN}, prioritized memory \citep{prioritized_memory}
 \begin{itemize}
-	\item bypass the exponential growth with state configurations
+	\item avoid the exponential growth with state configurations
+	\item DQN \citep{DQN} 
+	\item with prioritized memory \citep{prioritized_memory} some memory is more important, depending on loss, give more prio to the ones that have major loss. Try to choose the ones causing more loss. 
 \end{itemize}
 
 \subsubsection{DDQN}
-DDQN \citep{DDQN}, Dueling DQN \citep{DuelingDQN}
-
 \begin{itemize}
-	\item target model
+	\item DDQN \citep{DDQN} also has prioritized memory 
+	%Dueling DQN \citep{DuelingDQN}: state value, mix between q=learning and state action.
+	\item DQN update policy every time. 
+	\item continuously changing policy, estimate q-value changes every time.
+	target network updated every 100 steps. prediction of q-values is fixed. otherwise there is ``more bias''?
 \end{itemize}
 
-\subsection{Interaction between Representation Learner and Policy Learner}
-\begin{itemize}
-	\item history approach
-	\item parallel approach 
-\end{itemize}
+\subsection{Integrating Representation and Policy Learners}
+The interaction between the representation leaner and policy learner can occur in two ways, depending on the execution sequence of the two learning processes.
+
+\begin{figure}[ht!]
+	\centering
+	\begin{subfigure}{0.45\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
+		\caption{Simple autoencoder}
+		\label{subfig:repr_learner_simple_autoencoder}
+	\end{subfigure}%
+	~ 
+	\begin{subfigure}{0.45\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
+		\caption{Variational autoencoder (add noise sign)}
+		\label{subfig:repr_learner_vae}
+	\end{subfigure}
+	\begin{subfigure}{0.5\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../img/janus.pdf}
+		\caption{Janus}
+		\label{subfig:repr_learner_janus}
+	\end{subfigure}%
+	~ 
+	\begin{subfigure}{0.5\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{../img/cerberus.pdf}
+		\caption{Cerberus}
+		\label{subfig:repr_learner_cerberus}
+	\end{subfigure}
+	\caption{Network architectures of of representation learner, where $s$ and $s'$ indicate current and next state respectively, and $a$ indicates the action leading from $s$ to $s$. 
+		The layers marked in purple are the latent representations to be used as the basis of later transfer learning. 
+		The arrows indicate a straight copy from source to target.
+	}
+	\label{fig:approaches}
+\end{figure}
+
+\subsubsection{History Approach}
+As the name indicates, the history approach first creates a collection of state, action and rewards by randomly exploring in the environment.
+The representation learner is then trained based on the history.
+Once learning completes, the policy learner is trained based on the encoding of the representation learner.
+In this approach, the representation and policy learning are decoupled. 
+
+\subsubsection{Parallel Approach}
+In the parallel approach, the representation and policy learner are trained simultaneously.
+observe the reward and new state. 
+The policy learner is trained with loss from the observed reward.
+The 
+
+
+
+Encode using current encoder
+Choose action and observe
+%Use reward for policy loss
+Use observation to calculate representation loss
+

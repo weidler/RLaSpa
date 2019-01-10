@@ -42,7 +42,7 @@ class ParallelAgent(_Agent):
         rewards = []
         for episode in range(start_episode, episodes):
             done = False
-            current_state = self.env.reset()
+            current_state = self.reset_env()
             latent_state = self.representation_learner.encode(current_state)
             episode_reward = 0
             while not done:
@@ -51,7 +51,7 @@ class ParallelAgent(_Agent):
                 one_hot_action_vector = self.one_hot_actions[action]
 
                 # step and observe
-                observation, reward, done, _ = self.env.step(action)
+                observation, reward, done, _ = self.step_env(action)
                 latent_observation = self.representation_learner.encode(observation)
 
                 # TRAIN REPRESENTATION LEARNER using batches
@@ -64,7 +64,7 @@ class ParallelAgent(_Agent):
                     self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
                     if len(batch_memory) > max_batch_memory_size:
-                        batch_memory = batch_memory[1:]
+                        batch_memory.pop(0)
 
                 # TRAIN POLICY
                 self.policy.update(latent_state, action, reward, latent_observation, done)
@@ -91,26 +91,26 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
-    env = gym.make("CartPole-v0")
-    repr_learner = SimpleAutoencoder(4, 2, 3)
-    policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
+    # env = gym.make("CartPole-v0")
+    # repr_learner = SimpleAutoencoder(4, 2, 3)
+    # policy = DoubleDeepQNetwork(3, 2, eps_decay=2000)
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    # size = 30
-    # gym.envs.register(
-    #     id='VisualObstaclePathing-v1',
-    #     entry_point='src.gym_pathing.envs:ObstaclePathing',
-    #     kwargs={'width': size, 'height': size,
-    #             'obstacles': [[0, 18, 18, 21],
-    #                           [21, 24, 10, 30]],
-    #             'visual': True},
-    # )
-    # env = gym.make('VisualObstaclePathing-v1')
-    #
-    # repr_learner = JanusPixel(width=size,
-    #                              height=size,
-    #                              n_actions=env.action_space.n,
-    #                              n_hidden=size)
-    # policy = DoubleDeepQNetwork(size, env.action_space.n)
+    size = 30
+    gym.envs.register(
+        id='VisualObstaclePathing-v1',
+        entry_point='src.gym_pathing.envs:ObstaclePathing',
+        kwargs={'width': size, 'height': size,
+                'obstacles': [[0, 18, 18, 21],
+                              [21, 24, 10, 30]],
+                'visual': True},
+    )
+    env = gym.make('VisualObstaclePathing-v1')
+
+    repr_learner = JanusPixel(width=size,
+                              height=size,
+                              n_actions=env.action_space.n,
+                              n_hidden=size)
+    policy = DoubleDeepQNetwork(size, env.action_space.n)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)

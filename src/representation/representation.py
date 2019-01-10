@@ -17,12 +17,24 @@ class _RepresentationLearner(abc.ABC):
         raise NotImplementedError
 
     def learn_batch_of_tuples(self, batch: List[SARSTuple]):
-        state_batch, action_batch, reward_batch, next_state_batch = [], [], [], []
-        for sars_tuple in batch:
-            state_batch.append(sars_tuple.state)
-            action_batch.append(sars_tuple.action)
-            reward_batch.append(sars_tuple.reward)
-            next_state_batch.append(sars_tuple.next_state)
+        # batch_size = len(batch)
+        # state_size = batch[0].state.shape
+        # action_size = batch[0].action.shape
+
+        state_batch = torch.stack([s.state for s in batch], 0)
+        action_batch = torch.stack([s.action for s in batch], 0)
+        reward_batch = torch.Tensor([s.reward for s in batch])
+        next_state_batch = torch.stack([s.next_state for s in batch], 0)
+
+        # state_batch = torch.zeros((batch_size,) + state_size)
+        # action_batch = torch.zeros((batch_size,) + action_size)
+        # reward_batch = torch.zeros((batch_size, 1))
+        # next_state_batch = torch.zeros((batch_size,) + state_size)
+        # for i, sars_tuple in enumerate(batch):
+        #     state_batch.append(sars_tuple.state)
+        #     action_batch.append(sars_tuple.action)
+        #     reward_batch.append(sars_tuple.reward)
+        #     next_state_batch.append(sars_tuple.next_state)
 
         # learn
         self.learn(

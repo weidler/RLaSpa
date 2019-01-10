@@ -1,5 +1,7 @@
 import abc
 
+import torch
+
 
 class _Agent(abc.ABC):
 
@@ -16,12 +18,26 @@ class _Agent(abc.ABC):
     def act(self, current_state):
         current_state = self.representation_learner.encode(current_state)
         action = self.policy.choose_action_policy(current_state)
-        next_state, step_reward, env_done, _ = self.env.step(action)
+        next_state, step_reward, env_done, _ = self.step_env(action)
         return next_state, step_reward, env_done
+
+    def step_env(self, action):
+        """
+        Converts the next state to a tensor for better performance
+        :param action:
+        :return:
+        """
+        next_state, step_reward, env_done, info = self.env.step(action)
+        # convert next_state to a tensor
+        tensor_state = torch.Tensor(next_state).float()
+        return tensor_state, step_reward, env_done, info
+
+    def reset_env(self):
+        return torch.Tensor(self.env.reset()).float()
 
     def test(self):
         done = False
-        state = self.env.reset()
+        state = self.reset_env()
         step = 0
         total_reward = 0
         while not done:

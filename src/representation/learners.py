@@ -12,8 +12,6 @@ from src.representation.network.variational_autoencoder import VariationalAutoen
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder
 
-from src.task.pathing import ObstaclePathing
-
 def cast_float_tensor(o: object):
     # if state is given as list, convert to required tensor
     if isinstance(o, list):
@@ -331,46 +329,34 @@ if __name__ == "__main__":
     ae = VariationalAutoencoder(d_states=900, d_actions=2, d_middle=400, d_latent=20)
     # ae = VariationalAutoencoder(d_states=8, d_actions=2, d_middle=4, d_latent=2)
 
-    for i in range(2500):
-        # sample = [1, 2, 3, 4, 5]
-
-        # '''One hot encoded vector reconstruction test'''
-        # samples = numpy.eye(8, dtype=int)
-        # random.shuffle(samples)
-        # sample = samples[random.randint(0, 7)]
-
-        '''Obstacle pathing test'''
-        env = ObstaclePathing(30, 30,
-                              [[0, 18, 18, 21],
-                               [21, 24, 10, 30]]
-                              )
-        sample = env.static_pixels
-
-        loss = ae.learn(torch.Tensor(sample))
-        if i % 100 == 0:
-            print("Epoch ", i, " loss: ", loss)
-
-    for i in range(1):
-        # sample = [1, 2, 3, 4, 5]
-
-        # '''One hot encoded vector reconstruction test'''
-        # random.shuffle(sample)
-        # samples = numpy.eye(8, dtype=int)
-        # random.shuffle(samples)
-        # sample = samples[random.randint(0, 7)]
-        # # print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float(), torch.Tensor([1,2]).float())[0].tolist()]}")
-        # print(f"{sample} --> {[e for e in ae.network(torch.Tensor(sample))]}")
-
-        '''Obstacle pathing test'''
-        env = ObstaclePathing(30, 30,
-                              [[0, 18, 18, 21],
-                               [21, 24, 10, 30]]
-                              )
-        sample = env.static_pixels
-        out, mu, std = ae.network(torch.Tensor(sample))
-        print("input: ", sample)
-        print("output: ", out.round())
-
-
-
-    print()
+    # for i in range(2500):
+    #     # sample = [1, 2, 3, 4, 5]
+    #
+    #     # '''One hot encoded vector reconstruction test'''
+    #     # samples = numpy.eye(8, dtype=int)
+    #     # random.shuffle(samples)
+    #     # sample = samples[random.randint(0, 7)]
+    #
+    #     '''Obstacle pathing test'''
+    #     env = ObstaclePathing(30, 30,
+    #                           [[0, 18, 18, 21],
+    #                            [21, 24, 10, 30]]
+    #                           )
+    #     sample = env.static_pixels
+    #
+    #     loss = ae.learn(torch.Tensor(sample))
+    #     if i % 100 == 0:
+    #         print("Epoch ", i, " loss: ", loss)
+    #
+    # for i in range(1):
+    #     # sample = [1, 2, 3, 4, 5]
+    #
+    #     # '''One hot encoded vector reconstruction test'''
+    #     # random.shuffle(sample)
+    #     # samples = numpy.eye(8, dtype=int)
+    #     # random.shuffle(samples)
+    #     # sample = samples[random.randint(0, 7)]
+    #     # # print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float(), torch.Tensor([1,2]).float())[0].tolist()]}")
+    #     # print(f"{sample} --> {[e for e in ae.network(torch.Tensor(sample))]}")
+    #
+    # print()

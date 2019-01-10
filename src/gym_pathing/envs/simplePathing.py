@@ -1,4 +1,6 @@
 import copy
+
+import numpy
 import numpy as np
 import gym
 from gym import error, spaces, utils
@@ -32,6 +34,8 @@ class SimplePathing(gym.Env):
         self.width = width
         self.height = height
         self.action_space = gym.spaces.Discrete(4)  # UP, RIGHT, DOWN, LEFT
+        self.observation_space = gym.spaces.Box(low=0, high=max((width, height)), dtype=numpy.uint8, shape=(2,))
+        if visual: self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(width, height))
         self.max_steps = (width*height)  # Maybe reduce max_steps by dividing by 2?
         self.steps = 0
         self.visual = visual

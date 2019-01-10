@@ -116,10 +116,14 @@ class DeepQNetwork(_Policy):
         self.total_steps_done = 0
 
     def restore_from_state(self, input) -> None:
-        raise NotImplementedError("to be implemented")
+        self.model.load_state_dict(input['model'])
+        self.optimizer.load_state_dict(input['optimizer'])
 
     def get_current_training_state(self):
-        raise NotImplementedError("to be implemented")
+        return {
+            'model': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+        }
 
 
 class PrioritizedDeepQNetwork(DeepQNetwork):

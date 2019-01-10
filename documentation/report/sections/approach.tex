@@ -1,15 +1,10 @@
 \section{Approach}
 \label{sec:approach}
-We propose a modular framework for representation learning and transfer learning. 
+We propose a modular framework for transfer learning in reinforcement learning. 
 The framework consists three modules: 
-\begin{enumerate}
-	\item the representation learner, which constructs an abstract representation of the task environment
-	\item the policy learner is RL learner which operates based on the task abstraction created by the representation learner. 
-	\item the task environment. RL tasks to be solved by the RL learner
-\end{enumerate}
-
-History approach vs parallel approach.
-
+1) the \textbf{representation learner}, which constructs an abstract representation of the task environment;
+2) the \textbf{policy learner}, which is RL learner operating based on the task abstraction created by the representation learner;
+3) the \textbf{task environment}, which is the RL tasks to be solved by policy learner.
 
 \subsection{Representation Learners}
 The representation learner aims to construct an abstract and generalized representation of the task environment to facilitate later knowledge transfer.
@@ -30,7 +25,7 @@ Once learned, this intermediate latent space is expected to create a more compac
 	\begin{subfigure}{0.45\columnwidth}
 		\centering
 		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
-		\caption{Variational autoencoder}
+		\caption{Variational autoencoder (add noise sign)}
 		\label{subfig:repr_learner_vae}
 	\end{subfigure}
 	\begin{subfigure}{0.5\columnwidth}
@@ -46,38 +41,33 @@ Once learned, this intermediate latent space is expected to create a more compac
 		\caption{Cerberus}
 		\label{subfig:repr_learner_cerberus}
 	\end{subfigure}
-	\caption{Network architectures of of representation learner, where $s$ and $s'$ indicate current and next state respectively, and $a$ indicates the action leading from $s$ to $s$. The layers marked in purple are the latent representations to be used as the basis of later transfer learning.}
+	\caption{Network architectures of of representation learner, where $s$ and $s'$ indicate current and next state respectively, and $a$ indicates the action leading from $s$ to $s$. 
+	The layers marked in purple are the latent representations to be used as the basis of later transfer learning. 
+	The arrows indicate a straight copy from source to target.
+	}
 	\label{fig:repr_learner}
 \end{figure}
 
-
-\subsubsection{Simple Autoencoder}
-The simple autoencoder seeks to 
-, as shown in Figure \ref{subfig:repr_learner_simple_autoencoder}.
-
-\begin{itemize}
-	\item simply reconstruction of input
-\end{itemize}
-
-\subsubsection{Variational Autoencoder}
-, as shown in Figure \ref{subfig:repr_learner_vae}.
-
-\begin{itemize}
-	\item continuous
-\end{itemize}
+\subsubsection{Simple and Variational Autoencoder}
+The simplest representation learner is an autoencoder, which compresses and reconstructs the current state representation. 
+Figure \ref{subfig:repr_learner_simple_autoencoder} illustrates the simple autoencoder, and \ref{subfig:repr_learner_vae} the variational autoencoder (VAE). 
+%The VAE . 
+However, one theoretical drawback is that
+since the latent space only aims at compression, it is not necessarily a useful basis for transfer learning.
+The upcoming architectures account for this.
 
 \subsubsection{Janus}
-, as shown in Figure \ref{subfig:repr_learner_janus}.
-\begin{itemize}
-	\item preserve transition dynamics
-\end{itemize}
+To create more guidance in the construction of the latent space, we add another sub-network to capture the transition dynamics. 
+As shown in Figure \ref{subfig:repr_learner_janus},
+in addition to reconstructing the current state, we also append the action in latent space and seek to use this combination to predict the next state.
+The hypothesized effect of this approach is that the latent representation can preserve the transition dynamics in the environment, and therefore is a more meaningful abstraction of the task.
+
 
 \subsubsection{Cerberus}
-, as shown in Figure \ref{subfig:repr_learner_cerberus}.
-
-\begin{itemize}
-	\item preserve transition dynamics
-\end{itemize}
+Compared to Janus, the Cerberus architecture has one more output sub-network, which aims to construct the difference between the current and next state. 
+By only predicting the differences, focus is placed on the change caused by the action taken.
+This is especially useful when the changes between consecutive states are small relative to the entire state representation.
+The network architecture is shown in Figure \ref{subfig:repr_learner_cerberus}.  
 
 \subsection{Policy Learners}
 Based on the latent space constructed by the representation learner (marked in purple), the policy learner is RL agent that...
@@ -97,4 +87,10 @@ DDQN \citep{DDQN}, Dueling DQN \citep{DuelingDQN}
 
 \begin{itemize}
 	\item target model
+\end{itemize}
+
+\subsection{Interaction between Representation Learner and Policy Learner}
+\begin{itemize}
+	\item history approach
+	\item parallel approach 
 \end{itemize}

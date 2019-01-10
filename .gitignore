@@ -3,6 +3,7 @@ data/*.pkl
 data/*.his
 src/task/cifardata/*
 *.pdf
+models/*
 ###### PYTHON ######
 
 # Byte-compiled / optimized / DLL files

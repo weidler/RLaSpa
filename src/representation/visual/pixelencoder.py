@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class PixelEncoder(torch.nn.Module):
 
     def __init__(self):
@@ -88,6 +89,75 @@ class VariationalPixelEncoder(torch.nn.Module):
         deflattened_out = out.reshape(original_shape)
 
         return deflattened_out, mu, logvar
+
+
+class CVAE(torch.nn.Module):
+
+    def __init__(self, width, height, n_middle, n_hidden=10):
+        super(CVAE, self).__init__()
+
+        # # Encoder
+        # self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        # self.bn1 = nn.BatchNorm2d(16)
+        # self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1, bias=False)
+        # self.bn2 = nn.BatchNorm2d(32)
+        # self.conv3 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1, bias=False)
+        # self.bn3 = nn.BatchNorm2d(32)
+        # self.conv4 = nn.Conv2d(32, 16, kernel_size=3, stride=2, padding=1, bias=False)
+        # self.bn4 = nn.BatchNorm2d(16)
+        #
+        # self.fc1 = nn.Linear(8 * 8 * 16, 512)
+        # self.fc_bn1 = nn.BatchNorm1d(512)
+        # self.fc21 = nn.Linear(512, 512)
+        # self.fc22 = nn.Linear(512, 512)
+        #
+        # # Decoder
+        # self.fc3 = nn.Linear(512, 512)
+        # self.fc_bn3 = nn.BatchNorm1d(512)
+        # self.fc4 = nn.Linear(512, 8 * 8 * 16)
+        # self.fc_bn4 = nn.BatchNorm1d(8 * 8 * 16)
+        #
+        # self.conv5 = nn.ConvTranspose2d(16, 32, kernel_size=3, stride=2, padding=1, output_padding=1,
+        #                                 bias=False)
+        # self.bn5 = nn.BatchNorm2d(32)
+        # self.conv6 = nn.ConvTranspose2d(32, 32, kernel_size=3, stride=1, padding=1, bias=False)
+        # self.bn6 = nn.BatchNorm2d(32)
+        # self.conv7 = nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=1, output_padding=1,
+        #                                 bias=False)
+        # self.bn7 = nn.BatchNorm2d(16)
+        # self.conv8 = nn.ConvTranspose2d(16, 3, kernel_size=3, stride=1, padding=1, bias=False)
+
+        # self.fullyConnected = nn.Linear(width * height, n_middle)
+        # self.encoderMean = nn.Linear(n_middle, n_hidden)
+        # self.encoderStDev = nn.Linear(n_middle, n_hidden)
+        # self.decodeFc = nn.Linear(n_hidden, n_middle)
+        # self.decoderOut = nn.Linear(n_middle, width * height)
+        #
+        # self.activation = torch.relu
+
+
+def reparameterize(self, mu, logvar):
+    std = torch.exp(0.5 * logvar)
+    eps = torch.randn_like(std)
+    return eps.mul(std).add_(mu)
+
+
+def forward(self, state):
+    original_shape = state.shape
+
+    # Reshape IMAGE -> VECTOR
+    flattened = state.view(state.shape[0], -1)
+
+    z1 = self.activation(self.fullyConnected(flattened))
+    mu = self.encoderMean(z1)
+    logvar = self.encoderStDev(z1)
+    z2 = self.reparameterize(mu, logvar)
+    mid_out = self.activation(self.decodeFc(z2))
+    out = torch.sigmoid(self.decoderOut(mid_out))
+    # Reshape VECTOR -> IMAGE
+    deflattened_out = out.reshape(original_shape)
+
+    return deflattened_out, mu, logvar
 
 
 class JanusPixelEncoder(torch.nn.Module):

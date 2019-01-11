@@ -36,19 +36,20 @@ class _RepresentationLearner(abc.ABC):
         """
         raise NotImplementedError
 
-    def learn_batch_of_tuples(self, batch: List[SARSTuple]) -> None:
+    def learn_batch_of_tuples(self, batch: List[SARSTuple]) -> float:
         state_batch = torch.stack([s.state for s in batch], 0)
         action_batch = torch.stack([s.action for s in batch], 0)
         reward_batch = torch.Tensor([s.reward for s in batch])
         next_state_batch = torch.stack([s.next_state for s in batch], 0)
 
         # learn
-        self.learn(
+        loss = self.learn(
             state=state_batch,
             action=action_batch,
             reward=reward_batch,
             next_state=next_state_batch
         )
+        return loss
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
         """ Visualize some part of the representation learner.

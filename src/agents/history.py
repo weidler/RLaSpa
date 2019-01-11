@@ -13,7 +13,7 @@ from src.representation.learners import SimpleAutoencoder, VariationalAutoencode
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
-
+from src.utils.logger import Logger
 
 class HistoryAgent(_Agent):
     history: List[SARSTuple]
@@ -34,7 +34,9 @@ class HistoryAgent(_Agent):
         self.history = []
         self.is_pretrained = False
 
-    # REPRESENTATION LEARNING #
+        self.logger = Logger('../../logs')
+
+        # REPRESENTATION LEARNING #
 
     def load_history(self, savefile: str):
         print(f"Loading from {savefile}.")
@@ -102,19 +104,24 @@ class HistoryAgent(_Agent):
         n_batches = len(self.history) // batch_size
         for epoch in range(epochs):
             print(f"\t\tEpoch {epoch + 1}")
+
+            pretrain_loss = 0
+
             for i in range(n_batches):
                 batch_tuples = self.history[i * batch_size:(i + 1) * batch_size]
 
-                self.representation_learner.learn_batch_of_tuples(batch_tuples)
+                pretrain_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
-                if i % (n_batches // 3) == 0: print(
+            if i % (n_batches // 3) == 0: print(
                     f"\t\t|-- {round(i/n_batches * 100)}%")
+
+            self.logger.scalar_summary('pretrain_loss', pretrain_loss, epoch)
 
         self.is_pretrained = True
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None):
+    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None, log=False):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)

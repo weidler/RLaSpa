@@ -15,7 +15,7 @@ from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import VariationalPixelEncoder
 from src.utils.container import SARSTuple
 from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
-
+from src.utils.logger import Logger
 
 class ParallelAgent(_Agent):
     policy: _Policy
@@ -26,11 +26,12 @@ class ParallelAgent(_Agent):
         self.policy = policy
         self.env = environment
         self.one_hot_actions = torch.eye(self.env.action_space.n)
+        self.logger = Logger('../../logs')
 
     # REINFORCEMENT LEARNING #
 
     def train_agent(self, episodes: int, batch_size=32, max_batch_memory_size=1024, ckpt_to_load=None,
-                    save_ckpt_per=None, plot_every=None):
+                    save_ckpt_per=None, plot_every=None, log=False):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
@@ -51,6 +52,9 @@ class ParallelAgent(_Agent):
             latent_state = self.representation_learner.encode(current_state.reshape(-1))
 
             episode_reward = 0
+
+            repr_loss = 0.0
+
             while not done:
                 # choose action
                 action = self.policy.choose_action(latent_state)
@@ -67,7 +71,7 @@ class ParallelAgent(_Agent):
                     random.shuffle(batch_tuples)
                     batch_tuples = batch_tuples[:batch_size]
 
-                    self.representation_learner.learn_batch_of_tuples(batch_tuples)
+                    repr_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
                     if len(batch_memory) > max_batch_memory_size:
                         batch_memory.pop(0)
@@ -82,6 +86,11 @@ class ParallelAgent(_Agent):
 
                 # trackers
                 episode_reward += reward
+
+            # logging for tensorboard
+            if log:
+                info = {'loss': repr_loss, 'reward': episode_reward}
+                self.logger.scalar_summary_dict(info, episode)
 
             rewards.append(episode_reward)
 

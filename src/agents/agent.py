@@ -28,13 +28,14 @@ class _Agent(abc.ABC):
         self.representation_learner = repr_learner
 
     @abc.abstractmethod
-    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None, plot_every=None):
+    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None, plot_every=None, log=False):
         """ Train the agent for some number of episodes. The max length of episodes is specified in the environment.
         Optionally save or load checkpoints from previous trainings.
 
         :param episodes:        the number of episodes
         :param ckpt_to_load:    (default None) loading checkpoint
         :param save_ckpt_per:   (default None) number of episodes after which a checkpoint is saved
+        :param log:             (default False) whether logging is done
         """
         raise NotImplementedError
 

@@ -5,7 +5,7 @@ import gym
 import torch
 
 from src.agents.agent import _Agent
-from src.gym_pathing.envs import ObstaclePathing
+from src.gym_custom_tasks.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy

@@ -4,7 +4,7 @@ from typing import List
 import gym
 import torch
 
-import src.gym_pathing
+import src.gym_custom_tasks
 
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
@@ -101,26 +101,26 @@ if __name__ == "__main__":
     if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
+    env = gym.make('Race-v0')
     size = 30
-    gym.envs.register(
-        id='VisualObstaclePathing-v1',
-        entry_point='src.gym_pathing.envs:ObstaclePathing',
-        kwargs={'width': size, 'height': size,
-                'obstacles': [[0, 18, 18, 21],
-                              [21, 24, 10, 30]],
-                'visual': True},
-    )
-    env = gym.make('VisualObstaclePathing-v1')
+    # gym.envs.register(
+    #     id='VisualObstaclePathing-v1',
+    #     entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
+    #     kwargs={'width': size, 'height': size,
+    #             'obstacles': [[0, 18, 18, 21],
+    #                           [21, 24, 10, 30]],
+    #             'visual': True},
+    # )
+    # env = gym.make('VisualObstaclePathing-v1')
 
     # REPRESENTATION
-
-    repr_learner = JanusPixel(width=size,
-                              height=size,
+    repr_learner = JanusPixel(width=env.observation_space.shape[0],
+                              height=env.observation_space.shape[1],
                               n_actions=env.action_space.n,
                               n_hidden=size)
 
-    # repr_learner = VariationalAutoencoderPixel(width=size,
-    #                                            height=size,
+    # repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
+    #                                            height=env.observation_space.shape[1],
     #                                            n_middle=400,
     #                                            n_hidden=size)
 

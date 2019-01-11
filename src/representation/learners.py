@@ -7,7 +7,8 @@ from src.representation.network.cerberus import CerberusNetwork
 from src.representation.network.janus import JanusAutoencoder
 from src.representation.network.variational_autoencoder import VariationalAutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
-from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder
+from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder, \
+    CVAE
 
 import matplotlib.pyplot as plt
 
@@ -163,6 +164,64 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         logvar = self.network.encoderStDev(z1)
         z2 = self.network.reparameterize(mu, logvar)
         return z2
+
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
+        self.optimizer.zero_grad()
+        out, mu, logvar = self.network(state)
+        loss = self.loss_function(out, state, mu, logvar)
+        loss.backward()
+
+        self.optimizer.step()
+        return loss.data.item()
+
+
+class CVAEPixel(_RepresentationLearner):
+
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int, lr: float = 1e-3): # 1e-3 is the one originally used
+        # PARAMETERS
+        self.width = width
+        self.height = height
+        self.n_middle = n_middle
+        self.n_hidden = n_hidden
+
+        self.learning_rate = lr
+
+        # NETWORK
+        self.network = CVAE(
+            width=self.width,
+            height=self.height,
+            n_middle=self.n_middle,
+            n_hidden=self.n_hidden
+        )
+
+        # PARTS
+        # self.criterion = nn.MSELoss()
+        # self.criterion = nn.functional.binary_cross_entropy()
+        self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
+        # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+
+    def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
+        BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
+        # BCE = self.criterion(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
+        # MSE = self.criterion(recon_x, x_tens)
+
+        # see Appendix B from VAE paper:
+        # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+        # https://arxiv.org/abs/1312.6114
+        # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+        return BCE + KLD
+        # return MSE + KLD
+
+    def encode(self, x: Tensor):
+        conv1 = self.network.relu(self.network.bn1(self.network.conv1(x.reshape(16, 1, 3, 3))))
+        conv2 = self.network.relu(self.network.bn2(self.network.conv2(conv1)))
+        conv3 = self.network.relu(self.network.bn3(self.network.conv3(conv2)))
+        conv4 = self.network.relu(self.network.bn4(self.network.conv4(conv3))).view(-1, )
+
+        fc1 = self.network.relu(self.network.fc_bn1(self.network.fc1(conv4)))
+        return self.network.fc21(fc1), self.network.fc22(fc1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         self.optimizer.zero_grad()

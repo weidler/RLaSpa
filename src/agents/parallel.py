@@ -30,7 +30,7 @@ class ParallelAgent(_Agent):
     # REINFORCEMENT LEARNING #
 
     def train_agent(self, episodes: int, batch_size=32, max_batch_memory_size=1024, ckpt_to_load=None,
-                    save_ckpt_per=None):
+                    save_ckpt_per=None, plot_every=None):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
@@ -76,6 +76,7 @@ class ParallelAgent(_Agent):
                 self.policy.update(latent_state, action, reward, latent_observation, done)
 
                 # update states (both, to avoid redundant encoding)
+                last_state = current_state
                 current_state = observation
                 latent_state = latent_observation
 
@@ -90,6 +91,9 @@ class ParallelAgent(_Agent):
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+
+            if plot_every is not None and episode % plot_every == 0:
+                self.representation_learner.visualize_output(last_state, one_hot_action_vector, current_state)
 
         # Last update of the agent policy
         self.policy.finish_training()
@@ -130,7 +134,7 @@ if __name__ == "__main__":
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(episodes=1000)
+    agent.train_agent(episodes=1000, plot_every=100)
 
     # TEST
     for i in range(5):

@@ -12,7 +12,7 @@ from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, VariationalAutoencoder, JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.model_handler import save_checkpoint, load_checkpoint, get_checkpoint_dir
+from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
 
 
 class HistoryAgent(_Agent):
@@ -116,7 +116,7 @@ class HistoryAgent(_Agent):
     def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
-            start_episode = load_checkpoint(policy, ckpt_to_load)
+            start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
 
         if save_ckpt_per:  # if asked to save checkpoints
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
@@ -148,9 +148,8 @@ class HistoryAgent(_Agent):
                 f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
 
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
-                res = policy.get_current_training_state()
-                res["episode"] = episode  # append current episode
-                save_checkpoint(res, ckpt_dir, "ckpt_{}.ckpt".format(episode))
+                save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
+                save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
 
         self.policy.finish_training()
 

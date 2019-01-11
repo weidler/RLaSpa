@@ -1,9 +1,5 @@
-import random
-
-import numpy
 import torch
 from torch import Tensor
-from numpy.core.multiarray import ndarray
 from torch import nn, optim
 
 from src.representation.network.autoencoder import AutoencoderNetwork
@@ -21,7 +17,7 @@ class PassThrough(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return state
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         return 0.0
 
 
@@ -33,7 +29,7 @@ class Flatten(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return state.view(-1)
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         return 0.0
 
 
@@ -57,7 +53,7 @@ class SimpleAutoencoder(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         # convert to tensor if necessary
 
         self.optimizer.zero_grad()
@@ -110,7 +106,7 @@ class VariationalAutoencoder(_RepresentationLearner):
         z2 = self.network.reparameterize(mu, logvar)
         return z2
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         self.optimizer.zero_grad()
         out, mu, logvar = self.network(state)
         loss = self.loss_function(out, state, mu, logvar)
@@ -167,7 +163,7 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         z2 = self.network.reparameterize(mu, logvar)
         return z2
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         self.optimizer.zero_grad()
         out, mu, logvar = self.network(state)
         loss = self.loss_function(out, state, mu, logvar)
@@ -202,7 +198,7 @@ class Janus(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         # convert to tensor if necessary
         target_tensor = torch.cat((state, next_state), 0)
 
@@ -240,7 +236,7 @@ class JanusPixel(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state.view(-1)))
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         self.optimizer.zero_grad()
         reconstruction, next_state_construction = self.network(state, action)
 
@@ -278,7 +274,7 @@ class Cerberus(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         difference = state != next_state
 
         self.optimizer.zero_grad()
@@ -321,7 +317,7 @@ class CerberusPixel(_RepresentationLearner):
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state.view(-1)))
 
-    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor, remember: bool = True) -> float:
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         difference_target = state != next_state
 
         self.optimizer.zero_grad()

@@ -1,5 +1,8 @@
 import torch
 import os, datetime
+from src.representation.representation import _RepresentationLearner
+from src.policy.policy import _Policy
+
 
 def update_agent_model(current, target):
     """
@@ -33,38 +36,46 @@ def load_model(model, config_file: str):
     model.load_state_dict(config)
 
 
-def save_checkpoint(state: {}, out_dir: str, filename: str) -> None:
+def save_checkpoint(state: {}, episode: int, out_dir: str, learner: str) -> None:
     """
     Method that saves a dictionary to checkpoint in output directory/file
 
-    :param state:
-    :param out_dir:
-    :param filename:
+    :param state: the state to save
+    :param episode: current episode
+    :param out_dir: checkpoint directory
+    :param learner: which learner it is (policy or representation)
     :return:
     """
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    torch.save(state, os.path.join(out_dir, filename))
+    final_dir = os.path.join(out_dir, str(episode))
+    if not os.path.exists(os.path.join(final_dir)):
+        os.makedirs(final_dir)
+    torch.save(state, os.path.join(final_dir, "{}_{}.ckpt".format(learner, episode)))
 
 
-def load_checkpoint(policy, ckpt_path: str) -> int:
+def apply_checkpoint(policy: _Policy, repr: _RepresentationLearner, ckpt_path: str) -> int:
     """
-    Method that loads training status stored in checkpoint to policy
+    Method that loads training status stored in checkpoint
 
-    :param policy: a subclass extending from policy
-    :param ckpt_path: path to checkpoint
-    :return: starting episode (episode stored in check point)
+    :param policy: policy learner
+    :param repr: repr learner
+    :param ckpt_path: path to checkpoint folder,
+    for example "ckpt/ParallelAgent_ObstaclePathing_JanusPixel_DoubleDeepQNetwork/TIMESTAMP"
+    :return: latest episode saved in checkpoint
     """
-    if os.path.isfile(ckpt_path):
-        print("=> loading checkpoint '{}'".format(ckpt_path))
-        checkpoint = torch.load(ckpt_path)
-        policy.restore_from_state(checkpoint)
-        start_episode = checkpoint["episode"]
-        print("=> loaded checkpoint '{}' (episode {})".format(ckpt_path, start_episode))
-        return start_episode
-    else:
-        print("=> cannot find checkpoint '{}', aborting".format(ckpt_path))
-        exit()
+    assert os.path.isdir(ckpt_path)
+
+    latest_episode = max([int(dir_name) for dir_name in os.listdir(ckpt_path)])
+    policy_path = os.path.join(ckpt_path, str(latest_episode), 'policy_{}.ckpt'.format(latest_episode))
+    repr_path = os.path.join(ckpt_path, str(latest_episode), 'repr_{}.ckpt'.format(latest_episode))
+
+    assert os.path.isfile(policy_path)
+    assert os.path.isfile(repr_path)
+
+    policy.restore_from_state(torch.load(policy_path))
+    repr.restore_from(torch.load(repr_path))
+    print("=> loaded checkpoint '{}'".format(ckpt_path))
+
+    return latest_episode
 
 
 def get_checkpoint_dir(config: str) -> str:

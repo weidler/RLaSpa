@@ -10,6 +10,11 @@ from src.utils.container import SARSTuple
 class _RepresentationLearner(abc.ABC):
 
     @abc.abstractmethod
+    def __init__(self):
+        self.network = None  # placeholder in superclass, for the convenience of saving/loading
+        self.optimizer = None
+
+    @abc.abstractmethod
     def encode(self, state: Tensor) -> Tensor:
         raise NotImplementedError
 
@@ -44,3 +49,14 @@ class _RepresentationLearner(abc.ABC):
             reward=reward_batch,
             next_state=next_state_batch
         )
+
+    def current_state(self):
+        # TODO: catch exception here, as flatten and so don't have network and optimizer
+        return {
+            'model': self.network.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+        }
+
+    def restore_from(self, restore_input):
+        self.network.load_state_dict(restore_input['model'])
+        self.optimizer.load_state_dict(restore_input['optimizer'])

@@ -76,7 +76,8 @@ class HistoryAgent(_Agent):
                 action = exploring_policy.choose_action(flattener.encode(current_state))
                 one_hot_action_vector = self.one_hot_actions[action]
                 observation, reward, done, _ = self.step_env(action)
-                exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
+                if is_visual: exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
+                else: exploring_policy.update(current_state, action, reward, observation, done)
                 self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 step += 1
                 episode_reward += reward

@@ -3,6 +3,7 @@ import copy
 import numpy
 import numpy as np
 import gym
+import torch
 from gym import error, spaces, utils
 from gym.utils import seeding
 
@@ -49,7 +50,7 @@ class SimplePathing(gym.Env):
         self.show_breadcrumbs = True
 
         # MAP
-        self.static_pixels = self._generate_static_map()
+        self.static_pixels = self._generate_static_pixels()
 
 
     def __repr__(self):
@@ -63,13 +64,13 @@ class SimplePathing(gym.Env):
             representation += " ".join(map(str, row)) + "\n"
         return representation
 
-    def _generate_static_map(self):
+    def _generate_static_pixels(self):
         # static_map = [[SimplePathing.BACKGROUND_SYMBOL for _ in range(self.width)] for _ in range(self.height)]
         # static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
-        static_map = np.zeros((self.height, self.width))
-        static_map[self.target_coords[1], self.target_coords[0]] = SimplePathing.TARGET_PIXEL
+        static_pixels = torch.zeros((self.height, self.width))
+        static_pixels[self.target_coords[1], self.target_coords[0]] = SimplePathing.TARGET_PIXEL
 
-        return static_map
+        return static_pixels
 
     def _get_current_view(self):
         view = copy.deepcopy(self.static_pixels)
@@ -120,7 +121,7 @@ class SimplePathing(gym.Env):
             return self.current_state
 
     def get_pixelbased_representation(self):
-        pixels = self.static_pixels.copy()
+        pixels = self.static_pixels.clone()
         pixels[self.current_state[1], self.current_state[0]] = SimplePathing.AGENT_PIXEL
 
         return pixels

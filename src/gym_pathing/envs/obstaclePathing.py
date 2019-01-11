@@ -18,12 +18,14 @@ class ObstaclePathing(SimplePathing):
 
         self.action_space = gym.spaces.Discrete(4)
         self.observation_space = gym.spaces.Box(low=0, high=max((width, height)), dtype=numpy.uint8, shape=(2,))
-        if visual: self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(width, height))
+        if visual:
+            self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(width, height))
+
+        self.static_pixels = self._generate_pixelbased_representation()
         # create obstacles
         self.blocked_coordinates = []
         self.add_obstacles(obstacles)
 
-        self.static_pixels = self._generate_pixelbased_representation()
 
     def add_obstacles(self, obstacles):
         self.obstacles.extend(obstacles)
@@ -61,10 +63,10 @@ class ObstaclePathing(SimplePathing):
         if self.visual:
             return self.get_pixelbased_representation(), reward, done, None
         else:
-            return next_state, reward, done, None  # returns None at pos 4 to match gym envs
+            return next_state, reward, done, None
 
     def _generate_pixelbased_representation(self):
-        pixels = super(ObstaclePathing, self)._generate_static_map()
+        pixels = super(ObstaclePathing, self)._generate_static_pixels()
         for obst in self.obstacles:
             for y in range(obst[2], obst[3]):
                 for x in range(obst[0], obst[1]):

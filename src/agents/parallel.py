@@ -90,7 +90,7 @@ class ParallelAgent(_Agent):
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 res = policy.get_current_training_state()
                 res["episode"] = episode  # append current episode
-                save_checkpoint(res, ckpt_dir, "ckpt_{}".format(episode))
+                save_checkpoint(res, ckpt_dir, "ckpt_{}.ckpt".format(episode))
 
         # Last update of the agent policy
         self.policy.finish_training()

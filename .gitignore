@@ -446,3 +446,5 @@ documentation/report/report\.pdf
 documentation/project plan/project plan\.pdf
 
 src/agents/ckpt/*
+
+*.ckpt

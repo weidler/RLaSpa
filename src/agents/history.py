@@ -91,7 +91,7 @@ class HistoryAgent(_Agent):
 
         exploring_policy.finish_training()
 
-    def pretrain(self, epochs: int, batch_size=32):
+    def pretrain(self, epochs: int, batch_size=32, log=False):
         if len(self.history) == 0:
             raise RuntimeError("No history found. Add a history by using .gather_history() or .load_history()!")
 
@@ -115,7 +115,8 @@ class HistoryAgent(_Agent):
             if i % (n_batches // 3) == 0: print(
                     f"\t\t|-- {round(i/n_batches * 100)}%")
 
-            self.logger.scalar_summary('pretrain_loss', pretrain_loss, epoch)
+            if log:
+                self.logger.scalar_summary('pretrain_loss', pretrain_loss, epoch)
 
         self.is_pretrained = True
 

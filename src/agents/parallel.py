@@ -101,7 +101,7 @@ if __name__ == "__main__":
     if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    env = gym.make('Race-v0')
+    env = gym.make('Evasion-v0')
     size = 30
     # gym.envs.register(
     #     id='VisualObstaclePathing-v1',

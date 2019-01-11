@@ -30,3 +30,7 @@ register(
     id='Race-v0',
     entry_point='src.gym_custom_tasks.envs:Race',
 )
+register(
+    id='Evasion-v0',
+    entry_point='src.gym_custom_tasks.envs:Evasion',
+)

@@ -6,6 +6,11 @@ register(
     kwargs={'width': 30, 'height': 30, 'visual': False},
 )
 register(
+    id='VisualSimplePathing-v0',
+    entry_point='src.gym_pathing.envs:SimplePathing',
+    kwargs={'width': 30, 'height': 30, 'visual': True},
+)
+register(
     id='ObstaclePathing-v0',
     entry_point='src.gym_pathing.envs:ObstaclePathing',
     kwargs={'width': 30, 'height': 30,

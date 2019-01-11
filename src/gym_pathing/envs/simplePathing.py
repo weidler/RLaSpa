@@ -10,14 +10,13 @@ import matplotlib.pyplot as plt
 
 
 class SimplePathing(gym.Env):
-    BACKGROUND_SYMBOL = "."
     BACKGROUND_PIXEL = 0
 
-    TARGET_SYMBOL = "X"
     TARGET_PIXEL = 0.8
 
-    AGENT_SYMBOL = "A"
     AGENT_PIXEL = 0.3
+
+    TRAIL_PIXEL = 0.1
 
     PADDING = 3
 
@@ -50,8 +49,7 @@ class SimplePathing(gym.Env):
         self.show_breadcrumbs = True
 
         # MAP
-        self.static_map = self._generate_static_map()
-        self.static_pixels = self._generate_pixelbased_representation()
+        self.static_pixels = self._generate_static_map()
 
 
     def __repr__(self):
@@ -68,26 +66,21 @@ class SimplePathing(gym.Env):
     def _generate_static_map(self):
         # static_map = [[SimplePathing.BACKGROUND_SYMBOL for _ in range(self.width)] for _ in range(self.height)]
         # static_map[self.target_coords[1]][self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
-        static_map = np.full((self.height, self.width), SimplePathing.BACKGROUND_SYMBOL)
-        static_map[self.target_coords[1], self.target_coords[0]] = SimplePathing.TARGET_SYMBOL
+        static_map = np.zeros((self.height, self.width))
+        static_map[self.target_coords[1], self.target_coords[0]] = SimplePathing.TARGET_PIXEL
 
-        # print(static_map)
-        # print(static_map)
         return static_map
 
     def _get_current_view(self):
-        view = copy.deepcopy(self.static_map)
-        if view[self.current_state[1], self.current_state[0]] != "X":
-            view[self.current_state[1], self.current_state[0]] = "A"
-        else:
-            view[self.current_state[1], self.current_state[0]] = "Ä"
+        view = copy.deepcopy(self.static_pixels)
+        view[self.current_state[1], self.current_state[0]] = SimplePathing.AGENT_PIXEL
         return view
 
     def _get_current_view_with_trail(self):
         view = self._get_current_view()
         for step in range(-1, -len(self.state_trail), -1):
             state = self.state_trail[step]
-            view[state[1], state[0]] = "O"
+            view[state[1], state[0]] = SimplePathing.TRAIL_PIXEL
         return view
 
     def step(self, action: int):
@@ -126,13 +119,6 @@ class SimplePathing(gym.Env):
         else:
             return self.current_state
 
-    def _generate_pixelbased_representation(self):
-        view = self._get_current_view()
-        pixels = np.zeros(view.shape)
-        pixels[view == SimplePathing.TARGET_SYMBOL] = SimplePathing.TARGET_PIXEL
-
-        return pixels
-
     def get_pixelbased_representation(self):
         pixels = self.static_pixels.copy()
         pixels[self.current_state[1], self.current_state[0]] = SimplePathing.AGENT_PIXEL
@@ -141,6 +127,7 @@ class SimplePathing(gym.Env):
 
     def render(self, mode='human', close=False):
         img = self.get_pixelbased_representation()
+        plt.clf()
         plt.imshow(img, cmap="binary", origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)

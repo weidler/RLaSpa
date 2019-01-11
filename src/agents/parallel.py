@@ -84,8 +84,8 @@ class ParallelAgent(_Agent):
 
             rewards.append(episode_reward)
 
-            # if episode % (episodes // 100) == 0: print(
-            #     f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
+            if episode % (episodes // 100) == 0: print(
+                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
 
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 res = policy.get_current_training_state()
@@ -114,15 +114,15 @@ if __name__ == "__main__":
 
     # REPRESENTATION
 
-    # repr_learner = JanusPixel(width=size,
-    #                           height=size,
-    #                           n_actions=env.action_space.n,
-    #                           n_hidden=size)
+    repr_learner = JanusPixel(width=size,
+                              height=size,
+                              n_actions=env.action_space.n,
+                              n_hidden=size)
 
-    repr_learner = VariationalAutoencoderPixel(width=size,
-                                               height=size,
-                                               n_middle=400,
-                                               n_hidden=size)
+    # repr_learner = VariationalAutoencoderPixel(width=size,
+    #                                            height=size,
+    #                                            n_middle=400,
+    #                                            n_hidden=size)
 
     # POLICY
     policy = DoubleDeepQNetwork(size, env.action_space.n, eps_decay=2000)
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(episodes=56, ckpt_to_load='ckpt_55')
+    agent.train_agent(episodes=1000)
 
     # TEST
     for i in range(5):

@@ -5,7 +5,6 @@ from src.gym_pathing.envs.simplePathing import SimplePathing
 
 
 class ObstaclePathing(SimplePathing):
-    OBSTACLE_SYMBOL = "#"
     OBSTACLE_PIXEL = 1
 
     def __init__(self, width: int, height: int, obstacles: list, visual: bool):
@@ -24,7 +23,6 @@ class ObstaclePathing(SimplePathing):
         self.blocked_coordinates = []
         self.add_obstacles(obstacles)
 
-        self.static_map = self._generate_static_map()
         self.static_pixels = self._generate_pixelbased_representation()
 
     def add_obstacles(self, obstacles):
@@ -32,7 +30,7 @@ class ObstaclePathing(SimplePathing):
         for obst in obstacles:
             for y in range(obst[2], obst[3]):
                 for x in range(obst[0], obst[1]):
-                    self.static_map[y][x] = ObstaclePathing.OBSTACLE_SYMBOL
+                    self.static_pixels[y][x] = ObstaclePathing.OBSTACLE_PIXEL
                     self.blocked_coordinates.append([x, y])
 
     def step(self, action: int):
@@ -66,7 +64,7 @@ class ObstaclePathing(SimplePathing):
             return next_state, reward, done, None  # returns None at pos 4 to match gym envs
 
     def _generate_pixelbased_representation(self):
-        pixels = super(ObstaclePathing, self)._generate_pixelbased_representation()
+        pixels = super(ObstaclePathing, self)._generate_static_map()
         for obst in self.obstacles:
             for y in range(obst[2], obst[3]):
                 for x in range(obst[0], obst[1]):

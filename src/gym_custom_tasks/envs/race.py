@@ -9,7 +9,7 @@ class Race(gym.Env):
     DRIVER_PIXEL = 0.6
 
     def __init__(self):
-        self.width = 20
+        self.width = 30
         self.height = 30
         self.action_space = gym.spaces.Discrete(3) # LEFT, RIGHT, STRAIGHT
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))

@@ -9,6 +9,7 @@ from src.representation.network.variational_autoencoder import VariationalAutoen
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder
 
+import matplotlib.pyplot as plt
 
 class PassThrough(_RepresentationLearner):
     def __init__(self):
@@ -233,6 +234,15 @@ class JanusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
+    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+        reconstruction, next_state_construction = self.network(torch.unsqueeze(state, 0),
+                                                               torch.unsqueeze(action, 0))
+        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
+                   origin="upper")
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.show()
+
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state.view(-1)))
 
@@ -333,6 +343,17 @@ class CerberusPixel(_RepresentationLearner):
         self.optimizer.step()
         return total_loss.data.item()
 
+    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+        difference_tensor = (state != next_state)
+        reconstruction, next_state_construction, difference = self.network(torch.unsqueeze(state, 0),
+                                                                           torch.unsqueeze(action, 0))
+
+        # change the head you wanna see here:
+        plt.imshow(torch.squeeze(difference_tensor).tolist() + torch.squeeze(difference).tolist(), cmap="binary",
+                   origin="upper")
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.show()
 
 if __name__ == "__main__":
     # ae = Cerberus(d_states=5, d_actions=2, d_latent=5)

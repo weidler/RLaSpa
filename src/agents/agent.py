@@ -28,7 +28,7 @@ class _Agent(abc.ABC):
         self.representation_learner = repr_learner
 
     @abc.abstractmethod
-    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None):
+    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None, plot_every=None):
         """ Train the agent for some number of episodes. The max length of episodes is specified in the environment.
         Optionally save or load checkpoints from previous trainings.
 

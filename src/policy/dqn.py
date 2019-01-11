@@ -5,13 +5,14 @@ from src.policy.network.dqn_agent import DQN
 from src.policy.policy import _Policy
 from src.utils.memory.prioritized_replay_memory import PrioritizedReplayMemory
 from src.utils.memory.replay_memory import ReplayMemory
-from src.utils.schedules import ExponentialSchedule
+from src.utils.schedules import ExponentialSchedule, LinearSchedule
 
 
 class DeepQNetwork(_Policy):
 
-    def __init__(self, num_features: int, num_actions: int, memory_size=10000, batch_size=32, learning_rate=2e-3,
-                 gamma=0.99, init_eps=1.0, min_eps=0.01, eps_decay=500, memory_delay=5000) -> None:
+    def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, batch_size: int = 32,
+                 learning_rate: float = 2e-3, gamma: float = 0.99, init_eps: float = 1.0, min_eps=0.01, eps_decay=500,
+                 per_init_eps_memory: int = 0.8, memory_delay: int = 5000) -> None:
         """
         Initializes a Deep Q-Network agent
 
@@ -23,8 +24,12 @@ class DeepQNetwork(_Policy):
         :param gamma: Discount factor. Default: 0.9
         :param init_eps: Initial epsilon. Default:1.0
         :param min_eps: Minimal epsilon. Default: 0.01
-        :param eps_decay: Number of steps for epsilon convergence to the minimal value.
+        :param eps_decay: Number of steps for epsilon convergence to the minimal value since the use of the memory.
+        Default: 500
+        :param per_init_eps_memory: percentage of the initial epsilon that will remain when
+        the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
+
         """
         self.gamma = gamma
         self.total_steps_done = 0  # Counter to control the memory activation
@@ -33,7 +38,10 @@ class DeepQNetwork(_Policy):
         self.memory = ReplayMemory(capacity=memory_size)
         self.model = DQN(num_features=num_features, num_actions=num_actions)
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
-        self.epsilon_calculator = ExponentialSchedule(initial_p=init_eps, min_p=min_eps, decay=eps_decay)
+        self.epsilon_calculator = LinearSchedule(schedule_timesteps=self.memory_delay, initial_p=init_eps,
+                                                 final_p=init_eps * per_init_eps_memory)
+        self.memory_epsilon_calculator = ExponentialSchedule(initial_p=init_eps * per_init_eps_memory, min_p=min_eps,
+                                                             decay=eps_decay)
 
     def compute_td_loss(self, state, action, reward, next_state, done) -> None:
         """
@@ -106,7 +114,10 @@ class DeepQNetwork(_Policy):
             self.compute_td_loss(state, action, reward, next_state, done)
 
     def choose_action(self, state) -> int:
-        epsilon = self.epsilon_calculator.value(self.total_steps_done)
+        if self.total_steps_done > self.memory_delay:
+            epsilon = self.memory_epsilon_calculator.value(self.total_steps_done - self.memory_delay)
+        else:
+            epsilon = self.epsilon_calculator.value(self.total_steps_done)
         return self.model.act(state=state, epsilon=epsilon)
 
     def choose_action_policy(self, state) -> int:
@@ -127,26 +138,31 @@ class DeepQNetwork(_Policy):
 
 
 class PrioritizedDeepQNetwork(DeepQNetwork):
-    def __init__(self, num_features: int, num_actions: int, memory_size=10000, alpha=0.9, beta=0.9, batch_size=32,
-                 learning_rate=2e-3, gamma=0.9, init_eps=1.0, min_eps=0.01, eps_decay=500, memory_delay=5000):
+    def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, alpha: float = 0.9,
+                 beta: float = 0.9, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
+                 init_eps: float = 1.0, min_eps=0.01, eps_decay=500, per_init_eps_memory: int = 0.8,
+                 memory_delay: int = 5000) -> None:
         """
         Initializes a Deep Q-Network agent with prioritized memory.
 
         :param num_features: Number of features that describe the environment.
         :param num_actions: Number of actions that the agent can do.
         :param memory_size: Number of plays that can be saved in the memory. Default: 10000.
+        :param alpha: How much prioritization is used (0 - no prioritization, 1 - full prioritization). Default: 0.9.
+        :param beta: Degree to use importance weights (0 - no corrections, 1 - full correction). Default: 0.9.
         :param batch_size: Number of memories choose to update the policy. Default: 32.
         :param learning_rate: Learning rate. Default: 2e-3.
         :param gamma: Discount factor. Default: 0.9.
         :param init_eps: Initial epsilon. Default:1.0.
         :param min_eps: Minimal epsilon. Default: 0.01.
-        :param eps_decay: Number of steps for epsilon convergence to the minimal value.
-        :param alpha: How much prioritization is used (0 - no prioritization, 1 - full prioritization). Default: 0.9.
-        :param beta: Degree to use importance weights (0 - no corrections, 1 - full correction). Default: 0.9.
+        :param eps_decay: Number of steps for epsilon convergence to the minimal value since the use of the memory.
+        Default: 500
+        :param per_init_eps_memory: percentage of the initial epsilon that will remain when
+        the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
         """
         super().__init__(num_features, num_actions, memory_size, batch_size, learning_rate, gamma, init_eps, min_eps,
-                         eps_decay, memory_delay)
+                         eps_decay, per_init_eps_memory, memory_delay)
         self.alpha = alpha
         self.beta = beta
         self.memory = PrioritizedReplayMemory(capacity=memory_size, alpha=alpha)

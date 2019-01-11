@@ -5,7 +5,7 @@ import gym
 import torch
 
 from src.agents.agent import _Agent
-from src.gym_pathing.envs import ObstaclePathing
+from src.gym_custom_tasks.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy
@@ -44,7 +44,7 @@ class HistoryAgent(_Agent):
         tuples = 0
         for line in lines:
             state, action, reward, next_state = line.split("\t")
-            self.history.append(SARSTuple(eval(state), eval(action), eval(reward), eval(next_state)))
+            self.history.append(SARSTuple(torch.Tensor(eval(state)).float(), torch.Tensor(eval(action)).float(), eval(reward), torch.Tensor(eval(next_state)).float()))
             tuples += 1
 
         print(f"Loaded {tuples} records.")
@@ -54,7 +54,7 @@ class HistoryAgent(_Agent):
         with open(f"../../data/{savefile}", "w+") as f: pass  # clear file
         with open(f"../../data/{savefile}", "a") as f:  # write
             for sars in self.history:
-                f.write(f"{sars.state.tolist()}\t{sars.action}\t{sars.reward}\t{sars.next_state.tolist()}\n")
+                f.write(f"{sars.state.tolist()}\t{sars.action.tolist()}\t{sars.reward}\t{sars.next_state.tolist()}\n")
         print("Done.")
 
     def gather_history(self, exploring_policy: _Policy, episodes: int, max_episode_length=1000):
@@ -76,7 +76,8 @@ class HistoryAgent(_Agent):
                 action = exploring_policy.choose_action(flattener.encode(current_state))
                 one_hot_action_vector = self.one_hot_actions[action]
                 observation, reward, done, _ = self.step_env(action)
-                exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
+                if is_visual: exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
+                else: exploring_policy.update(current_state, action, reward, observation, done)
                 self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 step += 1
                 episode_reward += reward
@@ -125,7 +126,7 @@ class HistoryAgent(_Agent):
         if not self.is_pretrained: print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
         for episode in range(start_episode, episodes):
-            current_state = self.env.reset()
+            current_state = self.reset_env()
             done = False
             step = 0
             episode_reward = 0
@@ -133,10 +134,11 @@ class HistoryAgent(_Agent):
                 latent_state = self.representation_learner.encode(current_state)
                 action = self.policy.choose_action(latent_state)
 
-                observation, reward, done, _ = env.step(action)
+                observation, reward, done, _ = self.step_env(action)
                 latent_observation = self.representation_learner.encode(observation)
 
                 self.policy.update(latent_state, action, reward, latent_observation, done)
+
                 current_state = observation
 
                 episode_reward += reward
@@ -195,15 +197,12 @@ if __name__ == "__main__":
 
     agent = HistoryAgent(repr_learner, policy, env)
 
-    load = False
-
+    load = True
     if not load:
-
-        agent.gather_history(pretraining_policy, 100)
-
-        agent.save_history("cartpole-10000.data")
+        agent.gather_history(pretraining_policy, 20)
+        agent.save_history("cartpole-10.data")
     else:
-        agent.load_history("cartpole-10000.data")
+        agent.load_history("cartpole-10.data")
 
     agent.pretrain(5)
     agent.train_agent(1000)

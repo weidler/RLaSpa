@@ -50,6 +50,16 @@ class _RepresentationLearner(abc.ABC):
             next_state=next_state_batch
         )
 
+    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+        """ Visualize some part of the representation learner.
+
+        :param state:       state tensor
+        :param action:      action tensor
+        :param next_state:  next state tensor
+        :return:
+        """
+        pass
+
     def current_state(self):
         # TODO: catch exception here, as flatten and so don't have network and optimizer
         return {

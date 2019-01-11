@@ -2,6 +2,7 @@ import torch
 from torch import Tensor
 from torch import nn, optim
 
+from src.gym_custom_tasks.envs import ObstaclePathing
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.network.cerberus import CerberusNetwork
 from src.representation.network.janus import JanusAutoencoder
@@ -11,6 +12,7 @@ from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPi
     CVAE
 
 import matplotlib.pyplot as plt
+import gym
 
 class PassThrough(_RepresentationLearner):
     def __init__(self):
@@ -157,6 +159,14 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         return BCE + KLD
         # return MSE + KLD
 
+    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+        reconstruction, mu, logvar = self.network(torch.unsqueeze(state, 0))
+        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
+                   origin="upper")
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.show()
+
     def encode(self, state: Tensor) -> Tensor:
         z1 = self.network.activation(self.network.fullyConnected(state.reshape(-1)))
         # z1 = self.network.activation(self.network.fullyConnected(state))
@@ -213,6 +223,15 @@ class CVAEPixel(_RepresentationLearner):
 
         return BCE + KLD
         # return MSE + KLD
+
+    def visualize_output(self, state: Tensor):
+        reconstruction, mu, logvar = self.network(torch.unsqueeze(state, 0))
+
+        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
+                   origin="upper")
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.show()
 
     def encode(self, x: Tensor):
         conv1 = self.network.relu(self.network.bn1(self.network.conv1(x.reshape(16, 1, 3, 3))))
@@ -293,14 +312,14 @@ class JanusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
-        reconstruction, next_state_construction = self.network(torch.unsqueeze(state, 0),
-                                                               torch.unsqueeze(action, 0))
-        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
-                   origin="upper")
-        plt.gca().axes.get_xaxis().set_visible(False)
-        plt.gca().axes.get_yaxis().set_visible(False)
-        plt.show()
+    # def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+    #     reconstruction, next_state_construction = self.network(torch.unsqueeze(state, 0),
+    #                                                            torch.unsqueeze(action, 0))
+    #     plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
+    #                origin="upper")
+    #     plt.gca().axes.get_xaxis().set_visible(False)
+    #     plt.gca().axes.get_yaxis().set_visible(False)
+    #     plt.show()
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state.view(-1)))
@@ -428,16 +447,17 @@ if __name__ == "__main__":
     #     # sample = samples[random.randint(0, 7)]
     #
     #     '''Obstacle pathing test'''
+    #
     #     env = ObstaclePathing(30, 30,
     #                           [[0, 18, 18, 21],
-    #                            [21, 24, 10, 30]]
+    #                            [21, 24, 10, 30]],
+    #                           True
     #                           )
     #     sample = env.static_pixels
-    #
-    #     loss = ae.learn(torch.Tensor(sample))
+    #     loss = ae.learn(torch.Tensor(sample), None, None, None)
     #     if i % 100 == 0:
     #         print("Epoch ", i, " loss: ", loss)
-    #
+    # #
     # for i in range(1):
     #     # sample = [1, 2, 3, 4, 5]
     #

@@ -31,14 +31,14 @@ class _Agent:
         self.policy = policy
         self.representation_learner = representation_learner
 
-    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None, plot_every=None, log=False):
+    def train_agent(self, episodes: int, ckpt_to_load=None, episodes_per_saving=None, plot_every=None, log=False):
         """
         Train the agent for some number of episodes. The max length of episodes is specified in the environment.
         Optionally save or load checkpoints from previous trainings.
 
         :param episodes: the number of episodes
         :param ckpt_to_load: loading checkpoint. Default: None
-        :param save_ckpt_per: number of episodes after which a checkpoint is saved. Default: None
+        :param episodes_per_saving: number of episodes between saving checkpoint. Default: None
         :param plot_every: number of steps that will happen between the plotting of the space representation
         :param log: whether logging is done. Default: False
         """

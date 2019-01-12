@@ -3,6 +3,7 @@ from typing import List
 
 import gym
 import torch
+from gym import Env
 
 import src.gym_custom_tasks
 
@@ -20,12 +21,13 @@ from src.utils.logger import Logger
 class ParallelAgent(_Agent):
     policy: _Policy
     representation_learner: _RepresentationLearner
+    env: List[Env]
 
-    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment):
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environments: List[Env]):
         self.representation_learner = representation_learner
         self.policy = policy
-        self.env = environment
-        self.one_hot_actions = torch.eye(self.env.action_space.n)
+        self.env = environments
+        self.one_hot_actions = torch.eye(self.env.action_space.n) # TODO change to list of eyes
         self.logger = Logger('../../logs')
 
     # REINFORCEMENT LEARNING #
@@ -35,7 +37,6 @@ class ParallelAgent(_Agent):
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if ckpt_to_load:
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
-
         if save_ckpt_per:  # if asked to save checkpoints
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
 

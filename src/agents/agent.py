@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple
+from typing import Tuple, List
 
 import torch
 from gym import Env
@@ -21,10 +21,10 @@ class _Agent(abc.ABC):
     """
     representation_learner: _RepresentationLearner
     policy: _Policy
-    env: Env
+    env: List[Env]
 
     @abc.abstractmethod
-    def __init__(self, repr_learner: _RepresentationLearner, policy: _Policy, env: Env):
+    def __init__(self, repr_learner: _RepresentationLearner, policy: _Policy, env: List[Env]):
         self.env = env
         self.policy = policy
         self.representation_learner = repr_learner
@@ -48,22 +48,22 @@ class _Agent(abc.ABC):
 
         return next_state, step_reward, env_done
 
-    def step_env(self, action: int) -> Tuple[Tensor, float, bool, object]:
+    def step_env(self, action: int, env_id: int) -> Tuple[Tensor, float, bool, object]:
         """ Make a step in the environment and get the resulting state as a Tensor.
 
         :param action:  the action the agent is supposed to take in the environment
         """
-        next_state, step_reward, env_done, info = self.env.step(action)
+        next_state, step_reward, env_done, info = self.env[env_id].step(action)
         tensor_state = torch.Tensor(next_state).float()
 
         return tensor_state, step_reward, env_done, info
 
-    def reset_env(self) -> Tensor:
+    def reset_env(self, env_id: int) -> Tensor:
         """ Resets the environment and returns the starting state as a Tensor.
 
         :return:    the starting state
         """
-        return torch.Tensor(self.env.reset()).float()
+        return torch.Tensor(self.env[env_id].reset()).float()
 
     def test(self, num_testruns=1, render=True) -> None:
         """ Run a test in the environment using the current policy without exploration. """

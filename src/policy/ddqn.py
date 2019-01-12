@@ -41,8 +41,10 @@ class DoubleDeepQNetwork(_Policy):
         self.total_steps_done = 0
         self.batch_size = batch_size
         self.memory_delay = memory_delay
-        self.current_model = DQN(num_features=num_features, num_actions=num_actions, representation_network=representation_network)
-        self.target_model = DQN(num_features=num_features, num_actions=num_actions, representation_network=representation_network)
+        self.current_model = DQN(num_features=num_features, num_actions=num_actions,
+                                 representation_network=representation_network)
+        self.target_model = DQN(num_features=num_features, num_actions=num_actions,
+                                representation_network=representation_network)  # target model needs repr network as well because otherwise copying over parameters will be non trivial
         self.optimizer = optim.Adam(self.current_model.parameters(), lr=learning_rate)
         self.memory = PrioritizedReplayMemory(capacity=memory_size, alpha=alpha)
         self.epsilon_calculator = LinearSchedule(schedule_timesteps=self.memory_delay, initial_p=init_eps,

@@ -116,7 +116,7 @@ if __name__ == "__main__":
         id='Evasion-v1',
         entry_point='src.gym_custom_tasks.envs:Evasion',
         kwargs={'width': 10, 'height': 10,
-                'obstacle_chance': 0.01},
+                'obstacle_chance': 0.05},
     )
     env = gym.make('Evasion-v1')
     # size = 30
@@ -150,8 +150,9 @@ if __name__ == "__main__":
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(episodes=10000, plot_every=None, log=False)
+    agent.train_agent(episodes=100, plot_every=None, log=False)
 
     # TEST
-    agent.test(num_testruns=5)
+    # Gifs will only be produced when render is off
+    agent.test(num_testruns=5, render=False)
     agent.env.close()

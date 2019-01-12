@@ -1,7 +1,10 @@
+import datetime
+import os
+
 import torch
-import os, datetime
-from src.representation.representation import _RepresentationLearner
+
 from src.policy.policy import _Policy
+from src.representation.representation import _RepresentationLearner
 
 
 def update_agent_model(current, target):
@@ -87,5 +90,4 @@ def get_checkpoint_dir(config: str) -> str:
     :return: directory name
     """
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-
     return os.path.join(os.getcwd(), "ckpt", config, timestamp)

@@ -67,9 +67,15 @@ class _RepresentationLearner(abc.ABC):
 
         :return:            dict containing the network and optimizer
         """
+        # return {
+        #     'model': None if self.network is None else self.network.state_dict(),
+        #     'optimizer': None if self.network is None else self.optimizer.state_dict(),
+        # }
+
         return {
-            'model': None if self.network is None else self.network.state_dict(),
-            'optimizer': None if self.network is None else self.optimizer.state_dict(),
+            'model': self.network.state_dict() if hasattr(self, 'network') else None,
+            'optimizer': self.optimizer.state_dict() if hasattr(self, 'optimizer') else None,
+
         }
 
     def restore_from(self, restore_input):

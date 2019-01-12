@@ -12,7 +12,7 @@ class DeepQNetwork(_Policy):
 
     def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, batch_size: int = 32,
                  learning_rate: float = 2e-3, gamma: float = 0.99, init_eps: float = 1.0, min_eps=0.01, eps_decay=500,
-                 per_init_eps_memory: int = 0.8, memory_delay: int = 5000) -> None:
+                 per_init_eps_memory: int = 0.8, memory_delay: int = 5000, representation_network=None) -> None:
         """
         Initializes a Deep Q-Network agent
 
@@ -36,7 +36,7 @@ class DeepQNetwork(_Policy):
         self.batch_size = batch_size
         self.memory_delay = memory_delay
         self.memory = ReplayMemory(capacity=memory_size)
-        self.model = DQN(num_features=num_features, num_actions=num_actions)
+        self.model = DQN(num_features=num_features, num_actions=num_actions, representation_network=representation_network)
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         self.epsilon_calculator = LinearSchedule(schedule_timesteps=self.memory_delay, initial_p=init_eps,
                                                  final_p=init_eps * per_init_eps_memory)

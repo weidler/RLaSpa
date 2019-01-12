@@ -430,7 +430,7 @@ class CerberusPixel(_RepresentationLearner):
                                                                            torch.unsqueeze(action, 0))
         plt.clf()
         # change the head you wanna see here:
-        plt.imshow(torch.squeeze(difference_tensor).tolist() + torch.squeeze(difference).tolist(), cmap="binary",
+        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
                    origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)

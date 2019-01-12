@@ -5,11 +5,12 @@ import torch.nn as nn
 
 
 class DQN(nn.Module):
-    def __init__(self, num_features, num_actions):
+    def __init__(self, num_features, num_actions, representation_network):
         super(DQN, self).__init__()
         self.num_features = num_features
         self.num_actions = num_actions
         # Network structure
+        self.representation_network = representation_network
         self.layers = nn.Sequential(
             nn.Linear(self.num_features, 128),
             nn.ReLU(),

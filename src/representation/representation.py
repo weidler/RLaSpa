@@ -13,8 +13,8 @@ class _RepresentationLearner(abc.ABC):
 
     @abc.abstractmethod
     def __init__(self):
-        self.network = None  # placeholder in superclass, for the convenience of saving/loading
-        self.optimizer = None
+        self.network: torch.nn.Module = None  # placeholder in superclass, for the convenience of saving/loading
+        self.optimizer: torch.optim.Optimizer = None
 
     @abc.abstractmethod
     def encode(self, state: Tensor) -> Tensor:

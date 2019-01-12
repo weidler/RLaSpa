@@ -7,7 +7,7 @@ from gym import Env
 
 import src.gym_custom_tasks
 
-from src.agents.agent import _Agent
+from src.agents.agent import _Agent, reset_env, step_env
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel, VariationalAutoencoder, \
@@ -21,13 +21,12 @@ from src.utils.logger import Logger
 class ParallelAgent(_Agent):
     policy: _Policy
     representation_learner: _RepresentationLearner
-    env: List[Env]
+    environments: List[Env]
 
     def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environments: List[Env]):
-        self.representation_learner = representation_learner
-        self.policy = policy
-        self.env = environments
-        self.one_hot_actions = torch.eye(self.env.action_space.n) # TODO change to list of eyes
+        super(ParallelAgent, self).__init__(representation_learner, policy, environments)
+
+        self.one_hot_actions = torch.eye(self.environments[0].action_space.n)
         self.logger = Logger('../../logs')
 
     # REINFORCEMENT LEARNING #
@@ -47,22 +46,26 @@ class ParallelAgent(_Agent):
 
         rewards = []
         for episode in range(start_episode, episodes):
-            done = False
+            # choose environment
+            env = random.choice(self.environments)
 
-            current_state = self.reset_env()
+            # initialize episode
+            current_state = reset_env(env)
             latent_state = self.representation_learner.encode(current_state.reshape(-1))
 
+            # trackers
             episode_reward = 0
-
             repr_loss = 0.0
 
+            # begin episode
+            done = False
             while not done:
                 # choose action
                 action = self.policy.choose_action(latent_state)
                 one_hot_action_vector = self.one_hot_actions[action]
 
                 # step and observe
-                observation, reward, done, _ = self.step_env(action)
+                observation, reward, done, _ = step_env(action, env)
                 latent_observation = self.representation_learner.encode(observation)
 
                 # TRAIN REPRESENTATION LEARNER using batches
@@ -117,9 +120,11 @@ if __name__ == "__main__":
         id='Evasion-v1',
         entry_point='src.gym_custom_tasks.envs:Evasion',
         kwargs={'width': 10, 'height': 10,
-                'obstacle_chance': 0.05},
+                'obstacle_chance': 0.01},
     )
-    env = gym.make('Evasion-v1')
+
+    environments = []
+    environments.append(gym.make('Evasion-v1'))
     # size = 30
     # gym.envs.register(
     #     id='VisualObstaclePathing-v1',
@@ -145,15 +150,16 @@ if __name__ == "__main__":
     repr_learner = Flatten()
 
     # POLICY
-    policy = DoubleDeepQNetwork(100, env.action_space.n, eps_decay=2000)
+    policy = DoubleDeepQNetwork(100, environments[0].action_space.n, eps_decay=5000)
 
     # AGENT
-    agent = ParallelAgent(repr_learner, policy, env)
+    agent = ParallelAgent(repr_learner, policy, environments)
 
     # TRAIN
-    agent.train_agent(episodes=100, plot_every=None, log=False)
+    agent.train_agent(episodes=10000, plot_every=None, log=False)
 
     # TEST
     # Gifs will only be produced when render is off
-    agent.test(num_testruns=5, render=False)
-    agent.env.close()
+    agent.test(environments[0], num_testruns=5, render=False)
+    for env in environments:
+        env.close()

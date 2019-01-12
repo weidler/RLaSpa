@@ -4,7 +4,7 @@ from typing import List
 import gym
 import torch
 
-from src.agents.agent import _Agent
+from src.agents.agent import _Agent, reset_env, step_env
 from src.gym_custom_tasks.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
@@ -19,14 +19,14 @@ class HistoryAgent(_Agent):
     history: List[SARSTuple]
     representation_learner: _RepresentationLearner
     policy: _Policy
-    env: gym.Env
+    environments: List[gym.Env]
 
-    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment: gym.Env):
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environments: gym.Env):
         # modules
         self.representation_learner = representation_learner
         self.policy = policy
-        self.env = environment
-        self.one_hot_actions = torch.eye(self.env.action_space.n)
+        self.environments = environments
+        self.one_hot_actions = torch.eye(self.environments[0].action_space.n)
 
         # quick check ups
         # TODO check if policy input size matches representation encoding size
@@ -64,20 +64,25 @@ class HistoryAgent(_Agent):
         # check if it is a visual task that needs flattening
         is_visual = False
         flattener = Flatten()
-        if len(self.env.observation_space.shape) == 2:
+        if len(self.environments.observation_space.shape) == 2:
             is_visual = True
-
 
         rewards = []
         for episode in range(episodes):
-            current_state = self.reset_env()
-            done = False
+            # choose environment
+            env = random.choice(self.environments)
+            current_state = reset_env(env)
+
+            # trackers
             step = 0
             episode_reward = 0
+
+            # start episode
+            done = False
             while not done and step < max_episode_length:
                 action = exploring_policy.choose_action(flattener.encode(current_state))
                 one_hot_action_vector = self.one_hot_actions[action]
-                observation, reward, done, _ = self.step_env(action)
+                observation, reward, done, _ = step_env(action, env)
                 if is_visual: exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
                 else: exploring_policy.update(current_state, action, reward, observation, done)
                 self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
@@ -134,7 +139,9 @@ class HistoryAgent(_Agent):
         if not self.is_pretrained: print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
         for episode in range(start_episode, episodes):
-            current_state = self.reset_env()
+            env = random.choice(self.environments)
+
+            current_state = reset_env(env)
             done = False
             step = 0
             episode_reward = 0
@@ -142,7 +149,7 @@ class HistoryAgent(_Agent):
                 latent_state = self.representation_learner.encode(current_state)
                 action = self.policy.choose_action(latent_state)
 
-                observation, reward, done, _ = self.step_env(action)
+                observation, reward, done, _ = step_env(action, env)
                 latent_observation = self.representation_learner.encode(observation)
 
                 self.policy.update(latent_state, action, reward, latent_observation, done)
@@ -216,4 +223,4 @@ if __name__ == "__main__":
     agent.train_agent(1000)
 
     for i in range(5): agent.test()
-    agent.env.close()
+    agent.environments.close()

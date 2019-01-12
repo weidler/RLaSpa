@@ -11,6 +11,25 @@ from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
 
 
+def reset_env(env: Env) -> Tensor:
+    """ Resets the environment and returns the starting state as a Tensor.
+
+    :return:    the starting state
+    """
+    return torch.Tensor(env.reset()).float()
+
+
+def step_env(action: int, env: Env) -> Tuple[Tensor, float, bool, object]:
+    """ Make a step in the environment and get the resulting state as a Tensor.
+
+    :param action:  the action the agent is supposed to take in the environment
+    """
+    next_state, step_reward, env_done, info = env.step(action)
+    tensor_state = torch.Tensor(next_state).float()
+
+    return tensor_state, step_reward, env_done, info
+
+
 class _Agent(abc.ABC):
     """ Abstract agent class. An agent unifies the three cornerstones of the system:
             - an environment in which the agent acts
@@ -21,13 +40,26 @@ class _Agent(abc.ABC):
     """
     representation_learner: _RepresentationLearner
     policy: _Policy
-    env: List[Env]
+    environments: List[Env]
 
     @abc.abstractmethod
-    def __init__(self, repr_learner: _RepresentationLearner, policy: _Policy, env: List[Env]):
-        self.env = env
+    def __init__(self, repr_learner: _RepresentationLearner, policy: _Policy, environments: List[Env]):
+        self.environments = environments
         self.policy = policy
         self.representation_learner = repr_learner
+
+        # check if environments given as list
+        if not isinstance(environments, list):
+            raise ValueError("Need to provide list of environment. For single environment training provide single-element list.")
+
+        # check if the environments are having same action space
+        if not len(set([env.action_space.n for env in self.environments])) == 1:
+            raise ValueError("All environments need to have the same amount of available actions!")
+
+        # check if the environments are having same state space
+        if not len(set([env.observation_space.shape for env in self.environments])) == 1:
+            raise ValueError("All environments need to have the same state dimensionality!")
+
 
     @abc.abstractmethod
     def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None, plot_every=None, log=False):
@@ -41,31 +73,14 @@ class _Agent(abc.ABC):
         """
         raise NotImplementedError
 
-    def act(self, current_state: Tensor) -> Tuple[Tensor, float, bool]:
+    def act(self, current_state: Tensor, env) -> Tuple[Tensor, float, bool]:
         latent_state = self.representation_learner.encode(current_state)
         action = self.policy.choose_action_policy(latent_state)
-        next_state, step_reward, env_done, _ = self.step_env(action)
+        next_state, step_reward, env_done, _ = step_env(action, env)
 
         return next_state, step_reward, env_done
 
-    def step_env(self, action: int, env_id: int) -> Tuple[Tensor, float, bool, object]:
-        """ Make a step in the environment and get the resulting state as a Tensor.
-
-        :param action:  the action the agent is supposed to take in the environment
-        """
-        next_state, step_reward, env_done, info = self.env[env_id].step(action)
-        tensor_state = torch.Tensor(next_state).float()
-
-        return tensor_state, step_reward, env_done, info
-
-    def reset_env(self, env_id: int) -> Tensor:
-        """ Resets the environment and returns the starting state as a Tensor.
-
-        :return:    the starting state
-        """
-        return torch.Tensor(self.env[env_id].reset()).float()
-
-    def test(self, num_testruns=1, render=True) -> None:
+    def test(self, env, num_testruns=1, render=True) -> None:
         """ Run a test in the environment using the current policy without exploration. """
         all_rewards = []
         fig = plt.figure(figsize=(10, 6))
@@ -73,16 +88,16 @@ class _Agent(abc.ABC):
             plt.clf()
             ims = []
             done = False
-            state = self.reset_env()
+            state = reset_env(env)
             step = 0
             total_reward = 0
             while not done:
-                state, reward, done = self.act(state)
+                state, reward, done = self.act(state, env)
                 step += 1
                 total_reward += reward
                 ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
                 if render:
-                    self.env.render()
+                    env.render()
             all_rewards.append(total_reward)
             print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
             if not render:
@@ -94,6 +109,6 @@ class _Agent(abc.ABC):
     def get_config_name(self):
         return "_".join(
             [self.__class__.__name__,
-             self.env.__class__.__name__,
+             self.environments.__class__.__name__,
              self.representation_learner.__class__.__name__,
              self.policy.__class__.__name__])

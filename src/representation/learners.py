@@ -161,11 +161,13 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
         reconstruction, mu, logvar = self.network(torch.unsqueeze(state, 0))
+        plt.clf()
         plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
                    origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
-        plt.show()
+        plt.draw()
+        plt.pause(0.001)
 
     def encode(self, state: Tensor) -> Tensor:
         z1 = self.network.activation(self.network.fullyConnected(state.reshape(-1)))
@@ -226,12 +228,13 @@ class CVAEPixel(_RepresentationLearner):
 
     def visualize_output(self, state: Tensor):
         reconstruction, mu, logvar = self.network(torch.unsqueeze(state, 0))
-
+        plt.clf()
         plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
                    origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
-        plt.show()
+        plt.draw()
+        plt.pause(0.001)
 
     def encode(self, x: Tensor):
         conv1 = self.network.relu(self.network.bn1(self.network.conv1(x.reshape(16, 1, 3, 3))))
@@ -414,7 +417,7 @@ class CerberusPixel(_RepresentationLearner):
         # Loss
         reconstruction_loss = self.criterion(reconstruction, state)
         next_state_loss = self.criterion(next_state_construction, next_state)
-        difference_loss = self.criterion(difference, difference_target)
+        difference_loss = self.criterion(difference, difference_target.float())
         total_loss = sum([reconstruction_loss, next_state_loss, difference_loss])
         total_loss.backward()
 
@@ -425,13 +428,14 @@ class CerberusPixel(_RepresentationLearner):
         difference_tensor = (state != next_state)
         reconstruction, next_state_construction, difference = self.network(torch.unsqueeze(state, 0),
                                                                            torch.unsqueeze(action, 0))
-
+        plt.clf()
         # change the head you wanna see here:
         plt.imshow(torch.squeeze(difference_tensor).tolist() + torch.squeeze(difference).tolist(), cmap="binary",
                    origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
-        plt.show()
+        plt.draw()
+        plt.pause(0.001)
 
 if __name__ == "__main__":
     # ae = Cerberus(d_states=5, d_actions=2, d_latent=5)

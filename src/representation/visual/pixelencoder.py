@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch import Tensor
 from torch.autograd import Variable
 
 
@@ -16,7 +17,7 @@ class PixelEncoder(torch.nn.Module):
         self.unpool = torch.nn.MaxUnpool2d(kernel_size=2, stride=2, padding=1)
         self.unconv = torch.nn.ConvTranspose2d(1, 1, kernel_size=3, stride=1, padding=0)
 
-    def forward(self, input_tensor):
+    def forward(self, input_tensor: Tensor) -> Tensor:
         convoluted = self.conv(input_tensor)
         pooled, indices = self.pool(convoluted)
         original_shape = pooled.shape
@@ -41,7 +42,7 @@ class SimplePixelEncoder(torch.nn.Module):
 
         self.activation = torch.sigmoid
 
-    def forward(self, input_tensor):
+    def forward(self, input_tensor: Tensor) -> Tensor:
         original_shape = input_tensor.shape
 
         # Reshape IMAGE -> VECTOR
@@ -58,7 +59,7 @@ class SimplePixelEncoder(torch.nn.Module):
 
 class VariationalPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width, height, n_middle, n_hidden=10):
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int=10):
         super(VariationalPixelEncoder, self).__init__()
 
         self.fullyConnected = nn.Linear(width * height, n_middle)
@@ -94,7 +95,7 @@ class VariationalPixelEncoder(torch.nn.Module):
 
 class CVAE(torch.nn.Module):
 
-    def __init__(self, width, height, n_middle, n_hidden=10):
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int=10):
         super(CVAE, self).__init__()
 
         # Encoder
@@ -154,7 +155,7 @@ class CVAE(torch.nn.Module):
         conv7 = self.relu(self.bn7(self.conv7(conv6)))
         return self.conv8(conv7).view(-1, 256, 3, 32, 32)
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
@@ -162,7 +163,7 @@ class CVAE(torch.nn.Module):
 
 class JanusPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width, height, n_actions, n_hidden=10):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int=10):
         super(JanusPixelEncoder, self).__init__()
 
         self.encoder = torch.nn.Linear(width * height, n_hidden)
@@ -174,7 +175,7 @@ class JanusPixelEncoder(torch.nn.Module):
 
         self.activation = torch.sigmoid
 
-    def forward(self, state, action):
+    def forward(self, state: Tensor, action: Tensor) -> (Tensor, Tensor):
         original_shape = state.shape
 
         # Reshape IMAGE -> VECTOR
@@ -199,7 +200,7 @@ class JanusPixelEncoder(torch.nn.Module):
 
 class CerberusPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width, height, n_actions, n_hidden=10):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int=10):
         super(CerberusPixelEncoder, self).__init__()
 
         self.encoder = torch.nn.Linear(width * height, n_hidden)
@@ -213,7 +214,7 @@ class CerberusPixelEncoder(torch.nn.Module):
 
         self.activation = torch.sigmoid
 
-    def forward(self, state, action):
+    def forward(self, state: Tensor, action: Tensor) -> (Tensor, Tensor, Tensor):
         original_shape = state.shape
 
         # Reshape IMAGE -> VECTOR

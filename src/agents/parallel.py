@@ -10,7 +10,7 @@ from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel, VariationalAutoencoder, \
-    VariationalAutoencoderPixel, Flatten
+    VariationalAutoencoderPixel, PassThrough, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import VariationalPixelEncoder
 from src.utils.container import SARSTuple
@@ -109,7 +109,6 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
-
     if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
@@ -126,17 +125,17 @@ if __name__ == "__main__":
     # env = gym.make('VisualObstaclePathing-v1')
 
     # REPRESENTATION
-    # repr_learner = JanusPixel(width=env.observation_space.shape[0],
+    # repr_learner = CerberusPixel(width=env.observation_space.shape[0],
     #                           height=env.observation_space.shape[1],
     #                           n_actions=env.action_space.n,
     #                           n_hidden=size)
 
-    repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
-                                               height=env.observation_space.shape[1],
-                                               n_middle=200,
-                                               n_hidden=1)
-    repr_learner = Flatten()
+    # repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
+    #                                            height=env.observation_space.shape[1],
+    #                                            n_middle=200,
+    #                                            n_hidden=1)
 
+    repr_learner = Flatten()
 
     # POLICY
     policy = DoubleDeepQNetwork(100, env.action_space.n, eps_decay=2000)
@@ -148,6 +147,5 @@ if __name__ == "__main__":
     agent.train_agent(episodes=10000, plot_every=None, log=False)
 
     # TEST
-    for i in range(5):
-        agent.test()
+    agent.test(num_testruns=5)
     agent.env.close()

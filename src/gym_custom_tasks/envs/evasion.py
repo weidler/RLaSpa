@@ -15,7 +15,7 @@ class Evasion(gym.Env):
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))
 
         self.dungeon, self.pos_agent = self._init_dungeon()
-        self.obstacle_chance = torch.empty(self.height, 1).new_full((self.height, 1), 0.1)  # 0.1 = 10% chance that an obstacle is spawned
+        self.obstacle_chance = torch.empty(self.height, 1).new_full((self.height, 1), 0.05)  # 0.1 = 10% chance that an obstacle is spawned
         self.max_steps = 500
         self.steps = 0
 
@@ -64,8 +64,8 @@ class Evasion(gym.Env):
 
 
 if __name__ == "__main__":
-    env = Evasion()
-
+    # env = Evasion()
+    env = gym.make('evasion-v0')
     done = False
     while not done:
         env.render()

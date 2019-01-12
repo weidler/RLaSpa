@@ -29,7 +29,7 @@ class DeepQNetwork(_Policy):
         :param per_init_eps_memory: percentage of the initial epsilon that will remain when
         the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
-
+        :param representation_network: Optional nn.Module used for the representation. Including it into the policy network allows full backpropatation.
         """
         self.gamma = gamma
         self.total_steps_done = 0  # Counter to control the memory activation

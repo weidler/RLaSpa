@@ -76,7 +76,12 @@ class ParallelAgent(_Agent):
                         batch_memory.pop(0)
 
                 # TRAIN POLICY
+                weights_before = self.representation_learner.network.encoder.weight.data.clone()
                 self.policy.update(latent_state, action, reward, latent_observation, done)
+                weights_after = self.representation_learner.network.encoder.weight.data.clone()
+
+                if not torch.all(torch.eq(weights_before, weights_after)):
+                    print("IT CHANGED M**********CKERS")
 
                 # update states (both, to avoid redundant encoding)
                 last_state = current_state
@@ -143,7 +148,7 @@ if __name__ == "__main__":
     # repr_learner = Flatten()
 
     # POLICY
-    policy = DeepQNetwork(10, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
+    policy = DoubleDeepQNetwork(10, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)

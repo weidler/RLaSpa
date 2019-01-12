@@ -34,7 +34,7 @@ class HistoryAgent(_Agent):
         self.history = []
         self.is_pretrained = False
 
-        self.logger = Logger('../../logs')
+        self.logger = Logger('logs')
 
         # REPRESENTATION LEARNING #
 

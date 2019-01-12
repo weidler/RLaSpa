@@ -27,7 +27,8 @@ class ParallelAgent(_Agent):
         self.policy = policy
         self.env = environment
         self.one_hot_actions = torch.eye(self.env.action_space.n)
-        self.logger = Logger('../../logs')
+        self.logger = Logger('logs')
+
 
     # REINFORCEMENT LEARNING #
 

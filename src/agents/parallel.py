@@ -10,7 +10,7 @@ from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel, VariationalAutoencoder, \
-    VariationalAutoencoderPixel
+    VariationalAutoencoderPixel, PassThrough, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import VariationalPixelEncoder
 from src.utils.container import SARSTuple
@@ -113,8 +113,9 @@ if __name__ == "__main__":
     if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    env = gym.make('Evasion-v0')
-    size = 30
+
+    env = gym.make('Race-v0')
+    # size = 30
     # gym.envs.register(
     #     id='VisualObstaclePathing-v1',
     #     entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
@@ -136,14 +137,17 @@ if __name__ == "__main__":
     #                                            n_middle=200,
     #                                            n_hidden=1)
 
+    # REPRESENTATION
+    repr_learner = Flatten()
     # POLICY
-    policy = DoubleDeepQNetwork(30, env.action_space.n, eps_decay=2000)
+
+    policy = DoubleDeepQNetwork(30*30, env.action_space.n, eps_decay=2000)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(episodes=1000, plot_every=20)
+    agent.train_agent(episodes=1000)
 
     # TEST
     agent.test(num_testruns=5)

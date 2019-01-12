@@ -2,6 +2,8 @@ import gym
 import torch
 import numpy
 import matplotlib.pyplot as plt
+import src.gym_custom_tasks
+# from gym import spaces
 
 class Race(gym.Env):
 
@@ -15,7 +17,7 @@ class Race(gym.Env):
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))
 
         self.track, self.pos_agent = self._init_track()
-        self.driver_chance = torch.empty(1, self.width).new_full((1, self.width), 0.1)  # 0.1 = 10% chance that a driver is spawned
+        self.driver_chance = torch.empty(1, self.width).new_full((1, self.width), 0.01)  # 0.1 = 10% chance that a driver is spawned
         self.max_steps = 500
         self.steps = 0
 
@@ -64,8 +66,8 @@ class Race(gym.Env):
 
 
 if __name__ == "__main__":
-    env = Race()
-
+    # env = Race()
+    env = gym.make('Race-v0')
     done = False
     while not done:
         env.render()

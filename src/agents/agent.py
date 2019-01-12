@@ -63,19 +63,23 @@ class _Agent(abc.ABC):
         """
         return torch.Tensor(self.env.reset()).float()
 
-    def test(self) -> None:
+    def test(self, num_testruns=1, render=True) -> None:
         """ Run a test in the environment using the current policy without exploration. """
-        done = False
-        state = self.reset_env()
-        step = 0
-        total_reward = 0
-        while not done:
-            state, reward, done = self.act(state)
-            step += 1
-            total_reward += reward
-            self.env.render()
-
-        print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
+        all_rewards = []
+        for i in range(num_testruns):
+            done = False
+            state = self.reset_env()
+            step = 0
+            total_reward = 0
+            while not done:
+                state, reward, done = self.act(state)
+                step += 1
+                total_reward += reward
+                if render:
+                    self.env.render()
+            all_rewards.append(total_reward)
+            print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
+        print(f'Average max score after {num_testruns} testruns: {sum(all_rewards)/len(all_rewards)}')
 
     def get_config_name(self):
         return "_".join(

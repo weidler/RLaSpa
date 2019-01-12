@@ -113,31 +113,31 @@ if __name__ == "__main__":
     if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    # env = gym.make('Evasion-v0')
+    env = gym.make('Evasion-v0')
     size = 30
-    gym.envs.register(
-        id='VisualObstaclePathing-v1',
-        entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
-        kwargs={'width': size, 'height': size,
-                'obstacles': [[0, 18, 18, 21],
-                              [21, 24, 10, 30]],
-                'visual': True},
-    )
-    env = gym.make('VisualObstaclePathing-v1')
+    # gym.envs.register(
+    #     id='VisualObstaclePathing-v1',
+    #     entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
+    #     kwargs={'width': size, 'height': size,
+    #             'obstacles': [[0, 18, 18, 21],
+    #                           [21, 24, 10, 30]],
+    #             'visual': True},
+    # )
+    # env = gym.make('VisualObstaclePathing-v1')
 
     # REPRESENTATION
-    # repr_learner = JanusPixel(width=env.observation_space.shape[0],
-    #                           height=env.observation_space.shape[1],
-    #                           n_actions=env.action_space.n,
-    #                           n_hidden=size)
+    repr_learner = CerberusPixel(width=env.observation_space.shape[0],
+                              height=env.observation_space.shape[1],
+                              n_actions=env.action_space.n,
+                              n_hidden=size)
 
-    repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
-                                               height=env.observation_space.shape[1],
-                                               n_middle=200,
-                                               n_hidden=1)
+    # repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
+    #                                            height=env.observation_space.shape[1],
+    #                                            n_middle=200,
+    #                                            n_hidden=1)
 
     # POLICY
-    policy = DoubleDeepQNetwork(1, env.action_space.n, eps_decay=2000)
+    policy = DoubleDeepQNetwork(30, env.action_space.n, eps_decay=2000)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
@@ -146,6 +146,5 @@ if __name__ == "__main__":
     agent.train_agent(episodes=1000, plot_every=20)
 
     # TEST
-    for i in range(5):
-        agent.test()
+    agent.test(num_testruns=5)
     agent.env.close()

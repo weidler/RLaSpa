@@ -1,31 +1,34 @@
 import random
-from typing import List
 
-import gym
 import torch
+from gym import Env
 
 from src.agents.agent import _Agent
 from src.gym_custom_tasks.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, VariationalAutoencoder, JanusPixel, Flatten
+from src.representation.learners import JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
 from src.utils.logger import Logger
+from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
+
 
 class HistoryAgent(_Agent):
-    history: List[SARSTuple]
-    representation_learner: _RepresentationLearner
-    policy: _Policy
-    env: gym.Env
 
-    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment: gym.Env):
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment: Env):
+        """
+        Initializes a history agent with the required elements. The history will explore the environment and save
+        the execution history. Then, it will use the history to train the representation learner and, finally, will
+        use the trained representation learner to train the policy learner with its latent space.
+
+        :param representation_learner: module that converts an environment state into a latent representation.
+        :param policy: module that will make the decisions about how the agent is going to act.
+        :param environment: environment in which the agent acts.
+        """
         # modules
-        self.representation_learner = representation_learner
-        self.policy = policy
-        self.env = environment
+        super().__init__(representation_learner, policy, environment)
         self.one_hot_actions = torch.eye(self.env.action_space.n)
 
         # quick check ups
@@ -36,37 +39,55 @@ class HistoryAgent(_Agent):
 
         self.logger = Logger('logs')
 
-        # REPRESENTATION LEARNING #
+    def load_history(self, file_name: str) -> None:
+        """
+        Method that read the history file and load the state, action, reward, next_state tuples in to the execution.
 
-    def load_history(self, savefile: str):
-        print(f"Loading from {savefile}.")
-        with open(f"../../data/{savefile}", "r") as f:  # write
+        :param file_name: name of the file where the history is saved.
+        """
+        print(f"Loading from {file_name}.")
+        with open(f"../../data/{file_name}", "r") as f:
             lines = f.readlines()
-
         tuples = 0
         for line in lines:
             state, action, reward, next_state = line.split("\t")
-            self.history.append(SARSTuple(torch.Tensor(eval(state)).float(), torch.Tensor(eval(action)).float(), eval(reward), torch.Tensor(eval(next_state)).float()))
+            sars = SARSTuple(torch.Tensor(eval(state)).float(), torch.Tensor(eval(action)).float(), eval(reward),
+                             torch.Tensor(eval(next_state)).float())
+            self.history.append(sars)
             tuples += 1
-
         print(f"Loaded {tuples} records.")
 
-    def save_history(self, savefile: str):
-        print(f"Saving to {savefile}.")
-        with open(f"../../data/{savefile}", "w+") as f: pass  # clear file
-        with open(f"../../data/{savefile}", "a") as f:  # write
+    def save_history(self, file_name: str) -> None:
+        """
+        Method that copy the state, action, reward, next_state tuples for the execution and saves them in a file.
+
+        :param file_name: name of the file where the history is saved.
+        """
+        print(f"Saving to {file_name}.")
+        with open(f"../../data/{file_name}", "w+") as f:
+            pass  # clear file
+        with open(f"../../data/{file_name}", "a") as f:  # write
             for sars in self.history:
                 f.write(f"{sars.state.tolist()}\t{sars.action.tolist()}\t{sars.reward}\t{sars.next_state.tolist()}\n")
         print("Done.")
 
-    def gather_history(self, exploring_policy: _Policy, episodes: int, max_episode_length=1000, log=False):
+    def gather_history(self, exploring_policy: _Policy, episodes: int, max_episode_length: int = 1000,
+                       log: bool = False) -> None:
+        """
+        Method that executes the environment to generate a history of state, action, reward, next_state tuples using
+        only the policy learner specified.
+
+        :param exploring_policy: policy used during the gathering execution.
+        :param episodes: number of episodes to gather.
+        :param max_episode_length: max number of steps for the episodes.
+        :param log: logging flag.
+        """
         print("Gathering history...")
         # check if it is a visual task that needs flattening
         is_visual = False
         flattener = Flatten()
         if len(self.env.observation_space.shape) == 2:
             is_visual = True
-
 
         rewards = []
         for episode in range(episodes):
@@ -76,19 +97,26 @@ class HistoryAgent(_Agent):
             episode_reward = 0
             exp_policy_loss = 0
             while not done and step < max_episode_length:
-                action = exploring_policy.choose_action(flattener.encode(current_state))
+                encoded_current_state = flattener.encode(current_state)
+                action = exploring_policy.choose_action(encoded_current_state)
                 one_hot_action_vector = self.one_hot_actions[action]
-                observation, reward, done, _ = self.step_env(action)
-                if is_visual: exp_policy_loss += exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
-                else: exp_policy_loss += exploring_policy.update(current_state, action, reward, observation, done)
-                self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
+                next_state, reward, done, _ = self.step_env(action)
+                if is_visual:
+                    encoded_next_state = flattener.encode(next_state)
+                    exp_policy_loss += exploring_policy.update(encoded_current_state, action, reward,
+                                                               encoded_next_state, done)
+                else:
+                    exp_policy_loss += exploring_policy.update(current_state, action, reward, next_state, done)
+                sars = SARSTuple(current_state, one_hot_action_vector, reward, next_state)
+                self.history.append(sars)
                 step += 1
                 episode_reward += reward
-                current_state = observation
+                current_state = next_state
             rewards.append(episode_reward)
 
-            if episode % (episodes // 20) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
+            if episode % (episodes // 20) == 0:
+                print(f"\t|-- {round(episode / episodes * 100)}% " +
+                      f"(Avg. Rew. of {sum(rewards[-(episodes // 20):]) / (episodes // 20)})")
 
             if log:
                 info = {'explore_policy_loss': exp_policy_loss, 'explore_reward': episode_reward}
@@ -96,7 +124,14 @@ class HistoryAgent(_Agent):
 
         exploring_policy.finish_training()
 
-    def pretrain(self, epochs: int, batch_size=32, log=False):
+    def pretrain(self, epochs: int, batch_size: int = 32, log: bool = False) -> None:
+        """
+        Method that train the representation learner with the previously gathered data.
+
+        :param epochs: number of times the data will be used to train.
+        :param batch_size: number of samples used to train in each training iteration.
+        :param log: logging flag.
+        """
         if len(self.history) == 0:
             raise RuntimeError("No history found. Add a history by using .gather_history() or .load_history()!")
 
@@ -106,37 +141,41 @@ class HistoryAgent(_Agent):
         random.shuffle(self.history)
 
         print("\t|-- Training")
-        n_batches = len(self.history) // batch_size
+        number_of_batches = len(self.history) // batch_size
         for epoch in range(epochs):
             print(f"\t\tEpoch {epoch + 1}")
-
             pretrain_loss = 0
-
-            for i in range(n_batches):
-                batch_tuples = self.history[i * batch_size:(i + 1) * batch_size]
-
+            for batch_number in range(number_of_batches):
+                batch_tuples = self.history[batch_number * batch_size:(batch_number + 1) * batch_size]
                 pretrain_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
-
-            if i % (n_batches // 3) == 0: print(
-                    f"\t\t|-- {round(i/n_batches * 100)}%")
-
+                if batch_number % (number_of_batches // 3) == 0: print(
+                    f"\t\t|-- {round(batch_number / number_of_batches * 100)}%")
             if log:
                 self.logger.scalar_summary('pretrain_loss', pretrain_loss, epoch)
-
         self.is_pretrained = True
 
-    # REINFORCEMENT LEARNING #
+    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load: str = None,
+                    episodes_per_saving: int = None,
+                    log: bool = False) -> None:
+        """
+        Method that trains the agent policy learner using the pretrained representation learner.
 
-    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load=None, save_ckpt_per=None, log=False):
+        :param episodes: number of training episodes.
+        :param max_episode_length: max number of steps for the episodes.
+        :param ckpt_to_load: name of the checkpoint to load a pretrained policy learner.
+        :param episodes_per_saving: number of episodes between saving checkpoint.
+        :param log: logging flag.
+        """
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
-        if ckpt_to_load:
+        if not (ckpt_to_load is None):
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
-
-        if save_ckpt_per:  # if asked to save checkpoints
+        if not (episodes_per_saving is None):  # if asked to save checkpoints
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
-
+        else:
+            ckpt_dir = None
         print("Training Agent.")
-        if not self.is_pretrained: print("[WARNING]: You are using an untrained representation learner!")
+        if not self.is_pretrained:
+            print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
         for episode in range(start_episode, episodes):
             current_state = self.reset_env()
@@ -147,30 +186,22 @@ class HistoryAgent(_Agent):
             while not done and step < max_episode_length:
                 latent_state = self.representation_learner.encode(current_state)
                 action = self.policy.choose_action(latent_state)
-
-                observation, reward, done, _ = self.step_env(action)
-                latent_observation = self.representation_learner.encode(observation)
-
+                next_state, reward, done, _ = self.step_env(action)
+                latent_observation = self.representation_learner.encode(next_state)
                 policy_loss += self.policy.update(latent_state, action, reward, latent_observation, done)
-
-                current_state = observation
-
+                current_state = next_state
                 episode_reward += reward
                 step += 1
-
             rewards.append(episode_reward)
-
-            if episode % (episodes // 20) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
-
-            if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
+            if episode % (episodes // 20) == 0:
+                print(f"\t|-- {round(episode / episodes * 100)}% " +
+                      f"(Avg. Rew. of {sum(rewards[-(episodes // 20):]) / (episodes // 20)})")
+            if episodes_per_saving and episode % episodes_per_saving == 0:  # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
-
             if log:
                 info = {'policy_loss': policy_loss, 'reward': episode_reward}
                 self.logger.scalar_summary_dict(info, episode)
-
         self.policy.finish_training()
 
 
@@ -196,8 +227,7 @@ if __name__ == "__main__":
     # agent.test()
     # agent.env.close()
 
-
-    size=30
+    size = 30
 
     env = ObstaclePathing(30, 30,
                           [[0, 18, 18, 21],

@@ -1,16 +1,19 @@
-from typing import Tuple
-
-import torch
 from torch import Tensor
 
 
-class SARSTuple():
-    next_state: Tensor
-    reward: Tensor
-    action: Tensor
-    state: Tensor
+class SARSTuple:
+    """
+    Tuple that contains state, action, reward, next_state data.
+    """
 
-    def __init__(self, state: torch.Tensor, action: torch.Tensor, reward: torch.Tensor, next_state: torch.Tensor):
+    def __init__(self, state: Tensor, action: Tensor, reward: float, next_state: Tensor):
+        """
+        Creates a state, action, reward, next_state tuple.
+        :param state: previous state of the environment.
+        :param action: action taken by the agent.
+        :param reward: reward received after acting.
+        :param next_state: state of the environment after acting.
+        """
         self.state = state
         self.action = action
         self.reward = reward

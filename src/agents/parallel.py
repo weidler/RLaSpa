@@ -53,7 +53,8 @@ class ParallelAgent(_Agent):
 
             episode_reward = 0
 
-            repr_loss = 0.0
+            repr_loss = 0
+            policy_loss = 0
 
             while not done:
                 # choose action
@@ -77,7 +78,7 @@ class ParallelAgent(_Agent):
                         batch_memory.pop(0)
 
                 # TRAIN POLICY
-                self.policy.update(latent_state, action, reward, latent_observation, done)
+                policy_loss += self.policy.update(latent_state, action, reward, latent_observation, done)
 
                 # update states (both, to avoid redundant encoding)
                 last_state = current_state
@@ -89,7 +90,7 @@ class ParallelAgent(_Agent):
 
             # logging for tensorboard
             if log:
-                info = {'loss': repr_loss, 'reward': episode_reward}
+                info = {'loss': repr_loss, 'policy_loss': policy_loss, 'reward': episode_reward}
                 self.logger.scalar_summary_dict(info, episode)
 
             rewards.append(episode_reward)

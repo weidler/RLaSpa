@@ -143,11 +143,19 @@ if __name__ == "__main__":
 
     # repr_learner = Flatten()
 
+
+
     # POLICY
     policy = DoubleDeepQNetwork(10, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    repr_learner.network.to(device)
+    policy.current_model.to(device)
+    policy.target_model.to(device)
 
     # TRAIN
     agent.train_agent(episodes=10000, plot_every=None, log=False)

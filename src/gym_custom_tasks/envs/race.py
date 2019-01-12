@@ -12,14 +12,14 @@ class Race(gym.Env):
     AGENT_PIXEL = 0.3
     DRIVER_PIXEL = 0.6
 
-    def __init__(self):
-        self.width = 10
-        self.height = 10
+    def __init__(self, width: int=10, height: int=10, driver_chance: int=0.1):
+        self.width = width
+        self.height = height
         self.action_space = gym.spaces.Discrete(3) # LEFT, RIGHT, STRAIGHT
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))
 
         self.track, self.pos_agent = self._init_track()
-        self.driver_chance = torch.empty(1, self.width).new_full((1, self.width), 0.01)  # 0.1 = 10% chance that a driver is spawned
+        self.driver_chance = torch.empty(1, self.width).new_full((1, self.width), driver_chance)  # 0.1 = 10% chance that a driver is spawned
         self.max_steps = 500
         self.steps = 0
 

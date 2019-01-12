@@ -8,14 +8,14 @@ class Evasion(gym.Env):
     AGENT_PIXEL = 0.3
     OBSTACLE_PIXEL = 0.6
 
-    def __init__(self):
-        self.width = 10
-        self.height = 10
+    def __init__(self, width: int=10, height: int=10, obstacle_chance: int=0.1):
+        self.width = width
+        self.height = height
         self.action_space = gym.spaces.Discrete(3) # UP, DOWN, STRAIGHT
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))
 
         self.dungeon, self.pos_agent = self._init_dungeon()
-        self.obstacle_chance = torch.empty(self.height, 1).new_full((self.height, 1), 0.05)  # 0.1 = 10% chance that an obstacle is spawned
+        self.obstacle_chance = torch.empty(self.height, 1).new_full((self.height, 1), obstacle_chance)  # 0.1 = 10% chance that an obstacle is spawned
         self.max_steps = 500
         self.steps = 0
 

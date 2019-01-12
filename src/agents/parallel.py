@@ -8,6 +8,7 @@ import src.gym_custom_tasks
 
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
+from src.policy.dqn import DeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel, VariationalAutoencoder, \
     VariationalAutoencoderPixel, PassThrough, Flatten
@@ -40,10 +41,8 @@ class ParallelAgent(_Agent):
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
 
         print("Starting parallel training process.")
-
         # introduce batch memory to store observations and learn in batches
         batch_memory: List[SARSTuple] = []
-
         rewards = []
         for episode in range(start_episode, episodes):
             done = False
@@ -110,12 +109,16 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
-
     if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-
-    env = gym.make('Race-v0')
+    gym.envs.register(
+        id='Evasion-v1',
+        entry_point='src.gym_custom_tasks.envs:Evasion',
+        kwargs={'width': 10, 'height': 10,
+                'obstacle_chance': 0.01},
+    )
+    env = gym.make('Evasion-v1')
     # size = 30
     # gym.envs.register(
     #     id='VisualObstaclePathing-v1',
@@ -131,25 +134,25 @@ if __name__ == "__main__":
     repr_learner = CerberusPixel(width=env.observation_space.shape[0],
                               height=env.observation_space.shape[1],
                               n_actions=env.action_space.n,
-                              n_hidden=size)
+                              n_hidden=10)
 
     # repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
     #                                            height=env.observation_space.shape[1],
     #                                            n_middle=200,
     #                                            n_hidden=1)
 
-    # REPRESENTATION
-    repr_learner = Flatten()
-    # POLICY
+    # repr_learner = Flatten()
 
-    policy = DoubleDeepQNetwork(30*30, env.action_space.n, eps_decay=2000)
+    # POLICY
+    policy = DoubleDeepQNetwork(10, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
 
     # TRAIN
-    agent.train_agent(episodes=1000)
+    agent.train_agent(episodes=10000, plot_every=None, log=False)
 
     # TEST
-    agent.test(num_testruns=5)
+    # Gifs will only be produced when render is off
+    agent.test(num_testruns=5, render=False)
     agent.env.close()

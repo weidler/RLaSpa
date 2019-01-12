@@ -4,6 +4,8 @@ from typing import Tuple
 import torch
 from gym import Env
 from torch import Tensor
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 
 from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
@@ -66,7 +68,10 @@ class _Agent(abc.ABC):
     def test(self, num_testruns=1, render=True) -> None:
         """ Run a test in the environment using the current policy without exploration. """
         all_rewards = []
+        fig = plt.figure(figsize=(10, 6))
         for i in range(num_testruns):
+            plt.clf()
+            ims = []
             done = False
             state = self.reset_env()
             step = 0
@@ -75,10 +80,15 @@ class _Agent(abc.ABC):
                 state, reward, done = self.act(state)
                 step += 1
                 total_reward += reward
+                ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
                 if render:
                     self.env.render()
             all_rewards.append(total_reward)
             print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
+            if not render:
+                ani = animation.ArtistAnimation(fig, ims, blit=True,
+                                                repeat_delay=1000)
+                ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
         print(f'Average max score after {num_testruns} testruns: {sum(all_rewards)/len(all_rewards)}')
 
     def get_config_name(self):

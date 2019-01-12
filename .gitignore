@@ -1,6 +1,7 @@
 data/*
 src/task/cifardata/*
 *.pdf
+logs
 models/*
 ###### PYTHON ######
 

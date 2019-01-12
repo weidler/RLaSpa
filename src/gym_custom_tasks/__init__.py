@@ -34,3 +34,8 @@ register(
     id='Evasion-v0',
     entry_point='src.gym_custom_tasks.envs:Evasion',
 )
+
+register(
+    id='Evasion-v1',
+    entry_point='src.gym_custom_tasks.envs:Evasion',
+)

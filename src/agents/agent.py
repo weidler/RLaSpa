@@ -73,7 +73,7 @@ class _Agent(abc.ABC):
             state, reward, done = self.act(state)
             step += 1
             total_reward += reward
-            self.env.render()
+            # self.env.render()
 
         print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
 

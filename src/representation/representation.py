@@ -84,6 +84,6 @@ class _RepresentationLearner(abc.ABC):
         :param restore_input:   dict containing the state of network and optimizer to restore
         :return:
         """
-        if self.network is not None:
+        if hasattr(self, 'network'):
             self.network.load_state_dict(restore_input['model'])
             self.optimizer.load_state_dict(restore_input['optimizer'])

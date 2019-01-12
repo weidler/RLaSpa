@@ -59,7 +59,7 @@ class HistoryAgent(_Agent):
                 f.write(f"{sars.state.tolist()}\t{sars.action.tolist()}\t{sars.reward}\t{sars.next_state.tolist()}\n")
         print("Done.")
 
-    def gather_history(self, exploring_policy: _Policy, episodes: int, max_episode_length=1000):
+    def gather_history(self, exploring_policy: _Policy, episodes: int, max_episode_length=1000, log=False):
         print("Gathering history...")
         # check if it is a visual task that needs flattening
         is_visual = False
@@ -74,12 +74,13 @@ class HistoryAgent(_Agent):
             done = False
             step = 0
             episode_reward = 0
+            exp_policy_loss = 0
             while not done and step < max_episode_length:
                 action = exploring_policy.choose_action(flattener.encode(current_state))
                 one_hot_action_vector = self.one_hot_actions[action]
                 observation, reward, done, _ = self.step_env(action)
-                if is_visual: exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
-                else: exploring_policy.update(current_state, action, reward, observation, done)
+                if is_visual: exp_policy_loss += exploring_policy.update(flattener.encode(current_state), action, reward, flattener.encode(observation), done)
+                else: exp_policy_loss += exploring_policy.update(current_state, action, reward, observation, done)
                 self.history.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
                 step += 1
                 episode_reward += reward
@@ -88,6 +89,10 @@ class HistoryAgent(_Agent):
 
             if episode % (episodes // 20) == 0: print(
                 f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//20):])/(episodes//20)})")
+
+            if log:
+                info = {'explore_policy_loss': exp_policy_loss, 'explore_reward': episode_reward}
+                self.logger.scalar_summary_dict(info, episode)
 
         exploring_policy.finish_training()
 
@@ -138,6 +143,7 @@ class HistoryAgent(_Agent):
             done = False
             step = 0
             episode_reward = 0
+            policy_loss = 0
             while not done and step < max_episode_length:
                 latent_state = self.representation_learner.encode(current_state)
                 action = self.policy.choose_action(latent_state)
@@ -145,7 +151,7 @@ class HistoryAgent(_Agent):
                 observation, reward, done, _ = self.step_env(action)
                 latent_observation = self.representation_learner.encode(observation)
 
-                self.policy.update(latent_state, action, reward, latent_observation, done)
+                policy_loss += self.policy.update(latent_state, action, reward, latent_observation, done)
 
                 current_state = observation
 
@@ -160,6 +166,10 @@ class HistoryAgent(_Agent):
             if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+
+            if log:
+                info = {'policy_loss': policy_loss, 'reward': episode_reward}
+                self.logger.scalar_summary_dict(info, episode)
 
         self.policy.finish_training()
 

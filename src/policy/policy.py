@@ -8,7 +8,7 @@ class _Policy(abc.ABC):
     """
 
     @abc.abstractmethod
-    def update(self, state, action, reward, next_state, done) -> None:
+    def update(self, state, action, reward, next_state, done) -> float:
         """ Update Policy/Q-values based on observations from environment.
 
         :param state:       original environment state
@@ -16,6 +16,8 @@ class _Policy(abc.ABC):
         :param reward:      reward received
         :param next_state:  environment state after acting
         :param done:        environment finished after acting
+
+        :return:            loss produced by this update
         """
         raise NotImplementedError
 

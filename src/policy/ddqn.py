@@ -33,7 +33,8 @@ class DoubleDeepQNetwork(_Policy):
         :param per_init_eps_memory: percentage of the initial epsilon that will remain when
         the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
-        :param representation_network: Optional nn.Module used for the representation. Including it into the policy network allows full backpropatation.
+        :param representation_network: Optional nn.Module used for the representation. Including it into the policy
+        network allows full backpropagation.
         """
         self.beta = beta
         self.alpha = alpha
@@ -164,7 +165,7 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, alpha: float = 0.9,
                  beta: float = 0.9, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  init_eps: float = 1.0, min_eps=0.01, eps_decay=500, per_init_eps_memory: int = 0.8,
-                 memory_delay: int = 5000):
+                 memory_delay: int = 5000, representation_network: torch.nn.Module = None):
         """
         Initializes a Double Deep Q-Network agent with prioritized memory.
 
@@ -183,11 +184,15 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         :param per_init_eps_memory: percentage of the initial epsilon that will remain when
         the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
+        :param representation_network: Optional nn.Module used for the representation. Including it into the policy
+        network allows full backpropagation.
         """
         super().__init__(num_features, num_actions, memory_size, alpha, beta, batch_size, learning_rate, gamma,
-                         init_eps, min_eps, eps_decay, per_init_eps_memory, memory_delay)
-        self.current_model = DuelingDQN(num_features=num_features, num_actions=num_actions)
-        self.target_model = DuelingDQN(num_features=num_features, num_actions=num_actions)
+                         init_eps, min_eps, eps_decay, per_init_eps_memory, memory_delay, representation_network)
+        self.current_model = DuelingDQN(num_features=num_features, num_actions=num_actions,
+                                        representation_network=representation_network)
+        self.target_model = DuelingDQN(num_features=num_features, num_actions=num_actions,
+                                       representation_network=representation_network)
         update_agent_model(current=self.current_model, target=self.target_model)
 
     def compute_td_loss(self, state, action, reward, next_state, done) -> None:

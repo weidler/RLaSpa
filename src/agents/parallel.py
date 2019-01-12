@@ -30,6 +30,7 @@ class ParallelAgent(_Agent):
         """
         super().__init__(representation_learner=representation_learner, policy=policy, environment=environment)
         self.one_hot_actions = torch.eye(self.env.action_space.n)
+        self.representation_memory = deque(maxlen=representation_memory_size)
         self.logger = Logger('logs')
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
@@ -156,7 +157,7 @@ if __name__ == "__main__":
     policy.target_model.to(device)
 
     # TRAIN
-    agent.train_agent(episodes=2000, plot_every=200, log=True, save_ckpt_per=500)
+    agent.train_agent(episodes=2000, plot_every=200, log=True, episodes_per_saving=500)
 
     # TEST
     # Gifs will only be produced when render is off

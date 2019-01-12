@@ -62,12 +62,22 @@ class _RepresentationLearner(abc.ABC):
         pass
 
     def current_state(self):
-        # TODO: catch exception here, as flatten and so don't have network and optimizer
+        """ Get current state of the representation learner
+        Returns None if the repr learner does not contain a network (pass through, flatten)
+
+        :return:            dict containing the network and optimizer
+        """
         return {
-            'model': self.network.state_dict(),
-            'optimizer': self.optimizer.state_dict(),
+            'model': None if self.network is None else self.network.state_dict(),
+            'optimizer': None if self.network is None else self.optimizer.state_dict(),
         }
 
     def restore_from(self, restore_input):
-        self.network.load_state_dict(restore_input['model'])
-        self.optimizer.load_state_dict(restore_input['optimizer'])
+        """ Restores the repr learner from some state
+
+        :param restore_input:   dict containing the state of network and optimizer to restore
+        :return:
+        """
+        if self.network is not None:
+            self.network.load_state_dict(restore_input['model'])
+            self.optimizer.load_state_dict(restore_input['optimizer'])

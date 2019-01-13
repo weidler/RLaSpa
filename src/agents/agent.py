@@ -31,7 +31,8 @@ class _Agent:
         self.policy = policy
         self.representation_learner = representation_learner
 
-    def train_agent(self, episodes: int, ckpt_to_load=None, episodes_per_saving=None, plot_every=None, log=False):
+    def train_agent(self, episodes: int, ckpt_to_load: str = None, episodes_per_saving: int = None,
+                    plot_every: int = None, log: bool = False) -> None:
         """
         Train the agent for some number of episodes. The max length of episodes is specified in the environment.
         Optionally save or load checkpoints from previous trainings.

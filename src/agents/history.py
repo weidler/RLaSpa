@@ -154,9 +154,8 @@ class HistoryAgent(_Agent):
                 self.logger.scalar_summary('pretrain_loss', pretrain_loss, epoch)
         self.is_pretrained = True
 
-    def train_agent(self, episodes: int, max_episode_length=1000, ckpt_to_load: str = None,
-                    episodes_per_saving: int = None,
-                    log: bool = False) -> None:
+    def train_agent(self, episodes: int, max_episode_length: int = 1000, ckpt_to_load: str = None,
+                    episodes_per_saving: int = None, log: bool = False) -> None:
         """
         Method that trains the agent policy learner using the pretrained representation learner.
 

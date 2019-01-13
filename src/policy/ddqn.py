@@ -14,7 +14,7 @@ class DoubleDeepQNetwork(_Policy):
     def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, alpha: float = 0.9,
                  beta: float = 0.9, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  init_eps: float = 1.0, min_eps=0.01, eps_decay=500, per_init_eps_memory: int = 0.8,
-                 memory_delay: int = 5000, representation_network: torch.nn.Module = None):
+                 memory_delay: int = 5000, representation_network: torch.nn.Module = None) -> None:
         """
         Initializes a Double Deep Q-Network agent with prioritized memory.
 
@@ -44,8 +44,9 @@ class DoubleDeepQNetwork(_Policy):
         self.memory_delay = memory_delay
         self.current_model = DQN(num_features=num_features, num_actions=num_actions,
                                  representation_network=representation_network)
+        # target model needs repr network as well because otherwise copying over parameters will be non trivial
         self.target_model = DQN(num_features=num_features, num_actions=num_actions,
-                                representation_network=representation_network)  # target model needs repr network as well because otherwise copying over parameters will be non trivial
+                                representation_network=representation_network)
         self.optimizer = optim.Adam(self.current_model.parameters(), lr=learning_rate)
         self.memory = PrioritizedReplayMemory(capacity=memory_size, alpha=alpha)
         self.epsilon_calculator = LinearSchedule(schedule_timesteps=self.memory_delay, initial_p=init_eps,
@@ -139,12 +140,12 @@ class DoubleDeepQNetwork(_Policy):
                 loss = self.compute_td_loss_memory()
         else:
             loss = self.compute_td_loss(state, action, reward, next_state, done)
-            if self.total_steps_done == self.memory_delay: print("\tPolicy-DQN begins memorizing now.")
+            if self.total_steps_done == self.memory_delay:
+                print("\tPolicy-DQN begins memorizing now.")
         if self.total_steps_done % 100:
             update_agent_model(self.current_model, self.target_model)
 
         return 0 if loss is None else loss.data.item()
-
 
     def choose_action(self, state) -> int:
         if self.total_steps_done > self.memory_delay:
@@ -177,7 +178,7 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, alpha: float = 0.9,
                  beta: float = 0.9, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  init_eps: float = 1.0, min_eps=0.01, eps_decay=500, per_init_eps_memory: int = 0.8,
-                 memory_delay: int = 5000, representation_network: torch.nn.Module = None):
+                 memory_delay: int = 5000, representation_network: torch.nn.Module = None) -> None:
         """
         Initializes a Double Deep Q-Network agent with prioritized memory.
 

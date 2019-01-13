@@ -111,14 +111,14 @@ if __name__ == "__main__":
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
+    size = 30
     gym.envs.register(
         id='Evasion-v1',
         entry_point='src.gym_custom_tasks.envs:Evasion',
-        kwargs={'width': 10, 'height': 10,
-                'obstacle_chance': 0.01},
+        kwargs={'width': size, 'height': size,
+                'obstacle_chance': 0.05},
     )
     env = gym.make('Evasion-v1')
-    # size = 30
     # gym.envs.register(
     #     id='VisualObstaclePathing-v1',
     #     entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     repr_learner = CerberusPixel(width=env.observation_space.shape[0],
                                  height=env.observation_space.shape[1],
                                  n_actions=env.action_space.n,
-                                 n_hidden=10)
+                                 n_hidden=size)
 
     # repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
     #                                            height=env.observation_space.shape[1],
@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
 
     # POLICY
-    policy = DoubleDeepQNetwork(10, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
+    policy = DoubleDeepQNetwork(size, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
@@ -157,9 +157,9 @@ if __name__ == "__main__":
     policy.target_model.to(device)
 
     # TRAIN
-    agent.train_agent(episodes=2000, plot_every=200, log=True, episodes_per_saving=500)
+    # agent.train_agent(episodes=2000, plot_every=200, log=True, episodes_per_saving=500)
 
     # TEST
     # Gifs will only be produced when render is off
-    agent.test(runs_number=5, render=False)
+    agent.test(runs_number=5, render=True)
     agent.env.close()

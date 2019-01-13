@@ -79,7 +79,7 @@ class _Agent:
         """
         return torch.Tensor(self.env.reset()).float()
 
-    def test(self, runs_number=1, render=True) -> None:
+    def test(self, runs_number=1, render=False) -> None:
         """
         Run a test in the environment using the current policy without exploration.
 

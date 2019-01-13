@@ -1,4 +1,5 @@
 import random
+import time
 from collections import deque
 from typing import List
 
@@ -9,7 +10,7 @@ from gym import Env
 from src.agents.agent import _Agent, reset_env, step_env
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import CerberusPixel
+from src.representation.learners import CerberusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.logger import Logger
@@ -55,6 +56,7 @@ class ParallelAgent(_Agent):
         """
 
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
+        start_time = time.time()
         if not (ckpt_to_load is None):
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
 
@@ -65,6 +67,9 @@ class ParallelAgent(_Agent):
 
         print("Starting parallel training process.")
         rewards = []
+        all_repr_loss = []
+        all_policy_loss = []
+
         # store experiences in a stack to allow random shuffling between the episodes (and therefore between different
         # tasks.
         experience_stack = []
@@ -125,11 +130,17 @@ class ParallelAgent(_Agent):
                 self.logger.scalar_summary_dict(info, episode)
 
             # print progress report
+            rewards.append(episode_reward)
+            all_repr_loss.append(repr_loss)
+            all_policy_loss.append(policy_loss)
             if episode % (episodes // 100) == 0:
-                print(f"\t|-- {round(episode / episodes * 100)}% " \
-                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)})")
+                print(f"\t|-- {round(episode / episodes * 100):3d}% " \
+                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)} " \
+                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
+                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
+                      + f"Last 5 rewards: {rewards[-5:]}) " \
+                      + f"Time elapsed: {(time.time()-start_time)/60:.2f} min")
 
-            # save check point every n episodes
             if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
@@ -173,7 +184,9 @@ if __name__ == "__main__":
     policy.target_model.to(device)
 
     # TRAIN
+    start_time = time.time()
     agent.train_agent(episodes=100, batch_size=32, plot_every=10, log=False)
+    print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 
     # TEST
     # Gifs will only be produced when render is off

@@ -66,12 +66,12 @@ register(
 register(
     id='Race-v0',
     entry_point='src.gym_custom_tasks.envs:Race',
-    kwargs={'width':10, 'height':10,
-            'driver_chance':0.01},
+    kwargs={'width':30, 'height':30,
+            'driver_chance':0.05},
 )
 register(
     id='Evasion-v0',
     entry_point='src.gym_custom_tasks.envs:Evasion',
-    kwargs={'width':10, 'height':10,
-            'obstacle_chance':0.01},
+    kwargs={'width':30, 'height':30,
+            'obstacle_chance':0.05},
 )

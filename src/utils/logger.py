@@ -3,13 +3,16 @@ import tensorflow as tf
 import numpy as np
 import scipy.misc
 from io import BytesIO  # Python 3.x
+import os
 
 
 class Logger(object):
 
     def __init__(self, log_dir):
         """Create a summary writer logging to log_dir."""
-        self.writer = tf.summary.FileWriter(log_dir)
+        out_dir = os.path.normpath(os.path.abspath(__file__)).split(os.sep)[:-3]  # root_dir
+        out_dir.append(log_dir)
+        self.writer = tf.summary.FileWriter(os.sep.join(out_dir))
 
     def scalar_summary_dict(self, info: dict, step: int):
         """Log a set of scalar variable."""

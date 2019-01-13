@@ -14,7 +14,7 @@ class DoubleDeepQNetwork(_Policy):
     def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, alpha: float = 0.9,
                  beta: float = 0.9, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  init_eps: float = 1.0, min_eps=0.01, eps_decay=500, per_init_eps_memory: int = 0.8,
-                 memory_delay: int = 5000):
+                 memory_delay: int = 5000, representation_network: torch.nn.Module = None) -> None:
         """
         Initializes a Double Deep Q-Network agent with prioritized memory.
 
@@ -33,6 +33,8 @@ class DoubleDeepQNetwork(_Policy):
         :param per_init_eps_memory: percentage of the initial epsilon that will remain when
         the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
+        :param representation_network: Optional nn.Module used for the representation. Including it into the policy
+        network allows full backpropagation.
         """
         self.beta = beta
         self.alpha = alpha
@@ -40,8 +42,11 @@ class DoubleDeepQNetwork(_Policy):
         self.total_steps_done = 0
         self.batch_size = batch_size
         self.memory_delay = memory_delay
-        self.current_model = DQN(num_features=num_features, num_actions=num_actions)
-        self.target_model = DQN(num_features=num_features, num_actions=num_actions)
+        self.current_model = DQN(num_features=num_features, num_actions=num_actions,
+                                 representation_network=representation_network)
+        # target model needs repr network as well because otherwise copying over parameters will be non trivial
+        self.target_model = DQN(num_features=num_features, num_actions=num_actions,
+                                representation_network=representation_network)
         self.optimizer = optim.Adam(self.current_model.parameters(), lr=learning_rate)
         self.memory = PrioritizedReplayMemory(capacity=memory_size, alpha=alpha)
         self.epsilon_calculator = LinearSchedule(schedule_timesteps=self.memory_delay, initial_p=init_eps,
@@ -50,7 +55,7 @@ class DoubleDeepQNetwork(_Policy):
                                                              decay=eps_decay)
         update_agent_model(current=self.current_model, target=self.target_model)
 
-    def compute_td_loss(self, state, action, reward, next_state, done) -> None:
+    def compute_td_loss(self, state, action, reward, next_state, done) -> torch.tensor:
         """
         Method to compute the loss for a given iteration
 
@@ -59,6 +64,7 @@ class DoubleDeepQNetwork(_Policy):
         :param reward: reward received
         :param next_state: state after acting
         :param done: flag that indicates if the episode has finished
+        :return: loss tensor
         """
         state = torch.tensor(state, dtype=torch.float32)
         next_state = torch.tensor(next_state, dtype=torch.float32)
@@ -83,10 +89,14 @@ class DoubleDeepQNetwork(_Policy):
         loss.backward()
         self.optimizer.step()
 
-    def compute_td_loss_memory(self) -> None:
+        return loss
+
+    def compute_td_loss_memory(self) -> torch.tensor:
         """
         Method that computes the loss of a batch. The batch is sample for memory to take in consideration
         situations that happens before.
+
+        :return: loss tensor
         """
         state, action, reward, next_state, done, indices, weights = self.memory.sample(self.batch_size, self.beta)
 
@@ -117,18 +127,25 @@ class DoubleDeepQNetwork(_Policy):
         self.memory.update_priorities(indices, prios.data.cpu().numpy())
         self.optimizer.step()
 
-    def update(self, state, action, reward, next_state, done) -> None:
+        return loss
+
+    def update(self, state, action, reward, next_state, done) -> float:
         self.total_steps_done += 1
+
+        loss = None
         if self.total_steps_done > self.memory_delay:
             self.memory.push(state, action, reward, next_state, done)
             if len(self.memory) > self.batch_size:
                 # when saved plays are greater than the batch size calculate losses
-                self.compute_td_loss_memory()
+                loss = self.compute_td_loss_memory()
         else:
-            self.compute_td_loss(state, action, reward, next_state, done)
-            if self.total_steps_done == self.memory_delay: print("\tPolicy-DQN begins memorizing now.")
+            loss = self.compute_td_loss(state, action, reward, next_state, done)
+            if self.total_steps_done == self.memory_delay:
+                print("\tPolicy-DQN begins memorizing now.")
         if self.total_steps_done % 100:
             update_agent_model(self.current_model, self.target_model)
+
+        return 0 if loss is None else loss.data.item()
 
     def choose_action(self, state) -> int:
         if self.total_steps_done > self.memory_delay:
@@ -161,7 +178,7 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, memory_size: int = 10000, alpha: float = 0.9,
                  beta: float = 0.9, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  init_eps: float = 1.0, min_eps=0.01, eps_decay=500, per_init_eps_memory: int = 0.8,
-                 memory_delay: int = 5000):
+                 memory_delay: int = 5000, representation_network: torch.nn.Module = None) -> None:
         """
         Initializes a Double Deep Q-Network agent with prioritized memory.
 
@@ -180,14 +197,18 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         :param per_init_eps_memory: percentage of the initial epsilon that will remain when
         the memory starts to be used. Default: 0.8
         :param memory_delay: Number of steps until the memory is used.
+        :param representation_network: Optional nn.Module used for the representation. Including it into the policy
+        network allows full backpropagation.
         """
         super().__init__(num_features, num_actions, memory_size, alpha, beta, batch_size, learning_rate, gamma,
-                         init_eps, min_eps, eps_decay, per_init_eps_memory, memory_delay)
-        self.current_model = DuelingDQN(num_features=num_features, num_actions=num_actions)
-        self.target_model = DuelingDQN(num_features=num_features, num_actions=num_actions)
+                         init_eps, min_eps, eps_decay, per_init_eps_memory, memory_delay, representation_network)
+        self.current_model = DuelingDQN(num_features=num_features, num_actions=num_actions,
+                                        representation_network=representation_network)
+        self.target_model = DuelingDQN(num_features=num_features, num_actions=num_actions,
+                                       representation_network=representation_network)
         update_agent_model(current=self.current_model, target=self.target_model)
 
-    def compute_td_loss(self, state, action, reward, next_state, done) -> None:
+    def compute_td_loss(self, state, action, reward, next_state, done) -> torch.tensor:
         """
         Method to compute the loss for a given iteration
 
@@ -196,6 +217,7 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         :param reward: reward received
         :param next_state: state after acting
         :param done: flag that indicates if the episode has finished
+        :return: loss tensor
         """
         state = torch.tensor(state, dtype=torch.float32)
         next_state = torch.tensor(next_state, dtype=torch.float32)
@@ -219,10 +241,14 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         loss.backward()
         self.optimizer.step()
 
-    def compute_td_loss_memory(self) -> None:
+        return loss
+
+    def compute_td_loss_memory(self) -> torch.tensor:
         """
         Method that computes the loss of a batch. The batch is sample for memory to take in consideration
         situations that happens before.
+
+        :return: loss tensor
         """
         state, action, reward, next_state, done, indices, weights = self.memory.sample(self.batch_size, self.beta)
 
@@ -251,3 +277,5 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         loss.backward()
         self.memory.update_priorities(indices, prios.data.cpu().numpy())
         self.optimizer.step()
+
+        return loss

@@ -13,7 +13,7 @@ class Evasion(gym.Env):
     AGENT_PIXEL = 0.3
     OBSTACLE_PIXEL = 0.6
 
-    def __init__(self, width: int=10, height: int=10, obstacle_chance: int=0.1):
+    def __init__(self, width: int=10, height: int=10, obstacle_chance: float=0.05):
         self.width = width
         self.height = height
         self.action_space = gym.spaces.Discrete(3) # UP, DOWN, STRAIGHT

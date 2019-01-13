@@ -1,50 +1,73 @@
 import random
+from collections import deque
 from typing import List
 
 import gym
 import torch
 from gym import Env
 
-import src.gym_custom_tasks
-
 from src.agents.agent import _Agent, reset_env, step_env
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import SimpleAutoencoder, CerberusPixel, JanusPixel, VariationalAutoencoder, \
-    VariationalAutoencoderPixel, PassThrough, Flatten
+from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
-from src.representation.visual.pixelencoder import VariationalPixelEncoder
 from src.utils.container import SARSTuple
-from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
 from src.utils.logger import Logger
+from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
+
 
 class ParallelAgent(_Agent):
     policy: _Policy
     representation_learner: _RepresentationLearner
     environments: List[Env]
 
-    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environments: List[Env]):
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environments: List[Env],
+                 representation_memory_size: int = 1024):
+        """ Initialize a parallel agent with the required elements. The parallel agent trains at the same time
+        the representation and the policy learners.
+
+        :param representation_learner: module that converts an environment state into a latent representation.
+        :param policy: module that will make the decisions about how the agent is going to act.
+        :param environment: environment in which the agent acts.
+        :param representation_memory_size: number of SARS tuples that the representation learning memory can save.
+        """
+
         super(ParallelAgent, self).__init__(representation_learner, policy, environments)
 
         self.one_hot_actions = torch.eye(self.environments[0].action_space.n)
+        self.representation_memory = deque(maxlen=representation_memory_size)
         self.logger = Logger('../../logs')
 
     # REINFORCEMENT LEARNING #
 
-    def train_agent(self, episodes: int, batch_size=32, max_batch_memory_size=1024, ckpt_to_load=None,
-                    save_ckpt_per=None, plot_every=None, log=False):
+    def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
+                    episodes_per_saving: int = None, plot_every: int = None, log: bool = False,
+                    experience_warmup_length=0):
+        """
+        Method that trains the agent policy learner using the pretrained representation learner.
+
+        :param episodes: number of training episodes.
+        :param batch_size: number of samples used to train in each training iteration.
+        :param ckpt_to_load: name of the checkpoint to load a pretrained policy learner.
+        :param episodes_per_saving: number of episodes between saving checkpoint.
+        :param plot_every: number of steps that will happen between the plotting of the space representation.
+        :param log: logging flag.
+        """
+
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
-        if ckpt_to_load:
+        if not (ckpt_to_load is None):
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
-        if save_ckpt_per:  # if asked to save checkpoints
+
+        if not (episodes_per_saving is None):  # if asked to save checkpoints
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
+        else:
+            ckpt_dir = None
 
         print("Starting parallel training process.")
-
-        # introduce batch memory to store observations and learn in batches
-        batch_memory: List[SARSTuple] = []
-
         rewards = []
+        # store experiences in a stack to allow random shuffling between the episodes (and therefore between different
+        # tasks.
+        experience_stack = []
         for episode in range(start_episode, episodes):
             # choose environment
             env = random.choice(self.environments)
@@ -55,7 +78,8 @@ class ParallelAgent(_Agent):
 
             # trackers
             episode_reward = 0
-            repr_loss = 0.0
+            repr_loss = 0
+            policy_loss = 0
 
             # begin episode
             done = False
@@ -68,20 +92,23 @@ class ParallelAgent(_Agent):
                 observation, reward, done, _ = step_env(action, env)
                 latent_observation = self.representation_learner.encode(observation)
 
-                # TRAIN REPRESENTATION LEARNER using batches
-                batch_memory.append(SARSTuple(current_state, one_hot_action_vector, reward, observation))
-                if len(batch_memory) >= batch_size:
-                    batch_tuples = batch_memory[:]
-                    random.shuffle(batch_tuples)
-                    batch_tuples = batch_tuples[:batch_size]
+                # store sars tuple for batch learning
+                sars_tuple = SARSTuple(current_state, one_hot_action_vector, reward, observation)
+                self.representation_memory.append(sars_tuple)
 
+                # train representation module
+                if len(self.representation_memory) >= batch_size:
+                    batch_tuples = random.sample(self.representation_memory, batch_size)
                     repr_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
-                    if len(batch_memory) > max_batch_memory_size:
-                        batch_memory.pop(0)
+                # store experience for multitask learning
+                experience = (latent_state, action, reward, latent_observation, done)
+                experience_stack.append(experience)
 
-                # TRAIN POLICY
-                self.policy.update(latent_state, action, reward, latent_observation, done)
+                # train policy
+                if episode >= experience_warmup_length:
+                    random.shuffle(experience_stack)
+                    policy_loss += self.policy.update(*(experience_stack.pop(0)))
 
                 # update states (both, to avoid redundant encoding)
                 last_state = current_state
@@ -90,22 +117,25 @@ class ParallelAgent(_Agent):
 
                 # trackers
                 episode_reward += reward
+            rewards.append(episode_reward)
 
             # logging for tensorboard
             if log:
-                info = {'loss': repr_loss, 'reward': episode_reward}
+                info = {'loss': repr_loss, 'policy_loss': policy_loss, 'reward': episode_reward}
                 self.logger.scalar_summary_dict(info, episode)
 
-            rewards.append(episode_reward)
+            # print progress report
+            if episode % (episodes // 100) == 0:
+                print(f"\t|-- {round(episode / episodes * 100)}% " \
+                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)})")
 
-            if episode % (episodes // 100) == 0: print(
-                f"\t|-- {round(episode/episodes * 100)}% (Avg. Rew. of {sum(rewards[-(episodes//100):])/(episodes//100)})")
-
-            if save_ckpt_per and episode % save_ckpt_per == 0:  # save check point every n episodes
+            # save check point every n episodes
+            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
 
-            if plot_every is not None and episode % plot_every == 0:
+            # plotting the representation heads
+            if not (plot_every is None) and episode % plot_every == 0:
                 self.representation_learner.visualize_output(last_state, one_hot_action_vector, current_state)
 
         # Last update of the agent policy
@@ -113,15 +143,8 @@ class ParallelAgent(_Agent):
 
 
 if __name__ == "__main__":
-    if torch.cuda.is_available(): torch.set_default_tensor_type('torch.cuda.FloatTensor')
-
-    # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
-    # gym.envs.register(
-    #     id='Evasion-v1',
-    #     entry_point='src.gym_custom_tasks.envs:Evasion',
-    #     kwargs={'width': 10, 'height': 10,
-    #             'obstacle_chance': 0.01},
-    # )
+    if torch.cuda.is_available():
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     environments = [
         gym.make("VisualObstaclePathing-v0"),
@@ -130,30 +153,12 @@ if __name__ == "__main__":
         gym.make("VisualObstaclePathing-v3")
     ]
 
-    # environments.append(gym.make('Evasion-v1'))
-    # size = 30
-    # gym.envs.register(
-    #     id='VisualObstaclePathing-v1',
-    #     entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
-    #     kwargs={'width': size, 'height': size,
-    #             'obstacles': [[0, 18, 18, 21],
-    #                           [21, 24, 10, 30]],
-    #             'visual': True},
-    # )
-    # env = gym.make('VisualObstaclePathing-v1')
-
     # REPRESENTATION
+
     repr_learner = CerberusPixel(width=environments[0].observation_space.shape[0],
-                              height=environments[0].observation_space.shape[1],
-                              n_actions=environments[0].action_space.n,
-                              n_hidden=20)
-
-    # repr_learner = VariationalAutoencoderPixel(width=env.observation_space.shape[0],
-    #                                            height=env.observation_space.shape[1],
-    #                                            n_middle=200,
-    #                                            n_hidden=1)
-
-    # repr_learner = Flatten()
+                                 height=environments[0].observation_space.shape[1],
+                                 n_actions=environments[0].action_space.n,
+                                 n_hidden=20)
 
     # POLICY
     policy = DoubleDeepQNetwork(20, environments[0].action_space.n, eps_decay=5000)
@@ -161,11 +166,17 @@ if __name__ == "__main__":
     # AGENT
     agent = ParallelAgent(repr_learner, policy, environments)
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    repr_learner.network.to(device)  # if using passthrough or Flatten comment this
+    policy.current_model.to(device)
+    policy.target_model.to(device)
+
     # TRAIN
-    agent.train_agent(episodes=10000, batch_size=128, plot_every=10, log=False)
+    agent.train_agent(episodes=100, batch_size=32, plot_every=10, log=False)
 
     # TEST
     # Gifs will only be produced when render is off
-    agent.test(environments[0], num_testruns=5, render=False)
+    agent.test(environments[0], numb_runs=5, render=False)
     for env in environments:
         env.close()

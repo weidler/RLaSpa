@@ -438,6 +438,7 @@ class CerberusPixel(_RepresentationLearner):
         full_image = [l[0] + l[1] + l[2] + l[3] + l[4] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image, horizontal_seperator, difference_image))]
 
         plt.imshow(full_image, cmap="binary", origin="upper")
+
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
         plt.draw()

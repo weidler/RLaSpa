@@ -214,6 +214,8 @@ class CerberusPixelEncoder(torch.nn.Module):
 
         self.activation = torch.sigmoid
 
+        self.note = "HELLO"
+
     def forward(self, state: Tensor, action: Tensor) -> (Tensor, Tensor, Tensor):
         original_shape = state.shape
 

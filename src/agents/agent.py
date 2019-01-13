@@ -1,15 +1,15 @@
 import abc
 from typing import Tuple, List
+from typing import Tuple
 
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import torch
 from gym import Env
 from torch import Tensor
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 
 from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
-
 
 def reset_env(env: Env) -> Tensor:
     """ Resets the environment and returns the starting state as a Tensor.
@@ -38,15 +38,16 @@ class _Agent(abc.ABC):
         Implementations of the agent class provide methods for training the latter components for the purpose of acting
         in the environment.
     """
+
     representation_learner: _RepresentationLearner
     policy: _Policy
     environments: List[Env]
 
     @abc.abstractmethod
-    def __init__(self, repr_learner: _RepresentationLearner, policy: _Policy, environments: List[Env]):
+    def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environments: List[Env]):
         self.environments = environments
         self.policy = policy
-        self.representation_learner = repr_learner
+        self.representation_learner = representation_learner
 
         # check if environments given as list
         if not isinstance(environments, list):
@@ -62,29 +63,47 @@ class _Agent(abc.ABC):
 
 
     @abc.abstractmethod
-    def train_agent(self, episodes: int, ckpt_to_load=None, save_ckpt_per=None, plot_every=None, log=False):
+    def train_agent(self, episodes: int, ckpt_to_load: str = None, episodes_per_saving: int = None,
+                    plot_every: int = None, log: bool = False) -> None:
         """ Train the agent for some number of episodes. The max length of episodes is specified in the environment.
+
         Optionally save or load checkpoints from previous trainings.
 
-        :param episodes:        the number of episodes
-        :param ckpt_to_load:    (default None) loading checkpoint
-        :param save_ckpt_per:   (default None) number of episodes after which a checkpoint is saved
-        :param log:             (default False) whether logging is done
+        :param episodes: the number of episodes
+        :param ckpt_to_load: loading checkpoint. Default: None
+        :param episodes_per_saving: number of episodes between saving checkpoint. Default: None
+        :param plot_every: number of steps that will happen between the plotting of the space representation
+        :param log: whether logging is done. Default: False
         """
         raise NotImplementedError
 
-    def act(self, current_state: Tensor, env) -> Tuple[Tensor, float, bool]:
+    def act(self, current_state: Tensor, env: Env) -> Tuple[Tensor, float, bool]:
+        """
+        Method that makes the agent choose an action given the actual state. This method will imply the encoding
+        of the state if a representation learner is capable of doing so.
+
+        :param current_state: current state of the environment
+        :return: next state of the environment along with the reward and a flag that indicates if
+        the episode is finished
+        """
+
         latent_state = self.representation_learner.encode(current_state)
         action = self.policy.choose_action_policy(latent_state)
         next_state, step_reward, env_done, _ = step_env(action, env)
 
         return next_state, step_reward, env_done
 
-    def test(self, env, num_testruns=1, render=True) -> None:
-        """ Run a test in the environment using the current policy without exploration. """
+    def test(self, env: Env, numb_runs: int = 1, render: bool = False) -> None:
+        """
+        Run a test in the environment using the current policy without exploration.
+
+        :param numb_runs: number of test to be done.
+        :param render: render the environment
+        """
+
         all_rewards = []
         fig = plt.figure(figsize=(10, 6))
-        for i in range(num_testruns):
+        for i in range(numb_runs):
             plt.clf()
             ims = []
             done = False
@@ -101,10 +120,9 @@ class _Agent(abc.ABC):
             all_rewards.append(total_reward)
             print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
             if not render:
-                ani = animation.ArtistAnimation(fig, ims, blit=True,
-                                                repeat_delay=1000)
+                ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
                 ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
-        print(f'Average max score after {num_testruns} testruns: {sum(all_rewards)/len(all_rewards)}')
+        print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)}')
 
     def get_config_name(self):
         return "_".join(

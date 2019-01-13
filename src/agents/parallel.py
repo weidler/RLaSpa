@@ -1,4 +1,5 @@
 import random
+import time
 from collections import deque
 
 import gym
@@ -8,7 +9,7 @@ from gym import Env
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import CerberusPixel
+from src.representation.learners import CerberusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.logger import Logger
@@ -46,6 +47,7 @@ class ParallelAgent(_Agent):
         :param log: logging flag.
         """
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
+        start_time = time.time()
         if not (ckpt_to_load is None):
             start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
@@ -56,6 +58,8 @@ class ParallelAgent(_Agent):
         # introduce batch memory to store observations and learn in batches
 
         rewards = []
+        all_repr_loss = []
+        all_policy_loss = []
         for episode in range(start_episode, episodes):
             done = False
 
@@ -93,9 +97,15 @@ class ParallelAgent(_Agent):
                 info = {'loss': repr_loss, 'policy_loss': policy_loss, 'reward': episode_reward}
                 self.logger.scalar_summary_dict(info, episode)
             rewards.append(episode_reward)
+            all_repr_loss.append(repr_loss)
+            all_policy_loss.append(policy_loss)
             if episode % (episodes // 100) == 0:
-                print(f"\t|-- {round(episode / episodes * 100)}% " \
-                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)})")
+                print(f"\t|-- {round(episode / episodes * 100):3d}% " \
+                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)} " \
+                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
+                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
+                      + f"Last 5 rewards: {rewards[-5:]}) " \
+                      + f"Time elapsed: {(time.time()-start_time)/60:.2f} min")
             if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
                 # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
@@ -112,13 +122,7 @@ if __name__ == "__main__":
 
     # env = gym.make('VisualObstaclePathing-v0')  # Create VisualObstaclePathing with default values
     size = 30
-    gym.envs.register(
-        id='Evasion-v1',
-        entry_point='src.gym_custom_tasks.envs:Evasion',
-        kwargs={'width': size, 'height': size,
-                'obstacle_chance': 0.05},
-    )
-    env = gym.make('Evasion-v1')
+    env = gym.make('Evasion-v0')
     # gym.envs.register(
     #     id='VisualObstaclePathing-v1',
     #     entry_point='src.gym_custom_tasks.envs:ObstaclePathing',
@@ -142,10 +146,8 @@ if __name__ == "__main__":
 
     # repr_learner = Flatten()
 
-
-
     # POLICY
-    policy = DoubleDeepQNetwork(size, env.action_space.n, eps_decay=2000, representation_network=repr_learner.network)
+    policy = DoubleDeepQNetwork(size, env.action_space.n, eps_decay=2000)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, env)
@@ -157,9 +159,10 @@ if __name__ == "__main__":
     policy.target_model.to(device)
 
     # TRAIN
-    # agent.train_agent(episodes=2000, plot_every=200, log=True, episodes_per_saving=500)
-
+    start_time = time.time()
+    agent.train_agent(episodes=10000, log=True, episodes_per_saving=500)
+    print(f'Total training took {(time.time()-start_time)/60:.2f} min')
     # TEST
     # Gifs will only be produced when render is off
-    agent.test(runs_number=5, render=True)
+    agent.test(runs_number=5, render=False)
     agent.env.close()

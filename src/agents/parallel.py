@@ -13,7 +13,7 @@ from src.representation.learners import CerberusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.logger import Logger
-from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
+from src.utils.model_handler import save_checkpoint, apply_checkpoint
 
 
 class ParallelAgent(_Agent):
@@ -50,7 +50,7 @@ class ParallelAgent(_Agent):
         if not (ckpt_to_load is None):
             self.start_episode = apply_checkpoint(ckpt_to_load, policy=self.policy, repr=self.representation_learner)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = get_checkpoint_dir(agent.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_idr(agent.get_config_name())
         else:
             ckpt_dir = None
         print("Starting parallel training process.")
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     # TRAIN
     start_time = time.time()
     # LOAD
-    # agent.load('ckpt/ParallelAgent_Evasion_CerberusPixel_DoubleDeepQNetwork/2019-01-13_17-27-18')
+    # agent.load('../../ckpt/ParallelAgent_Evasion_CerberusPixel_DoubleDeepQNetwork/2019-01-13_20-55-49')
     total_episodes = 10000
     agent.train_agent(episodes=total_episodes, log=True, episodes_per_saving=500)
     print(f'Total training took {(time.time()-start_time)/60:.2f} min')

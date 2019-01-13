@@ -4,15 +4,16 @@ import numpy as np
 import scipy.misc
 from io import BytesIO  # Python 3.x
 import os
+from src.utils.path_manager import PathManager
 
 
 class Logger(object):
 
-    def __init__(self, log_dir):
+    def __init__(self, log_dir: str):
         """Create a summary writer logging to log_dir."""
-        out_dir = os.path.normpath(os.path.abspath(__file__)).split(os.sep)[:-3]  # root_dir
-        out_dir.append(log_dir)
-        self.writer = tf.summary.FileWriter(os.sep.join(out_dir))
+        self.path_manager = PathManager()
+        out_dir = self.path_manager.get_subdir_under_root(log_dir)
+        self.writer = tf.summary.FileWriter(out_dir)
 
     def scalar_summary_dict(self, info: dict, step: int):
         """Log a set of scalar variable."""

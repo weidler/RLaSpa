@@ -12,7 +12,7 @@ from src.representation.learners import JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.logger import Logger
-from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
+from src.utils.model_handler import save_checkpoint, apply_checkpoint
 
 
 class HistoryAgent(_Agent):
@@ -168,7 +168,7 @@ class HistoryAgent(_Agent):
         if not (ckpt_to_load is None):
             self.start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = get_checkpoint_dir(agent.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_idr(agent.get_config_name())
         else:
             ckpt_dir = None
         print("Training Agent.")
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     # SAVE
     # agent.save(episode=0, save_policy_learner=False)
     # LOAD
-    # agent.load(ckpt_dir='ckpt/HistoryAgent_ObstaclePathing_JanusPixel_DoubleDeepQNetwork/2019-01-13_18-17-16',
+    # agent.load(ckpt_dir='../../ckpt/HistoryAgent_ObstaclePathing_JanusPixel_DoubleDeepQNetwork/2019-01-13_18-17-16',
     #            load_policy_learner=False)
 
     agent.train_agent(1000)

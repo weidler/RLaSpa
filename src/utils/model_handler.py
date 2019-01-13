@@ -92,6 +92,5 @@ def get_checkpoint_dir(config: str) -> str:
     :param config: configuration description (agent type, representation learner type, policy type)
     :return: directory name
     """
-    # TODO: save ckpt under project root
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     return os.path.join(os.getcwd(), "ckpt", config, timestamp)

@@ -165,9 +165,8 @@ class HistoryAgent(_Agent):
         :param episodes_per_saving: number of episodes between saving checkpoint.
         :param log: logging flag.
         """
-        start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if not (ckpt_to_load is None):
-            start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
+            self.start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
         else:
@@ -176,7 +175,7 @@ class HistoryAgent(_Agent):
         if not self.is_pretrained:
             print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
-        for episode in range(start_episode, episodes):
+        for episode in range(self.start_episode, episodes):
             current_state = self.reset_env()
             done = False
             step = 0
@@ -195,7 +194,8 @@ class HistoryAgent(_Agent):
             if episode % (episodes // 20) == 0:
                 print(f"\t|-- {round(episode / episodes * 100)}% " +
                       f"(Avg. Rew. of {sum(rewards[-(episodes // 20):]) / (episodes // 20)})")
-            if episodes_per_saving and episode % episodes_per_saving == 0:  # save check point every n episodes
+            if episodes_per_saving and episode % episodes_per_saving == 0 and episode != 0:
+                # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
             if log:
@@ -252,6 +252,12 @@ if __name__ == "__main__":
         agent.load_history("cartpole-10.data")
 
     agent.pretrain(5)
+    # SAVE
+    # agent.save(episode=0, save_policy_learner=False)
+    # LOAD
+    # agent.load(ckpt_dir='ckpt/HistoryAgent_ObstaclePathing_JanusPixel_DoubleDeepQNetwork/2019-01-13_18-17-16',
+    #            load_policy_learner=False)
+
     agent.train_agent(1000)
 
     for i in range(5): agent.test()

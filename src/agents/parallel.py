@@ -35,7 +35,7 @@ class ParallelAgent(_Agent):
         self.logger = Logger('logs')
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
-                    episodes_per_saving: int = None, plot_every: int = None, log: bool = False):
+                    episodes_per_saving: int = None, plot_every: int = None, log: bool = False) -> None:
         """
         Method that trains the agent policy learner using the pretrained representation learner.
 
@@ -46,10 +46,9 @@ class ParallelAgent(_Agent):
         :param plot_every: number of steps that will happen between the plotting of the space representation.
         :param log: logging flag.
         """
-        start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         start_time = time.time()
         if not (ckpt_to_load is None):
-            start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
+            self.start_episode = apply_checkpoint(ckpt_to_load, policy=self.policy, repr=self.representation_learner)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
             ckpt_dir = get_checkpoint_dir(agent.get_config_name())
         else:
@@ -60,7 +59,7 @@ class ParallelAgent(_Agent):
         rewards = []
         all_repr_loss = []
         all_policy_loss = []
-        for episode in range(start_episode, episodes):
+        for episode in range(self.start_episode, episodes):
             done = False
 
             current_state = self.reset_env()
@@ -106,7 +105,7 @@ class ParallelAgent(_Agent):
                       + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
                       + f"Last 5 rewards: {rewards[-5:]}) " \
                       + f"Time elapsed: {(time.time()-start_time)/60:.2f} min")
-            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
+            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0 and episode != 0:
                 # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
@@ -160,8 +159,13 @@ if __name__ == "__main__":
 
     # TRAIN
     start_time = time.time()
-    agent.train_agent(episodes=10000, log=True, episodes_per_saving=500)
+    # LOAD
+    # agent.load('ckpt/ParallelAgent_Evasion_CerberusPixel_DoubleDeepQNetwork/2019-01-13_17-27-18')
+    total_episodes = 10000
+    agent.train_agent(episodes=total_episodes, log=True, episodes_per_saving=500)
     print(f'Total training took {(time.time()-start_time)/60:.2f} min')
+    # SAVE
+    # agent.save(total_episodes-1)
     # TEST
     # Gifs will only be produced when render is off
     agent.test(runs_number=5, render=False)

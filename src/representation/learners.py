@@ -426,12 +426,18 @@ class CerberusPixel(_RepresentationLearner):
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
         difference_tensor = (state != next_state)
-        reconstruction, next_state_construction, difference = self.network(torch.unsqueeze(state, 0),
+        reconstruction, next_state_reconstruction, difference = self.network(torch.unsqueeze(state, 0),
                                                                            torch.unsqueeze(action, 0))
         plt.clf()
-        # change the head you wanna see here:
-        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
-                   origin="upper")
+
+        vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
+        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(reconstruction).tolist()
+        next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
+        difference_image = torch.squeeze(difference_tensor).tolist() + vertical_seperator + torch.squeeze(difference).tolist()
+        horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
+        full_image = [l[0] + l[1] + l[2] + l[3] + l[4] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image, horizontal_seperator, difference_image))]
+
+        plt.imshow(full_image, cmap="binary", origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
         plt.draw()

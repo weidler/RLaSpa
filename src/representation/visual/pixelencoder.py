@@ -223,7 +223,7 @@ class CerberusPixelEncoder(torch.nn.Module):
         # encode current state and create latent space
         latent_space = self.activation(self.encoder(flattened))
         # decode current state
-        outState = (self.decoderState(latent_space))
+        outState = self.activation(self.decoderState(latent_space))
         # Reshape VECTOR -> IMAGE
         deflattened_reconstruction = outState.reshape(original_shape)
 
@@ -231,12 +231,12 @@ class CerberusPixelEncoder(torch.nn.Module):
         latent_space_action = torch.cat((latent_space, action), 1)
 
         # decode next state from latent space with action
-        outNextState = self.decoderNextState(latent_space_action)
+        outNextState = self.activation(self.decoderNextState(latent_space_action))
         # Reshape VECTOR -> IMAGE
         deflattened_next_state = outNextState.reshape(original_shape)
 
         # decode difference between state and next state
-        difference = self.decoderDifference(latent_space_action)
+        difference = self.activation(self.decoderDifference(latent_space_action))
         deflattened_difference = difference.reshape(original_shape)
 
         return deflattened_reconstruction, deflattened_next_state, deflattened_difference

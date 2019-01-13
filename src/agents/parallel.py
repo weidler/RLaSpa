@@ -162,7 +162,7 @@ if __name__ == "__main__":
     agent = ParallelAgent(repr_learner, policy, environments)
 
     # TRAIN
-    agent.train_agent(episodes=100, plot_every=10, log=False)
+    agent.train_agent(episodes=10000, batch_size=128, plot_every=10, log=False)
 
     # TEST
     # Gifs will only be produced when render is off

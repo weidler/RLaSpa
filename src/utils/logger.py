@@ -9,11 +9,11 @@ from src.utils.path_manager import PathManager
 
 class Logger(object):
 
-    def __init__(self, log_dir: str):
+    def __init__(self, log_dir: str, config: str):
         """Create a summary writer logging to log_dir."""
         self.path_manager = PathManager()
-        out_dir = self.path_manager.get_subdir_under_root(log_dir)
-        self.writer = tf.summary.FileWriter(out_dir)
+        out_dir = self.path_manager.get_subdir_under_root(os.path.join(log_dir, config))
+        self.writer = tf.summary.FileWriter(out_dir, filename_suffix='_{}'.format(self.path_manager.start_timestamp))
 
     def scalar_summary_dict(self, info: dict, step: int):
         """Log a set of scalar variable."""

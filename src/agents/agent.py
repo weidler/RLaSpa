@@ -10,6 +10,7 @@ from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
 from src.utils.model_handler import save_checkpoint, apply_checkpoint
 from src.utils.path_manager import PathManager
+from src.utils.logger import Logger
 
 
 class _Agent:
@@ -34,6 +35,7 @@ class _Agent:
         self.representation_learner = representation_learner
         self.start_episode = 0
         self.path_manager = PathManager()
+        self.logger = Logger('logs', self.get_config_name())
 
     def train_agent(self, episodes: int, ckpt_to_load: str = None, episodes_per_saving: int = None,
                     plot_every: int = None, log: bool = False) -> None:

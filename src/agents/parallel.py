@@ -12,7 +12,6 @@ from src.policy.policy import _Policy
 from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.logger import Logger
 from src.utils.model_handler import save_checkpoint, apply_checkpoint
 
 
@@ -32,7 +31,6 @@ class ParallelAgent(_Agent):
         super().__init__(representation_learner=representation_learner, policy=policy, environment=environment)
         self.one_hot_actions = torch.eye(self.env.action_space.n)
         self.representation_memory = deque(maxlen=representation_memory_size)
-        self.logger = Logger('logs')
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
                     episodes_per_saving: int = None, plot_every: int = None, log: bool = False) -> None:

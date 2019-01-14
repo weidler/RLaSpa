@@ -33,7 +33,8 @@ class ParallelAgent(_Agent):
         self.representation_memory = deque(maxlen=representation_memory_size)
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
-                    episodes_per_saving: int = None, plot_every: int = None, log: bool = False) -> None:
+                    episodes_per_saving: int = None, plot_every: int = None, numb_intermediate_tests: int = 0,
+                    log: bool = False) -> None:
         """
         Method that trains the agent policy learner using the pretrained representation learner.
 
@@ -55,7 +56,6 @@ class ParallelAgent(_Agent):
         else:
             ckpt_dir = None
         print("Starting parallel training process.")
-        # introduce batch memory to store observations and learn in batches
 
         rewards = []
         all_repr_loss = []
@@ -92,10 +92,12 @@ class ParallelAgent(_Agent):
                 latent_state = latent_observation
                 # trackers
                 episode_reward += reward
+
             # logging for tensorboard
             if log:
                 info = {'loss': repr_loss, 'policy_loss': policy_loss, 'reward': episode_reward}
                 self.logger.scalar_summary_dict(info, episode)
+
             rewards.append(episode_reward)
             all_repr_loss.append(repr_loss)
             all_policy_loss.append(policy_loss)

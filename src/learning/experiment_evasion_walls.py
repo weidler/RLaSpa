@@ -1,24 +1,23 @@
 import time
 
-import gym
 import torch
+
+import gym
 
 from src.agents.parallel import ParallelAgent
 from src.policy.ddqn import DoubleDeepQNetwork
-from src.representation.learners import CerberusPixel
-
+from src.policy.dqn import DeepQNetwork
+from src.representation.learners import Flatten, CerberusPixel
 
 if torch.cuda.is_available():
-    print("Using GPU - Setting default tensor type to cuda.FloatTensor.")
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-env = gym.make("Tunnel-v0")
-
+env = gym.make("EvasionWalls-v0")
 representation_module = CerberusPixel(width=env.observation_space.shape[0],
-                                      height=env.observation_space.shape[1],
-                                      n_actions=env.action_space.n,
-                                      n_hidden=30)
+                                 height=env.observation_space.shape[1],
+                                 n_actions=env.action_space.n,
+                                 n_hidden=30)
 policy = DoubleDeepQNetwork(30, env.action_space.n, eps_decay=10000)
 
 agent = ParallelAgent(representation_module, policy, env)

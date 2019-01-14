@@ -8,6 +8,8 @@ from torch import Tensor
 
 from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
+from src.utils.model_handler import save_checkpoint, apply_checkpoint
+from src.utils.path_manager import PathManager
 
 
 class _Agent:
@@ -30,6 +32,8 @@ class _Agent:
         self.env = environment
         self.policy = policy
         self.representation_learner = representation_learner
+        self.start_episode = 0
+        self.path_manager = PathManager()
 
     def train_agent(self, episodes: int, ckpt_to_load: str = None, episodes_per_saving: int = None,
                     plot_every: int = None, log: bool = False) -> None:
@@ -118,3 +122,23 @@ class _Agent:
              self.env.__class__.__name__,
              self.representation_learner.__class__.__name__,
              self.policy.__class__.__name__])
+
+    def save(self, episode: int, save_repr_learner: bool=True, save_policy_learner: bool=True) -> None:
+        ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
+
+        if save_repr_learner:
+            save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+
+        if save_policy_learner:
+            save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
+
+    def load(self, ckpt_dir: str, load_repr_learner: bool=True, load_policy_learner: bool=True) -> None:
+
+        if load_repr_learner and load_policy_learner:
+            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy, repr=self.representation_learner)
+
+        elif load_repr_learner:
+            self.start_episode = apply_checkpoint(ckpt_dir, repr=self.representation_learner)
+
+        elif load_policy_learner:
+            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy)

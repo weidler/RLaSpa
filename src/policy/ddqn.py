@@ -165,12 +165,16 @@ class DoubleDeepQNetwork(_Policy):
         self.current_model.load_state_dict(input['current_model'])
         self.target_model.load_state_dict(input['target_model'])
         self.optimizer.load_state_dict(input['optimizer'])
+        self.total_steps_done = input['total_steps']
+        self.memory = input['memory']
 
     def get_current_training_state(self):
         return {
             'current_model': self.current_model.state_dict(),
             'target_model': self.target_model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
+            'total_steps': self.total_steps_done,
+            'memory': self.memory
         }
 
 

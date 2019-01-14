@@ -44,7 +44,7 @@ def save_checkpoint(state: {}, episode: int, out_dir: str, learner: str) -> None
     Method that saves a dictionary to checkpoint in output directory/file
 
     :param state: the state to save
-    :param episode: current episode
+    :param episode: current episode, indexed from 0
     :param out_dir: checkpoint directory
     :param learner: which learner it is (policy or representation)
     :return:
@@ -55,7 +55,7 @@ def save_checkpoint(state: {}, episode: int, out_dir: str, learner: str) -> None
     torch.save(state, os.path.join(final_dir, "{}_{}.ckpt".format(learner, episode)))
 
 
-def apply_checkpoint(policy: _Policy, repr: _RepresentationLearner, ckpt_path: str) -> int:
+def apply_checkpoint(ckpt_path: str, policy: _Policy=None, repr: _RepresentationLearner=None) -> int:
     """
     Method that loads training status stored in checkpoint
 
@@ -68,15 +68,18 @@ def apply_checkpoint(policy: _Policy, repr: _RepresentationLearner, ckpt_path: s
     assert os.path.isdir(ckpt_path)
 
     latest_episode = max([int(dir_name) for dir_name in os.listdir(ckpt_path)])
-    policy_path = os.path.join(ckpt_path, str(latest_episode), 'policy_{}.ckpt'.format(latest_episode))
-    repr_path = os.path.join(ckpt_path, str(latest_episode), 'repr_{}.ckpt'.format(latest_episode))
 
-    assert os.path.isfile(policy_path)
-    assert os.path.isfile(repr_path)
+    if policy is not None:
+        policy_path = os.path.join(ckpt_path, str(latest_episode), 'policy_{}.ckpt'.format(latest_episode))
+        assert os.path.isfile(policy_path)
+        policy.restore_from_state(torch.load(policy_path))
+        print("=> loaded checkpoint '{}'".format(policy_path))
 
-    policy.restore_from_state(torch.load(policy_path))
-    repr.restore_from(torch.load(repr_path))
-    print("=> loaded checkpoint '{}'".format(ckpt_path))
+    if repr is not None:
+        repr_path = os.path.join(ckpt_path, str(latest_episode), 'repr_{}.ckpt'.format(latest_episode))
+        assert os.path.isfile(repr_path)
+        repr.restore_from(torch.load(repr_path))
+        print("=> loaded checkpoint '{}'".format(repr_path))
 
     return latest_episode
 

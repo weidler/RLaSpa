@@ -23,8 +23,8 @@ Once learned, this intermediate latent space is expected to create a more compac
 	~ 
 	\begin{subfigure}{0.45\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{img/very_simple_autoencoder.pdf}
-		\caption{Variational autoencoder (add noise sign)}
+		\includegraphics[width=\linewidth]{img/variational_autoencoder.pdf}
+		\caption{Variational autoencoder}
 		\label{subfig:repr_learner_vae}
 	\end{subfigure}
 	\begin{subfigure}{0.5\columnwidth}
@@ -71,8 +71,7 @@ The network architecture is shown in Figure \ref{subfig:repr_learner_cerberus}.
 Based on the latent space constructed by the representation learner, the policy learner trains an RL agents to complete the given task.
 %More specifically, take the output
 
-\subsubsection{Table-based(?)}
-Include or not?
+%\subsubsection{Table-based(?)}
 
 \subsubsection{Deep Q-Network}
 One of the drawbacks of table-based Q-learning occurs in environments with large state spaces.
@@ -100,7 +99,7 @@ More specifically, the target is kept fixed for a certain number of steps, contr
 	target network updated every 100 steps. prediction of q-values is fixed. otherwise there is ``more bias''?
 \end{itemize}
 \fi
-The Double DQN also uses prioritized memory as DQN.
+The Double DQN also uses prioritized memory.
 
 \subsection{Integrating Representation and Policy Learners}
 The interaction between the representation leaner and policy learner can occur in two ways depending on the execution sequence of the two learning processes.
@@ -126,17 +125,20 @@ The interaction between the representation leaner and policy learner can occur i
 \end{figure}
 
 \subsubsection{History Approach}
-As the name indicates, the history approach first creates a collection of state, action and rewards by randomly exploring in the environment.
-The representation learner is then trained based on the history.
+As the name indicates, the history approach first creates a collection of states, actions and rewards by randomly exploring in the environment.
+The representation learner is then trained based on the collected history.
 Once learning completes, the policy learner is trained based on the encoding of the representation learner.
-In this approach, the representation and policy learning are decoupled. 
+In this approach, the representation and policy learning are sequential and decoupled. 
 
 \subsubsection{Parallel Approach}
 In the parallel approach, the representation and policy learners are trained simultaneously.
 As the RL agent explores the environment, it chooses an action based on the the encoded representation of the current state.
-After executing the chosen action, the RL observes the new state and reward, which provide feedback to the representation and policy learners respectively.
+After executing the chosen action, the RL observes the new state and reward, which provide feedback to the representation and policy learners for their loss calculation respectively.
+The loss of the policy learner is further back-propagated to the representation learner.
 
-\textbf{Modular loss propagation}
-
-
-\textbf{Full loss propagation}
+\subsection{Multi-task Learning}
+\begin{itemize}
+	\item structure easy to incorporate MTL
+	\item every time randomly choose an env
+	\item save previously seen training instances in experience stacks
+\end{itemize}

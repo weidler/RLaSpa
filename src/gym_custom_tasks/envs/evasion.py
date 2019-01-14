@@ -1,7 +1,12 @@
+import random
+
 import gym
+from gym import spaces
 import torch
 import numpy
 import matplotlib.pyplot as plt
+
+import src.gym_custom_tasks
 
 class Evasion(gym.Env):
 
@@ -64,12 +69,12 @@ class Evasion(gym.Env):
 
 
 if __name__ == "__main__":
-    env = Evasion()
-    # env = gym.make('Evasion-v0')
+    env = gym.make('Evasion-v0')
+
     done = False
     while not done:
         env.render()
-        observation, reward, done, _ = env.step(2)
+        observation, reward, done, _ = env.step(random.choice((2,)))
     # env.step(1)
     # observation, reward, done, _ = env.step(2)
     # print('Observation:', type(observation), 'size:', observation.shape)

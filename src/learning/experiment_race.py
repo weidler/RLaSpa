@@ -21,4 +21,4 @@ policy.current_model.to(device)
 policy.target_model.to(device)
 
 agent.train_agent(1000, log=True)
-agent.test(numb_runs=20)
+agent.test(numb_runs=20, env=env)

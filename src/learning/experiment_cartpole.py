@@ -20,4 +20,4 @@ policy.current_model.to(device)
 policy.target_model.to(device)
 
 agent.train_agent(50000, log=True, episodes_per_saving=1000)
-agent.test(numb_runs=10)
+agent.test(numb_runs=10, env=env)

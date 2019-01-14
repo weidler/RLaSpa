@@ -121,7 +121,7 @@ class _Agent(abc.ABC):
                     state, reward, done = self.act(state, env)
                     step += 1
                     total_reward += reward
-                    ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
+                    ims.append([plt.imshow(state.cpu(), cmap="binary", origin="upper", animated=True)])
                     if render:
                         env.render()
                 all_rewards.append(total_reward)
@@ -129,8 +129,8 @@ class _Agent(abc.ABC):
                 if not render:
                     ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
                     ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
-            except:
-                print(f"Episode {i} went wrong.")
+            except Exception as e:
+                print(f"Episode {i} went wrong: " + str(e))
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)}')
 
     def get_config_name(self):

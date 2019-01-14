@@ -38,6 +38,8 @@ class ParallelAgent(_Agent):
         self.one_hot_actions = torch.eye(self.environments[0].action_space.n)
         self.representation_memory = deque(maxlen=representation_memory_size)
 
+        print(f"Created Agent using {self.representation_learner.__class__.__name__} and {self.policy.__class__.__name__}.")
+
     # REINFORCEMENT LEARNING #
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
@@ -93,7 +95,6 @@ class ParallelAgent(_Agent):
 
                 # step and observe
                 observation, reward, done, _ = step_env(action, env)
-                latent_observation = self.representation_learner.encode(observation)
 
                 # store sars tuple for batch learning
                 sars_tuple = SARSTuple(current_state, one_hot_action_vector, reward, observation)
@@ -105,18 +106,23 @@ class ParallelAgent(_Agent):
                     repr_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
                 # store experience for multitask learning
-                experience = (latent_state, action, reward, latent_observation, done)
+                experience = (current_state, action, reward, observation, done)
                 experience_stack.append(experience)
 
                 # train policy
                 if episode >= experience_warmup_length:
-                    random.shuffle(experience_stack)
-                    policy_loss += self.policy.update(*(experience_stack.pop(0)))
+                    # transformations into the latent space need to be done here such that the update is based on the
+                    # current state of the encoder!
+                    exp_state, exp_action, exp_reward, exp_next_state, exp_done = experience_stack.pop(
+                        random.randint(0, len(experience_stack) - 1))
+                    exp_latent_state = self.representation_learner.encode(exp_state)
+                    exp_latent_observation = self.representation_learner.encode(exp_next_state)
+                    policy_loss += self.policy.update(exp_latent_state, exp_action, exp_reward, exp_latent_observation,
+                                                      exp_done)
 
                 # update states (both, to avoid redundant encoding)
                 last_state = current_state
                 current_state = observation
-                latent_state = latent_observation
 
                 # trackers
                 episode_reward += reward

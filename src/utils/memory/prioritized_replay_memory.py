@@ -1,6 +1,5 @@
 import random
 
-import numpy as np
 import torch
 
 from src.utils.memory.memory import Memory
@@ -31,7 +30,8 @@ class PrioritizedReplayMemory(Memory):
         self._it_min = MinSegmentTree(it_capacity)
         self._max_priority = 1.0
 
-    def push(self, state, action, reward, next_state, done):
+    def push(self, state: torch.Tensor, action: torch.Tensor, reward: torch.Tensor, next_state: torch.Tensor,
+             done: torch.Tensor) -> None:
         """
         Method to save the plays made by the agent in the memory
 
@@ -42,16 +42,20 @@ class PrioritizedReplayMemory(Memory):
         :param done: true if the game is finished after executing the action
         """
         idx = self._next_idx
-        if type(state) is torch.Tensor and type(next_state) is torch.Tensor:
-            state = state.detach()
-            next_state = next_state.detach()
-        state = np.expand_dims(state, 0)
-        next_state = np.expand_dims(next_state, 0)
+
+        state = state.unsqueeze(0)
+        # transform to tensor
+        action = torch.tensor(action, dtype=torch.long)
+        reward = torch.tensor(reward, dtype=torch.float32)
+        done = torch.tensor(done, dtype=torch.float32)
+        next_state = next_state.unsqueeze(0)
         data = (state, action, reward, next_state, done)
+
         if self._next_idx >= len(self._storage):
             self._storage.append(data)
         else:
             self._storage[self._next_idx] = data
+
         self._next_idx = (self._next_idx + 1) % self._max_size
         self._it_sum[idx] = self._max_priority ** self._alpha
         self._it_min[idx] = self._max_priority ** self._alpha
@@ -103,7 +107,7 @@ class PrioritizedReplayMemory(Memory):
             p_sample = self._it_sum[idx] / self._it_sum.sum()
             weight = (p_sample * len(self._storage)) ** (-beta)
             weights.append(weight / max_weight)
-        weights = np.array(weights)
+        weights = torch.tensor(weights, dtype=torch.float32)
         encoded_sample = self._encode_sample(idxes)
         return tuple(list(encoded_sample) + [idxes, weights])
 
@@ -133,7 +137,7 @@ class PrioritizedReplayMemory(Memory):
             rewards.append(reward)
             next_states.append(next_state)
             dones.append(done)
-        return np.concatenate(states), actions, rewards, np.concatenate(next_states), dones
+        return torch.cat(states), torch.stack(actions), torch.stack(rewards), torch.cat(next_states), torch.stack(dones)
 
     def __len__(self):
         return len(self._storage)

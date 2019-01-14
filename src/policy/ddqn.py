@@ -38,10 +38,10 @@ class DoubleDeepQNetwork(_Policy):
         """
         self.beta = beta
         self.alpha = alpha
-        self.gamma = gamma
         self.total_steps_done = 0
         self.batch_size = batch_size
         self.memory_delay = memory_delay
+        self.gamma = torch.tensor(gamma, dtype=torch.float32)
         self.current_model = DQN(num_features=num_features, num_actions=num_actions,
                                  representation_network=representation_network)
         # target model needs repr network as well because otherwise copying over parameters will be non trivial
@@ -98,11 +98,6 @@ class DoubleDeepQNetwork(_Policy):
         """
         state, action, reward, next_state, done, indices, weights = self.memory.sample(self.batch_size, self.beta)
 
-        action = torch.tensor(action, dtype=torch.long)
-        reward = torch.tensor(reward, dtype=torch.float32)
-        done = torch.tensor(done, dtype=torch.float32)
-        weights = torch.tensor(weights, dtype=torch.float32)
-
         q_values = self.current_model(state)
         next_q_values = self.current_model(next_state)
         next_state_value = self.target_model(next_state)
@@ -141,7 +136,7 @@ class DoubleDeepQNetwork(_Policy):
         if self.total_steps_done % 100:
             update_agent_model(self.current_model, self.target_model)
 
-        return 0 if loss is None else loss.data.item()
+        return 0 if loss is None else loss.item()
 
     def choose_action(self, state) -> int:
         if self.total_steps_done > self.memory_delay:

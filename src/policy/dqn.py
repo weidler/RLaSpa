@@ -112,10 +112,6 @@ class DeepQNetwork(_Policy):
 
         loss: torch.Tensor = None
         if self.total_steps_done > self.memory_delay:
-            # transform to tensor
-            action = torch.tensor(action, dtype=torch.long)
-            reward = torch.tensor(reward, dtype=torch.float32)
-            done = torch.tensor(done, dtype=torch.float32)
             # save in memory
             self.memory.push(state, action, reward, next_state, done)
             # when saved plays are greater than the batch size calculate losses

@@ -43,3 +43,8 @@ register(
     entry_point='src.gym_custom_tasks.envs:Tunnel',
     kwargs={'width':30, 'height':30},
 )
+register(
+    id='EvasionWalls-v0',
+    entry_point='src.gym_custom_tasks.envs:Evasion_walls',
+    kwargs={'width':30, 'height':30},
+)

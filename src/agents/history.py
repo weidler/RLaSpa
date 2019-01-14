@@ -1,9 +1,11 @@
 import random
+from typing import List
 
+import gym
 import torch
 from gym import Env
 
-from src.agents.agent import _Agent
+from src.agents.agent import _Agent, reset_env, step_env
 from src.gym_custom_tasks.envs import ObstaclePathing
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
@@ -15,6 +17,10 @@ from src.utils.model_handler import save_checkpoint, apply_checkpoint
 
 
 class HistoryAgent(_Agent):
+    history: List[SARSTuple]
+    representation_learner: _RepresentationLearner
+    policy: _Policy
+    environments: List[gym.Env]
 
     def __init__(self, representation_learner: _RepresentationLearner, policy: _Policy, environment: Env):
         """
@@ -28,7 +34,7 @@ class HistoryAgent(_Agent):
         """
         # modules
         super().__init__(representation_learner, policy, environment)
-        self.one_hot_actions = torch.eye(self.env.action_space.n)
+        self.one_hot_actions = torch.eye(self.environments[0].action_space.n)
 
         # quick check ups
         # TODO check if policy input size matches representation encoding size
@@ -83,21 +89,28 @@ class HistoryAgent(_Agent):
         # check if it is a visual task that needs flattening
         is_visual = False
         flattener = Flatten()
-        if len(self.env.observation_space.shape) == 2:
+        if len(self.environments.observation_space.shape) == 2:
             is_visual = True
 
         rewards = []
         for episode in range(episodes):
-            current_state = self.reset_env()
-            done = False
+            # choose environment
+            env = random.choice(self.environments)
+            current_state = reset_env(env)
+
+            # trackers
             step = 0
             episode_reward = 0
+
+            # start episode
+            done = False
             exp_policy_loss = 0
             while not done and step < max_episode_length:
                 encoded_current_state = flattener.encode(current_state)
                 action = exploring_policy.choose_action(encoded_current_state)
                 one_hot_action_vector = self.one_hot_actions[action]
-                next_state, reward, done, _ = self.step_env(action)
+
+                next_state, reward, done, _ = step_env(action, env)
                 if is_visual:
                     encoded_next_state = flattener.encode(next_state)
                     exp_policy_loss += exploring_policy.update(encoded_current_state, action, reward,
@@ -106,6 +119,7 @@ class HistoryAgent(_Agent):
                     exp_policy_loss += exploring_policy.update(current_state, action, reward, next_state, done)
                 sars = SARSTuple(current_state, one_hot_action_vector, reward, next_state)
                 self.history.append(sars)
+
                 step += 1
                 episode_reward += reward
                 current_state = next_state
@@ -172,8 +186,11 @@ class HistoryAgent(_Agent):
         if not self.is_pretrained:
             print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
+
         for episode in range(self.start_episode, episodes):
-            current_state = self.reset_env()
+            env = random.choice(self.environments)
+
+            current_state = reset_env(env)
             done = False
             step = 0
             episode_reward = 0
@@ -181,23 +198,31 @@ class HistoryAgent(_Agent):
             while not done and step < max_episode_length:
                 latent_state = self.representation_learner.encode(current_state)
                 action = self.policy.choose_action(latent_state)
-                next_state, reward, done, _ = self.step_env(action)
-                latent_observation = self.representation_learner.encode(next_state)
+
+                observation, reward, done, _ = step_env(action, env)
+                latent_observation = self.representation_learner.encode(observation)
+
                 policy_loss += self.policy.update(latent_state, action, reward, latent_observation, done)
-                current_state = next_state
+
+                current_state = observation
+
                 episode_reward += reward
                 step += 1
             rewards.append(episode_reward)
+
             if episode % (episodes // 20) == 0:
                 print(f"\t|-- {round(episode / episodes * 100)}% " +
                       f"(Avg. Rew. of {sum(rewards[-(episodes // 20):]) / (episodes // 20)})")
+
             if episodes_per_saving and episode % episodes_per_saving == 0 and episode != 0:
                 # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+
             if log:
                 info = {'policy_loss': policy_loss, 'reward': episode_reward}
                 self.logger.scalar_summary_dict(info, episode)
+
         self.policy.finish_training()
 
 
@@ -258,4 +283,4 @@ if __name__ == "__main__":
     agent.train_agent(1000)
 
     for i in range(5): agent.test()
-    agent.env.close()
+    agent.environments.close()

@@ -18,11 +18,12 @@ representation_module = CerberusPixel(width=env.observation_space.shape[0],
                                  height=env.observation_space.shape[1],
                                  n_actions=env.action_space.n,
                                  n_hidden=30)
-policy = DoubleDeepQNetwork(30, env.action_space.n, eps_decay=10000)
+representation_module = Flatten()
+policy = DoubleDeepQNetwork(900, env.action_space.n, eps_decay=10000)
 
-agent = ParallelAgent(representation_module, policy, env)
+agent = ParallelAgent(representation_module, policy, [env])
 
-representation_module.network.to(device)  # if using passthrough or Flatten comment this
+#representation_module.network.to(device)  # if using passthrough or Flatten comment this
 policy.current_model.to(device)
 policy.target_model.to(device)
 

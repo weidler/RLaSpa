@@ -3,6 +3,8 @@ import torch
 import numpy
 import matplotlib.pyplot as plt
 
+import src.gym_custom_tasks
+
 class Evasion_walls(gym.Env):
 
     AGENT_PIXEL = 0.3
@@ -78,8 +80,7 @@ class Evasion_walls(gym.Env):
 
 
 if __name__ == "__main__":
-    env = Evasion_walls()
-    # env = gym.make('Evasion-v0')
+    env = gym.make('EvasionWalls-v0')
     for _ in range(5):
         env.reset()
         done = False

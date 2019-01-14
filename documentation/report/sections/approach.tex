@@ -6,12 +6,6 @@ The framework consists three modules:
 2) the \textbf{policy learner}, which is RL learner operating based on the task abstraction created by the representation learner;
 3) the \textbf{task environment}, which is the RL tasks to be solved by policy learner.
 
-explain 
-\begin{itemize}
-	\item why representation?
-	\item how is it good transfer?
-\end{itemize}
-
 \subsection{Representation Learners}
 The representation learner aims to construct an abstract and generalized representation of the task environment to facilitate later knowledge transfer.
 Our framework includes several architectures as visualized in Figure \ref{fig:repr_learner}.
@@ -22,27 +16,27 @@ Once learned, this intermediate latent space is expected to create a more compac
 	\centering
 	\begin{subfigure}{0.45\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
+		\includegraphics[width=\linewidth]{img/very_simple_autoencoder.pdf}
 		\caption{Simple autoencoder}
 		\label{subfig:repr_learner_simple_autoencoder}
 	\end{subfigure}%
 	~ 
 	\begin{subfigure}{0.45\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
+		\includegraphics[width=\linewidth]{img/very_simple_autoencoder.pdf}
 		\caption{Variational autoencoder (add noise sign)}
 		\label{subfig:repr_learner_vae}
 	\end{subfigure}
 	\begin{subfigure}{0.5\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/janus.pdf}
+		\includegraphics[width=\linewidth]{img/janus.pdf}
 		\caption{Janus}
 		\label{subfig:repr_learner_janus}
 	\end{subfigure}%
 	~ 
 	\begin{subfigure}{0.5\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/cerberus.pdf}
+		\includegraphics[width=\linewidth]{img/cerberus.pdf}
 		\caption{Cerberus}
 		\label{subfig:repr_learner_cerberus}
 	\end{subfigure}
@@ -83,45 +77,50 @@ Include or not?
 \subsubsection{Deep Q-Network}
 One of the drawbacks of table-based Q-learning occurs in environments with large state spaces.
 Maintaining and updating the values of all possible states is memory intensive requires a great amount of training data.
-An alternative to resolve this problem is function approximation. 
+An alternative that avoids this problem is function approximation. 
 We use Deep Q-Network (DQN) \citep{DQN}, which is a Q-learning algorithm that uses deep neural networks to approximate the Q values of states.
 
 Experience replay is used to improve the learning process in DQN. 
-This mechanism stores the situations that the agent previously encountered as ``memories'' and randomly samples them to train the neural network. 
-The sampling of memory removes correlation between training instances and facilitates learning.
+This mechanism stores the situations that the agent previously encountered as ``memories'' and randomly samples them to train the network. 
+The sampling of memories is meant to remove correlation between training instances and facilitate learning.
 Furthermore, prioritized memory \citep{prioritized_memory} is used to more frequently learn from situations that caused more loss previously. %by adjusting sampling weights.
 
 %some memory is more important, depending on loss, give more prio to the ones that have major loss. Try to choose the ones causing more loss. 
 
 
 \subsubsection{Double Deep Q-Network}
+The double Deep Q-Network \citep{DDQN} is an improvement to DQN that stabilizes the target Q-values to be predicted. 
+More specifically, the target is kept fixed for a certain number of steps, contrary to in DQN where it changes every step.
+\iffalse
 \begin{itemize}
-	\item DDQN \citep{DDQN} also has prioritized memory 
+	\item DDQN  also has prioritized memory 
 	%Dueling DQN \citep{DuelingDQN}: state value, mix between q=learning and state action.
 	\item DQN update policy every time. 
 	\item continuously changing policy, estimate q-value changes every time.
 	target network updated every 100 steps. prediction of q-values is fixed. otherwise there is ``more bias''?
 \end{itemize}
+\fi
+The Double DQN also uses prioritized memory as DQN.
 
 \subsection{Integrating Representation and Policy Learners}
-The interaction between the representation leaner and policy learner can occur in two ways, depending on the execution sequence of the two learning processes.
+The interaction between the representation leaner and policy learner can occur in two ways depending on the execution sequence of the two learning processes.
 
 \begin{figure}[ht!]
 	\centering
-	\begin{subfigure}{0.45\columnwidth}
+	\begin{subfigure}{\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/tbc.pdf}
-		\caption{Simple autoencoder}
-		\label{subfig:repr_learner_simple_autoencoder}
+		\includegraphics[width=\linewidth]{img/history.pdf}
+		\caption{Illustration of the history approach, where the representation learner is first trained and the policy learner uses the encoding produced by trained representation learner to operate in the environment.}
+		\label{subfig:approach_history}
 	\end{subfigure}%
 	
-	\begin{subfigure}{0.45\columnwidth}
+	\begin{subfigure}{\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/tbc.pdf}
-		\caption{Variational autoencoder (add noise sign)}
-		\label{subfig:repr_learner_vae}
+		\includegraphics[width=\linewidth]{img/parallel.pdf}
+		\caption{Illustration of the parallel approach, where the representation and policy learners are trained simultaneously as the RL agent operates in the environment.}
+		\label{subfig:approach_parallel}
 	\end{subfigure}
-	\caption{History and parallel approach.
+	\caption{Illustrations of how the representation and policy learners are integrated.
 	}
 	\label{fig:approaches}
 \end{figure}
@@ -133,16 +132,11 @@ Once learning completes, the policy learner is trained based on the encoding of 
 In this approach, the representation and policy learning are decoupled. 
 
 \subsubsection{Parallel Approach}
-In the parallel approach, the representation and policy learner are trained simultaneously.
-observe the reward and new state. 
-The policy learner is trained with loss from the observed reward.
-The 
+In the parallel approach, the representation and policy learners are trained simultaneously.
+As the RL agent explores the environment, it chooses an action based on the the encoded representation of the current state.
+After executing the chosen action, the RL observes the new state and reward, which provide feedback to the representation and policy learners respectively.
+
+\textbf{Modular loss propagation}
 
 
-
-Encode using current encoder
-Choose action and observe
-%Use reward for policy loss
-Use observation to calculate representation loss
-
-\textbf{full loss propagation}
+\textbf{Full loss propagation}

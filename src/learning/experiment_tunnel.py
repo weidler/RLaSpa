@@ -18,8 +18,9 @@ env = gym.make("Tunnel-v0")
 #                                       height=env.observation_space.shape[1],
 #                                       n_actions=env.action_space.n,
 #                                       n_hidden=30)
+
 representation_module = Flatten()
-policy = DoubleDeepQNetwork(900, env.action_space.n, eps_decay=10000)
+policy = DoubleDeepQNetwork(900, env.action_space.n, eps_decay=50000, memory_delay=1000000)
 
 # AGENT
 agent = ParallelAgent(representation_module, policy, [env])
@@ -31,6 +32,6 @@ policy.target_model.to(device)
 
 # TRAIN/TEST
 start_time = time.time()
-agent.train_agent(100, log=True)
+agent.train_agent(50000, log=False)
 print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 agent.test(numb_runs=10, env=env)

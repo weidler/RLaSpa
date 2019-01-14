@@ -40,6 +40,6 @@ register(
 )
 register(
     id='Tunnel-v0',
-    entry_point='src.gym_custom_tasks.envs:Evasion',
+    entry_point='src.gym_custom_tasks.envs:Tunnel',
     kwargs={'width':30, 'height':30},
 )

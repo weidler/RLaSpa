@@ -169,7 +169,7 @@ if __name__ == "__main__":
                                  height=environments[0].observation_space.shape[1],
                                  n_actions=environments[0].action_space.n,
                                  n_hidden=20)
-    
+
     # POLICY
     policy = DoubleDeepQNetwork(20, environments[0].action_space.n, eps_decay=5000)
 

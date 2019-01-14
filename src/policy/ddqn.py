@@ -96,6 +96,7 @@ class DoubleDeepQNetwork(_Policy):
 
         :return: loss tensor
         """
+
         state, action, reward, next_state, done, indices, weights = self.memory.sample(self.batch_size, self.beta)
 
         q_values = self.current_model(state)
@@ -112,7 +113,6 @@ class DoubleDeepQNetwork(_Policy):
         loss = (q_value - expected_q_value.detach()).pow(2) * weights
         prios = loss + 1e-5
         loss = loss.mean()
-
         self.optimizer.zero_grad()
         loss.backward()
         self.memory.update_priorities(indices, prios.data.cpu().numpy())

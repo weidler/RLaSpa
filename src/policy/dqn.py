@@ -111,7 +111,7 @@ class DeepQNetwork(_Policy):
         loss: torch.Tensor = None
         self.total_steps_done += 1
         # memory or not memory
-        if self.total_steps_done > self.memory_delay:
+        if self.total_steps_done >= self.memory_delay:
             # save in memory
             self.memory.push(state, action, reward, next_state, done)
             # when saved plays are greater than the batch size calculate losses
@@ -125,7 +125,7 @@ class DeepQNetwork(_Policy):
         return 0 if loss is None else loss.item()
 
     def choose_action(self, state) -> int:
-        if not self.use_memory and self.total_steps_done > self.memory_delay:
+        if not self.use_memory and self.total_steps_done >= self.memory_delay:
             self.use_memory = True
         if self.use_memory:
             epsilon = self.memory_epsilon_calculator.value(self.total_steps_done - self.memory_delay)
@@ -179,7 +179,7 @@ class DoubleDeepQNetwork(DeepQNetwork):
     def update(self, state, action, reward, next_state, done) -> float:
         loss: torch.Tensor = super().update(state, action, reward, next_state, done)
 
-        if self.total_steps_done % 100:
+        if self.total_steps_done % 100 == 0:
             update_agent_model(self.model, self.target_model)
 
         return loss
@@ -213,6 +213,8 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         # target model needs repr network as well because otherwise copying over parameters will be non trivial
         self.target_model = DuelingDQN(num_features=num_features, num_actions=num_actions,
                                        representation_network=representation_network)
+        # update the optimizer to the new model
+        self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         update_agent_model(current=self.model, target=self.target_model)
 
     def calculate_next_q_value(self, next_state: torch.Tensor) -> torch.Tensor:

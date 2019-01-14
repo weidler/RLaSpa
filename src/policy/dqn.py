@@ -59,16 +59,6 @@ class DeepQNetwork(_Policy):
 
     def compute_td_loss(self, state: torch.tensor, action: torch.tensor, reward: torch.tensor, next_state: torch.tensor,
                         done: torch.tensor) -> torch.tensor:
-        """
-        Method to compute the loss for a given iteration
-
-        :param state: initial state
-        :param action: action taken
-        :param reward: reward received
-        :param next_state: state after acting
-        :param done: flag that indicates if the episode has finished
-        :return: loss tensor
-        """
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)
@@ -91,12 +81,6 @@ class DeepQNetwork(_Policy):
         return loss
 
     def compute_td_loss_memory(self) -> torch.Tensor:
-        """
-        Method that computes the loss of a batch. The batch is sample for memory to take in consideration
-        situations that happens before.
-
-        :return: loss tensor
-        """
         state, action, reward, next_state, done = self.memory.sample(self.batch_size)
 
         q_values = self.model(state)

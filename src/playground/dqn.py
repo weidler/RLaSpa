@@ -3,7 +3,7 @@ import argparse
 import gym
 import torch
 
-from src.policy.ddqn import PrioritizedDuelingDeepQNetwork
+from src.policy.dqn_prioritized import PrioritizedDuelingDeepQNetwork
 from src.utils.schedules import ExponentialSchedule, LinearSchedule
 
 

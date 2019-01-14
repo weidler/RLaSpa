@@ -4,8 +4,9 @@ import gym
 import torch
 
 from src.agents.parallel import ParallelAgent
-from src.policy.ddqn import DoubleDeepQNetwork
-from src.representation.learners import CerberusPixel, Flatten
+from src.policy.dqn_prioritized import PrioritizedDoubleDeepQNetwork
+from src.representation.learners import Flatten
+from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 if torch.cuda.is_available():
     print("Using GPU - Setting default tensor type to cuda.FloatTensor.")
@@ -19,7 +20,15 @@ env = gym.make("Tunnel-v0")
 #                                       n_actions=env.action_space.n,
 #                                       n_hidden=30)
 representation_module = Flatten()
-policy = DoubleDeepQNetwork(900, env.action_space.n, eps_decay=20000)
+memory_delay = 5000
+init_eps = 1.0
+memory_eps = 0.8
+min_eps = 0.01
+eps_decay = 20000
+linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
+exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
+policy = PrioritizedDoubleDeepQNetwork(900, env.action_space.n, eps_calculator=linear,
+                                       memory_eps_calculator=exponential, memory_delay=memory_delay)
 
 # AGENT
 agent = ParallelAgent(representation_module, policy, [env])
@@ -32,5 +41,5 @@ policy.target_model.to(device)
 # TRAIN/TEST
 start_time = time.time()
 agent.train_agent(50000, log=True)
-print(f'Total training took {(time.time()-start_time)/60:.2f} min')
+print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
 agent.test(numb_runs=10, env=env)

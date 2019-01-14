@@ -8,12 +8,13 @@ import torch
 from gym import Env
 
 from src.agents.agent import _Agent, reset_env, step_env
-from src.policy.ddqn import DoubleDeepQNetwork
+from src.policy.dqn_prioritized import PrioritizedDoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.model_handler import save_checkpoint, apply_checkpoint
+from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 
 class ParallelAgent(_Agent):
@@ -130,14 +131,16 @@ class ParallelAgent(_Agent):
                 self.logger.scalar_summary_dict(info, episode)
 
             # progress report
-            if episode % (episodes_per_report) == 0:
-                last_episodes_rewards = rewards[-(episodes_per_report):]
-                print(f"\t|-- {round(episode / episodes * 100):3d}%; " \
-                      + f"r-avg: {(sum(last_episodes_rewards) / (episodes_per_report)):8.2f}; r-peak: {max(last_episodes_rewards):4d};"
-                        f" r-slack: {min(last_episodes_rewards):4d}; r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4d}; " \
-                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes_per_report):]) / (episodes_per_report):10.4f}; " \
-                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes_per_report):]) / (episodes_per_report):15.4f}; " \
-                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; " \
+            if episode % episodes_per_report == 0:
+                last_episodes_rewards = rewards[-episodes_per_report:]
+                print(f"\t|-- {round(episode / episodes * 100):3d}%; "
+                      + f"r-avg: {(sum(last_episodes_rewards) / episodes_per_report):8.2f}; "
+                      + f"r-peak: {max(last_episodes_rewards):4f}; "
+                      + f"r-slack: {min(last_episodes_rewards):4f}; "
+                      + f"r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4f}; "
+                      + f"Avg. repr_loss: {sum(all_repr_loss[-episodes_per_report:]) / episodes_per_report :10.4f}; "
+                      + f"Avg. policy_loss: {sum(all_policy_loss[-episodes_per_report:]) / episodes_per_report :15.4f}; "
+                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; "
                       + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
 
             if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
@@ -171,7 +174,15 @@ if __name__ == "__main__":
                                  n_hidden=20)
 
     # POLICY
-    policy = DoubleDeepQNetwork(20, environments[0].action_space.n, eps_decay=5000)
+    memory_delay = 5000
+    init_eps = 1.0
+    memory_eps = 0.8
+    min_eps = 0.01
+    eps_decay = 10000
+    linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
+    exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
+    policy = PrioritizedDoubleDeepQNetwork(20, environments[0].action_space.n, eps_calculator=linear,
+                                           memory_eps_calculator=exponential, memory_delay=memory_delay)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, environments)
@@ -179,7 +190,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     repr_learner.network.to(device)  # if using passthrough or Flatten comment this
-    policy.current_model.to(device)
+    policy.model.to(device)
     policy.target_model.to(device)
 
     # TRAIN

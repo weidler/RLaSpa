@@ -10,6 +10,9 @@ from torch import Tensor
 
 from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
+from src.utils.model_handler import save_checkpoint, apply_checkpoint
+from src.utils.path_manager import PathManager
+from src.utils.logger import Logger
 
 def reset_env(env: Env) -> Tensor:
     """ Resets the environment and returns the starting state as a Tensor.
@@ -48,6 +51,9 @@ class _Agent(abc.ABC):
         self.environments = environments
         self.policy = policy
         self.representation_learner = representation_learner
+        self.start_episode = 0
+        self.path_manager = PathManager()
+        self.logger = Logger('logs', self.get_config_name())
 
         # check if environments given as list
         if not isinstance(environments, list):
@@ -104,24 +110,27 @@ class _Agent(abc.ABC):
         all_rewards = []
         fig = plt.figure(figsize=(10, 6))
         for i in range(numb_runs):
-            plt.clf()
-            ims = []
-            done = False
-            state = reset_env(env)
-            step = 0
-            total_reward = 0
-            while not done:
-                state, reward, done = self.act(state, env)
-                step += 1
-                total_reward += reward
-                ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
-                if render:
-                    env.render()
-            all_rewards.append(total_reward)
-            print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
-            if not render:
-                ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
-                ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
+            try:
+                plt.clf()
+                ims = []
+                done = False
+                state = reset_env(env)
+                step = 0
+                total_reward = 0
+                while not done:
+                    state, reward, done = self.act(state, env)
+                    step += 1
+                    total_reward += reward
+                    ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
+                    if render:
+                        env.render()
+                all_rewards.append(total_reward)
+                print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
+                if not render:
+                    ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
+                    ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
+            except:
+                print(f"Episode {i} went wrong.")
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)}')
 
     def get_config_name(self):
@@ -130,3 +139,23 @@ class _Agent(abc.ABC):
              self.environments.__class__.__name__,
              self.representation_learner.__class__.__name__,
              self.policy.__class__.__name__])
+
+    def save(self, episode: int, save_repr_learner: bool=True, save_policy_learner: bool=True) -> None:
+        ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
+
+        if save_repr_learner:
+            save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+
+        if save_policy_learner:
+            save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
+
+    def load(self, ckpt_dir: str, load_repr_learner: bool=True, load_policy_learner: bool=True) -> None:
+
+        if load_repr_learner and load_policy_learner:
+            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy, repr=self.representation_learner)
+
+        elif load_repr_learner:
+            self.start_episode = apply_checkpoint(ckpt_dir, repr=self.representation_learner)
+
+        elif load_policy_learner:
+            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy)

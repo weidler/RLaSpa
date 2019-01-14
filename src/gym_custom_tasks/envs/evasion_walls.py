@@ -1,19 +1,14 @@
-import random
-
 import gym
-from gym import spaces
 import torch
 import numpy
 import matplotlib.pyplot as plt
 
-import src.gym_custom_tasks
-
-class Evasion(gym.Env):
+class Evasion_walls(gym.Env):
 
     AGENT_PIXEL = 0.3
     OBSTACLE_PIXEL = 0.6
 
-    def __init__(self, width: int=30, height: int=30, obstacle_chance: float=0.05):
+    def __init__(self, width: int=30, height: int=30, obstacle_chance: float=0.02):
         self.width = width
         self.height = height
         self.action_space = gym.spaces.Discrete(3) # UP, DOWN, STRAIGHT
@@ -27,7 +22,7 @@ class Evasion(gym.Env):
     def _init_dungeon(self):
         track = torch.zeros((self.height, self.width))
         pos = self.height//2
-        track[pos, 0] = Evasion.AGENT_PIXEL
+        track[pos, 0] = Evasion_walls.AGENT_PIXEL
         return track, pos
 
     def reset(self):
@@ -52,9 +47,23 @@ class Evasion(gym.Env):
             reward = 10
 
         new_row = torch.zeros(self.height, 1)
-        new_row[torch.bernoulli(self.obstacle_chance).byte()] = Evasion.OBSTACLE_PIXEL
+        obstacle_pos = torch.bernoulli(self.obstacle_chance).byte()
+        # obstacle_pos = torch.zeros(self.height, 1).byte()
+        # obstacle_pos[15] = 1
+        # obstacle_pos[8] = 1
+        obst = obstacle_pos.nonzero()
+        if len(obst) > 0:
+            obst_min1 = obst[:, 0]-1
+            obst_min1[obst_min1 < 0] = 0
+            obst_plus1 = obst[:, 0]+1
+            obst_plus1[obst_plus1 > self.height-1] = self.height-1
+            obstacle_pos[obst_min1] = 1
+            obstacle_pos[obst_plus1] = 1
+        new_row[obstacle_pos] = Evasion_walls.OBSTACLE_PIXEL
+
+        # add new row
         self.dungeon = torch.cat((self.dungeon[:, 1:], new_row), 1)
-        self.dungeon[self.pos_agent, 0] = Evasion.AGENT_PIXEL
+        self.dungeon[self.pos_agent, 0] = Evasion_walls.AGENT_PIXEL
 
         return self.dungeon, reward, done, None
 
@@ -69,12 +78,14 @@ class Evasion(gym.Env):
 
 
 if __name__ == "__main__":
-    env = gym.make('Evasion-v0')
-
-    done = False
-    while not done:
-        env.render()
-        observation, reward, done, _ = env.step(random.choice((2,)))
+    env = Evasion_walls()
+    # env = gym.make('Evasion-v0')
+    for _ in range(5):
+        env.reset()
+        done = False
+        while not done:
+            env.render()
+            observation, reward, done, _ = env.step(2)
     # env.step(1)
     # observation, reward, done, _ = env.step(2)
     # print('Observation:', type(observation), 'size:', observation.shape)

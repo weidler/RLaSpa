@@ -13,8 +13,7 @@ from src.policy.policy import _Policy
 from src.representation.learners import JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.logger import Logger
-from src.utils.model_handler import save_checkpoint, apply_checkpoint, get_checkpoint_dir
+from src.utils.model_handler import save_checkpoint, apply_checkpoint
 
 
 class HistoryAgent(_Agent):
@@ -42,8 +41,6 @@ class HistoryAgent(_Agent):
 
         self.history = []
         self.is_pretrained = False
-
-        self.logger = Logger('logs')
 
     def load_history(self, file_name: str) -> None:
         """
@@ -179,18 +176,18 @@ class HistoryAgent(_Agent):
         :param episodes_per_saving: number of episodes between saving checkpoint.
         :param log: logging flag.
         """
-        start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         if not (ckpt_to_load is None):
-            start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
+            self.start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = get_checkpoint_dir(agent.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_idr(agent.get_config_name())
         else:
             ckpt_dir = None
         print("Training Agent.")
         if not self.is_pretrained:
             print("[WARNING]: You are using an untrained representation learner!")
         rewards = []
-        for episode in range(start_episode, episodes):
+
+        for episode in range(self.start_episode, episodes):
             env = random.choice(self.environments)
 
             current_state = reset_env(env)
@@ -217,7 +214,8 @@ class HistoryAgent(_Agent):
                 print(f"\t|-- {round(episode / episodes * 100)}% " +
                       f"(Avg. Rew. of {sum(rewards[-(episodes // 20):]) / (episodes // 20)})")
 
-            if episodes_per_saving and episode % episodes_per_saving == 0:  # save check point every n episodes
+            if episodes_per_saving and episode % episodes_per_saving == 0 and episode != 0:
+                # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
 
@@ -276,6 +274,12 @@ if __name__ == "__main__":
         agent.load_history("cartpole-10.data")
 
     agent.pretrain(5)
+    # SAVE
+    # agent.save(episode=0, save_policy_learner=False)
+    # LOAD
+    # agent.load(ckpt_dir='../../ckpt/HistoryAgent_ObstaclePathing_JanusPixel_DoubleDeepQNetwork/2019-01-13_18-17-16',
+    #            load_policy_learner=False)
+
     agent.train_agent(1000)
 
     for i in range(5): agent.test()

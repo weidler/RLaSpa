@@ -46,6 +46,8 @@ class ParallelAgent(_Agent):
         :param plot_every: number of steps that will happen between the plotting of the space representation.
         :param log: logging flag.
         """
+        episodes_per_report = episodes // 100
+
         start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         start_time = time.time()
         if not (ckpt_to_load is None):
@@ -100,14 +102,15 @@ class ParallelAgent(_Agent):
             all_repr_loss.append(repr_loss)
             all_policy_loss.append(policy_loss)
 
-            if episode % (episodes // 100) == 0:
+            if episode % (episodes_per_report) == 0:
+                last_episodes_rewards = rewards[-(episodes_per_report):]
                 print(f"\t|-- {round(episode / episodes * 100):3d}%; " \
-                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)}; " \
-                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes // 100):]) / (episodes // 100):.4f}; " \
-                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes // 100):]) / (episodes // 100):.4f}; " \
-                      + f"r-peak: {max(rewards[-(episodes // 100):])}; r-slack: {min(rewards[-(episodes // 100):])};" \
-                      + f"Time elapsed: {(time.time()-start_time)/60:.2f} min; " \
-                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay)}")
+                      + f"r-avg: {(sum(last_episodes_rewards) / (episodes_per_report)):8.2f}; r-peak: {max(last_episodes_rewards):4d};"
+                        f" r-slack: {min(last_episodes_rewards):4d}; r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4d}; " \
+                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes_per_report):]) / (episodes_per_report):10.4f}; " \
+                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes_per_report):]) / (episodes_per_report):15.4f}; " \
+                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; " \
+                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
 
             if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
                 # save check point every n episodes

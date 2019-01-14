@@ -89,24 +89,27 @@ class _Agent:
         all_rewards = []
         fig = plt.figure(figsize=(10, 6))
         for i in range(runs_number):
-            plt.clf()
-            ims = []
-            done = False
-            state = self.reset_env()
-            step = 0
-            total_reward = 0
-            while not done:
-                state, reward, done = self.act(state)
-                step += 1
-                total_reward += reward
-                ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
-                if render:
-                    self.env.render()
-            all_rewards.append(total_reward)
-            print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
-            if not render:
-                ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
-                ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
+            try:
+                plt.clf()
+                ims = []
+                done = False
+                state = self.reset_env()
+                step = 0
+                total_reward = 0
+                while not done:
+                    state, reward, done = self.act(state)
+                    step += 1
+                    total_reward += reward
+                    ims.append([plt.imshow(state, cmap="binary", origin="upper", animated=True)])
+                    if render:
+                        self.env.render()
+                all_rewards.append(total_reward)
+                print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
+                if not render:
+                    ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
+                    ani.save(f'../../data/testrun_{i}.gif', writer='imagemagick', fps=15)
+            except:
+                print(f"Episode {i} went wrong.")
         print(f'Average max score after {runs_number} testruns: {sum(all_rewards) / len(all_rewards)}')
 
     def get_config_name(self):

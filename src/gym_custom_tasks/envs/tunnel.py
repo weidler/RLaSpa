@@ -3,6 +3,8 @@ import torch
 import numpy
 import matplotlib.pyplot as plt
 
+import src.gym_custom_tasks
+
 class Tunnel(gym.Env):
 
     AGENT_PIXEL = 0.3
@@ -68,7 +70,7 @@ class Tunnel(gym.Env):
 
 
 if __name__ == "__main__":
-    env = Tunnel()
+    env = gym.make("Tunnel-v0")
     # env = gym.make('Evasion-v0')
     for _ in range(5):
         env.reset()

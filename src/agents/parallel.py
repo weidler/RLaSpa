@@ -9,7 +9,7 @@ from gym import Env
 from src.agents.agent import _Agent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.policy import _Policy
-from src.representation.learners import CerberusPixel, Flatten
+from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.logger import Logger
@@ -46,11 +46,14 @@ class ParallelAgent(_Agent):
         :param plot_every: number of steps that will happen between the plotting of the space representation.
         :param log: logging flag.
         """
+
+        episodes_per_report = episodes // 100
+        start_episode = 0  # which episode to start from. This is > 0 in case of resuming training.
         start_time = time.time()
         if not (ckpt_to_load is None):
             self.start_episode = apply_checkpoint(ckpt_to_load, policy=self.policy, repr=self.representation_learner)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = self.path_manager.get_ckpt_idr(agent.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
         else:
             ckpt_dir = None
         print("Starting parallel training process.")
@@ -98,19 +101,25 @@ class ParallelAgent(_Agent):
             rewards.append(episode_reward)
             all_repr_loss.append(repr_loss)
             all_policy_loss.append(policy_loss)
-            if episode % (episodes // 100) == 0:
-                print(f"\t|-- {round(episode / episodes * 100):3d}% " \
-                      + f"(Avg. Rew. of {sum(rewards[-(episodes // 100):]) / (episodes // 100)} " \
-                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
-                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes // 100):]) / (episodes // 100):.4f} " \
-                      + f"Last 5 rewards: {rewards[-5:]}) " \
-                      + f"Time elapsed: {(time.time()-start_time)/60:.2f} min")
-            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0 and episode != 0:
+
+            if episode % (episodes_per_report) == 0:
+                last_episodes_rewards = rewards[-(episodes_per_report):]
+                print(f"\t|-- {round(episode / episodes * 100):3d}%; " \
+                      + f"r-avg: {(sum(last_episodes_rewards) / (episodes_per_report)):8.2f}; r-peak: {max(last_episodes_rewards):4d};"
+                        f" r-slack: {min(last_episodes_rewards):4d}; r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4d}; " \
+                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes_per_report):]) / (episodes_per_report):10.4f}; " \
+                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes_per_report):]) / (episodes_per_report):15.4f}; " \
+                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; " \
+                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
+
+            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
                 # save check point every n episodes
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
                 save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+
             if not (plot_every is None) and episode % plot_every == 0:
                 self.representation_learner.visualize_output(last_state, one_hot_action_vector, current_state)
+
         # Last update of the agent policy
         self.policy.finish_training()
 
@@ -153,7 +162,7 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    repr_learner.network.to(device)# if using passthrough or Flatten comment this
+    repr_learner.network.to(device)  # if using passthrough or Flatten comment this
     policy.current_model.to(device)
     policy.target_model.to(device)
 

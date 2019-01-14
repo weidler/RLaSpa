@@ -14,7 +14,7 @@ def update_agent_model(current, target):
     :param current: model used to train continuously
     :param target: model that will use the agent after finishing the training
     """
-    target.load_state_dict(current.state_dict())
+    target.load_state_dict(current.state_dict().copy())
 
 
 def save_model(model, filename: str):

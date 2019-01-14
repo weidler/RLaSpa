@@ -6,11 +6,16 @@ The framework consists three modules:
 2) the \textbf{policy learner}, which is RL learner operating based on the task abstraction created by the representation learner;
 3) the \textbf{task environment}, which is the RL tasks to be solved by policy learner.
 
+explain 
+\begin{itemize}
+	\item why representation?
+	\item how is it good transfer?
+\end{itemize}
+
 \subsection{Representation Learners}
 The representation learner aims to construct an abstract and generalized representation of the task environment to facilitate later knowledge transfer.
 Our framework includes several architectures as visualized in Figure \ref{fig:repr_learner}.
-The architectures all include some lower-dimensional ``bottleneck'' layers, 
-which are designed to enforce dimensionality reduction of the input.
+The architectures all include some lower-dimensional ``bottleneck'' layers for dimensionality reduction of the input.
 Once learned, this intermediate latent space is expected to create a more compact and abstract representation of the original environment and serve as the basis of transfer learning. 
 
 \begin{figure}[ht!]
@@ -52,42 +57,44 @@ Once learned, this intermediate latent space is expected to create a more compac
 The simplest representation learner is an autoencoder, which compresses and reconstructs the current state representation. 
 Figure \ref{subfig:repr_learner_simple_autoencoder} illustrates the simple autoencoder, and \ref{subfig:repr_learner_vae} the variational autoencoder (VAE). 
 %The VAE . 
-However, one theoretical drawback is that
+One theoretical drawback of such structure for representation learning is that
 since the latent space only aims at compression, it is not necessarily a useful basis for transfer learning.
 The upcoming architectures account for this.
 
 \subsubsection{Janus}
-To create more guidance in the construction of the latent space, we add another sub-network to capture the transition dynamics. 
+To create more guidance in the construction of the latent space, we add another sub-network to capture the dynamics of the environment. 
 As shown in Figure \ref{subfig:repr_learner_janus},
 in addition to reconstructing the current state, we also append the action in latent space and seek to use this combination to predict the next state.
-The hypothesized effect of this approach is that the latent representation can preserve the transition dynamics in the environment, and therefore is a more meaningful abstraction of the task.
-
+The hypothesized effect of this approach is that the latent representation is incentivized to preserve transition dynamics in the environment, and therefore is a more meaningful abstraction of the task.
 
 \subsubsection{Cerberus}
-Compared to Janus, the Cerberus architecture has one more output sub-network, which aims to construct the difference between the current and next state. 
-By only predicting the differences, focus is placed on the change caused by the action taken.
-This is especially useful when the changes between consecutive states are small relative to the entire state representation.
+Compared to Janus, the Cerberus architecture contains one more output sub-network, which aims to predict the difference between the current and next state. 
+By only predicting the differences instead of the next state in its entirety, focus is placed on the change caused by the action taken.
+We expect this to be especially useful when the changes between consecutive states are small relative to the entire state representation.
 The network architecture is shown in Figure \ref{subfig:repr_learner_cerberus}.  
 
 \subsection{Policy Learners}
-Based on the latent space constructed by the representation learner, the policy learner is RL agent that .
+Based on the latent space constructed by the representation learner, the policy learner trains an RL agents to complete the given task.
+%More specifically, take the output
 
 \subsubsection{Table-based(?)}
 Include or not?
 
-\subsubsection{DQN}
-\begin{itemize}
-	\item avoid the exponential growth with state configurations
-	\item DQN \citep{DQN} 
-	\item with prioritized memory \citep{prioritized_memory} some memory is more important, depending on loss, give more prio to the ones that have major loss. Try to choose the ones causing more loss. 
-\end{itemize}
-One of the problems that arises when using the table-based Q-learning algorithm is produced in environments with big state spaces. Creating and maintaining such structure would not be efficient and filling it will require a great amount of training data.
-A well known technique used in the field to solve this situation is function approximation. We use Deep Q-Network (DQN) \citep{DQN} that is a Q-learning algorithm that uses deep learning to approximate the Q values.
+\subsubsection{Deep Q-Network}
+One of the drawbacks of table-based Q-learning occurs in environments with large state spaces.
+Maintaining and updating the values of all possible states is memory intensive requires a great amount of training data.
+An alternative to resolve this problem is function approximation. 
+We use Deep Q-Network (DQN) \citep{DQN}, which is a Q-learning algorithm that uses deep neural networks to approximate the Q values of states.
 
-To improve the learning process in DQN experience replay is used. This mechanism store the situations the agent has been through to, later, randomly sample them to train the neural network. The arbitrary selection of this memories remove the correlation between situations and 
+Experience replay is used to improve the learning process in DQN. 
+This mechanism stores the situations that the agent previously encountered as ``memories'' and randomly samples them to train the neural network. 
+The sampling of memory removes correlation between training instances and facilitates learning.
+Furthermore, prioritized memory \citep{prioritized_memory} is used to more frequently learn from situations that caused more loss previously. %by adjusting sampling weights.
+
+%some memory is more important, depending on loss, give more prio to the ones that have major loss. Try to choose the ones causing more loss. 
 
 
-\subsubsection{DDQN}
+\subsubsection{Double Deep Q-Network}
 \begin{itemize}
 	\item DDQN \citep{DDQN} also has prioritized memory 
 	%Dueling DQN \citep{DuelingDQN}: state value, mix between q=learning and state action.
@@ -103,33 +110,18 @@ The interaction between the representation leaner and policy learner can occur i
 	\centering
 	\begin{subfigure}{0.45\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
+		\includegraphics[width=\linewidth]{../img/tbc.pdf}
 		\caption{Simple autoencoder}
 		\label{subfig:repr_learner_simple_autoencoder}
 	\end{subfigure}%
-	~ 
+	
 	\begin{subfigure}{0.45\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{../img/very_simple_autoencoder.pdf}
+		\includegraphics[width=\linewidth]{../img/tbc.pdf}
 		\caption{Variational autoencoder (add noise sign)}
 		\label{subfig:repr_learner_vae}
 	\end{subfigure}
-	\begin{subfigure}{0.5\columnwidth}
-		\centering
-		\includegraphics[width=\linewidth]{../img/janus.pdf}
-		\caption{Janus}
-		\label{subfig:repr_learner_janus}
-	\end{subfigure}%
-	~ 
-	\begin{subfigure}{0.5\columnwidth}
-		\centering
-		\includegraphics[width=\linewidth]{../img/cerberus.pdf}
-		\caption{Cerberus}
-		\label{subfig:repr_learner_cerberus}
-	\end{subfigure}
-	\caption{Network architectures of of representation learner, where $s$ and $s'$ indicate current and next state respectively, and $a$ indicates the action leading from $s$ to $s$. 
-		The layers marked in purple are the latent representations to be used as the basis of later transfer learning. 
-		The arrows indicate a straight copy from source to target.
+	\caption{History and parallel approach.
 	}
 	\label{fig:approaches}
 \end{figure}
@@ -153,3 +145,4 @@ Choose action and observe
 %Use reward for policy loss
 Use observation to calculate representation loss
 
+\textbf{full loss propagation}

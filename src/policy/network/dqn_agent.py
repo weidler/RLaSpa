@@ -36,7 +36,7 @@ class DQN(nn.Module):
         """
         return self.layers(x)
 
-    def act(self, state, epsilon: float) -> int:
+    def act(self, state: torch.Tensor, epsilon: float) -> int:
         """
         Method that returns the action the agent will do. This method uses the iteration value
         to calculate epsilon and choose between exploration and exploitation.
@@ -46,7 +46,7 @@ class DQN(nn.Module):
         :return: the action that the agent will take
         """
         if random.random() > epsilon:
-            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+            state = state.unsqueeze(0)
             q_value = self.forward(state)
             action = torch.argmax(q_value).item()
         else:

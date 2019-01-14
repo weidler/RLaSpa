@@ -1,7 +1,6 @@
 import random
 from collections import deque
 
-import numpy as np
 import torch
 
 from src.utils.memory.memory import Memory
@@ -16,7 +15,8 @@ class ReplayMemory(Memory):
         """
         self.memory = deque(maxlen=capacity)
 
-    def push(self, state, action, reward, next_state, done):
+    def push(self, state: torch.Tensor, action: torch.Tensor, reward: torch.Tensor, next_state: torch.Tensor,
+             done: torch.Tensor) -> None:
         """
         Method to save the plays made by the agent in the memory
 
@@ -26,14 +26,15 @@ class ReplayMemory(Memory):
         :param next_state: state of the game after executing the action
         :param done: true if the game is finished after executing the action
         """
-        if type(state) is torch.Tensor and type(next_state) is torch.Tensor:
-            state = state.detach()
-            next_state = next_state.detach()
-        state = np.expand_dims(state, 0)
-        next_state = np.expand_dims(next_state, 0)
+        state = state.unsqueeze(0)
+        # transform to tensor
+        action = torch.tensor(action, dtype=torch.long)
+        reward = torch.tensor(reward, dtype=torch.float32)
+        done = torch.tensor(done, dtype=torch.float32)
+        next_state = next_state.unsqueeze(0)
         self.memory.append((state, action, reward, next_state, done))
 
-    def sample(self, batch_size):
+    def sample(self, batch_size: int):
         """
         Method to obtain a sample of saved memories
 
@@ -41,7 +42,7 @@ class ReplayMemory(Memory):
         :return: batch of memories
         """
         state, action, reward, next_state, done = zip(*random.sample(self.memory, batch_size))
-        return np.concatenate(state), action, reward, np.concatenate(next_state), done
+        return torch.cat(state), torch.stack(action), torch.stack(reward), torch.cat(next_state), torch.stack(done)
 
     def __len__(self):
         return len(self.memory)

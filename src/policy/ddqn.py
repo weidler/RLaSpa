@@ -66,8 +66,6 @@ class DoubleDeepQNetwork(_Policy):
         :param done: flag that indicates if the episode has finished
         :return: loss tensor
         """
-        state = torch.tensor(state, dtype=torch.float32)
-        next_state = torch.tensor(next_state, dtype=torch.float32)
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)
@@ -100,8 +98,6 @@ class DoubleDeepQNetwork(_Policy):
         """
         state, action, reward, next_state, done, indices, weights = self.memory.sample(self.batch_size, self.beta)
 
-        state = torch.tensor(state, dtype=torch.float32)
-        next_state = torch.tensor(next_state, dtype=torch.float32)
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)
@@ -223,8 +219,6 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
         :param done: flag that indicates if the episode has finished
         :return: loss tensor
         """
-        state = torch.tensor(state, dtype=torch.float32)
-        next_state = torch.tensor(next_state, dtype=torch.float32)
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)

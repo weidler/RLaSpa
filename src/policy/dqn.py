@@ -33,9 +33,10 @@ class DeepQNetwork(_Policy):
         :param representation_network: Optional nn.Module used for the representation. Including it into the policy
         network allows full backpropagation.
         """
-        self.gamma = gamma
+        self.gamma = torch.tensor(gamma).float()
         self.total_steps_done = 0  # Counter to control the memory activation
         self.batch_size = batch_size
+        self.use_memory = False
         self.memory_delay = memory_delay
         self.memory = ReplayMemory(capacity=memory_size)
         self.model = DQN(num_features=num_features, num_actions=num_actions,
@@ -57,8 +58,6 @@ class DeepQNetwork(_Policy):
         :param done: flag that indicates if the episode has finished
         :return: loss tensor
         """
-        state = torch.tensor(state, dtype=torch.float32)
-        next_state = torch.tensor(next_state, dtype=torch.float32)
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)
@@ -89,11 +88,6 @@ class DeepQNetwork(_Policy):
         :return: loss tensor
         """
         state, action, reward, next_state, done = self.memory.sample(self.batch_size)
-        state = torch.tensor(state, dtype=torch.float32)
-        next_state = torch.tensor(next_state, dtype=torch.float32)
-        action = torch.tensor(action, dtype=torch.long)
-        reward = torch.tensor(reward, dtype=torch.float32)
-        done = torch.tensor(done, dtype=torch.float32)
 
         q_values = self.model(state)
         next_q_values = self.model(next_state)
@@ -116,19 +110,26 @@ class DeepQNetwork(_Policy):
     def update(self, state, action, reward, next_state, done) -> float:
         self.total_steps_done += 1
 
-        loss = None
+        loss: torch.Tensor = None
         if self.total_steps_done > self.memory_delay:
+            # transform to tensor
+            action = torch.tensor(action, dtype=torch.long)
+            reward = torch.tensor(reward, dtype=torch.float32)
+            done = torch.tensor(done, dtype=torch.float32)
+            # save in memory
             self.memory.push(state, action, reward, next_state, done)
+            # when saved plays are greater than the batch size calculate losses
             if len(self.memory) > self.batch_size:
-                # when saved plays are greater than the batch size calculate losses
                 loss = self.compute_td_loss_memory()
         else:
             loss = self.compute_td_loss(state, action, reward, next_state, done)
 
-        return 0 if loss is None else loss.data.item()
+        return 0 if loss is None else loss.item()
 
     def choose_action(self, state) -> int:
-        if self.total_steps_done > self.memory_delay:
+        if not self.use_memory and self.total_steps_done > self.memory_delay:
+            self.use_memory = True
+        if self.use_memory:
             epsilon = self.memory_epsilon_calculator.value(self.total_steps_done - self.memory_delay)
         else:
             epsilon = self.epsilon_calculator.value(self.total_steps_done)
@@ -196,8 +197,6 @@ class PrioritizedDeepQNetwork(DeepQNetwork):
         """
         state, action, reward, next_state, done, indices, weights = self.memory.sample(self.batch_size, self.beta)
 
-        state = torch.tensor(state, dtype=torch.float32)
-        next_state = torch.tensor(next_state, dtype=torch.float32)
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)

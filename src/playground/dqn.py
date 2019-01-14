@@ -3,11 +3,11 @@ import argparse
 import gym
 import torch
 
-from src.policy.dqn import DuelingDeepQNetwork
+from src.policy.ddqn import PrioritizedDuelingDeepQNetwork
 from src.utils.schedules import ExponentialSchedule, LinearSchedule
 
 
-def train(iterations: int, batch_size: int):
+def train(iterations: int):
     state = torch.tensor(env.reset()).float()
     losses = []
     all_rewards = []
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=int, metavar='G', default=0.99, help='Gamma')
     parser.add_argument('--memory_size', type=int, metavar='S', default=10000, help='Memory size')
     parser.add_argument('--batch_size', type=int, metavar='B', default=32, help='Batch size')
-    parser.add_argument('--iterations', type=int, metavar='IT', default=15000, help='Training iterations')
+    parser.add_argument('--iterations', type=int, metavar='IT', default=30000, help='Training iterations')
     args = parser.parse_args()
 
     env = gym.make(args.env)
@@ -76,11 +76,11 @@ if __name__ == '__main__':
     init_eps = 1.0
     memory_eps = 0.8
     min_eps = 0.01
-    eps_decay = 5000
+    eps_decay = 10000
     linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
     exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
-    model = DuelingDeepQNetwork(num_features=number_of_observations, num_actions=number_of_actions,
-                                eps_calculator=linear,
-                                memory_eps_calculator=exponential, memory_delay=memory_delay)
-    train(iterations=args.iterations, batch_size=args.batch_size)
+    model = PrioritizedDuelingDeepQNetwork(num_features=number_of_observations, num_actions=number_of_actions,
+                                           eps_calculator=linear, memory_eps_calculator=exponential,
+                                           memory_delay=memory_delay)
+    train(iterations=args.iterations)
     play(iterations=10000, render=True)

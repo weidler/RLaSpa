@@ -29,6 +29,14 @@ class DeepQNetwork(_Policy):
         :param representation_network: Optional nn.Module used for the representation. Including it into the policy
         network allows full backpropagation.
         """
+        if num_features is None:
+            raise ValueError('Number of features not included.')
+        if num_actions is None:
+            raise ValueError('Number of action not included.')
+        if memory_eps_calculator is None:
+            raise ValueError('The epsilon calculator for the memory cannot be null.')
+        if eps_calculator is None and memory_delay != 0:
+            raise ValueError('The epsilon calculator cannot be null if the memory_delay is not 0.')
         self.gamma = torch.tensor(gamma).float()
         self.total_steps_done = 0  # Counter to control the memory activation
         self.batch_size = batch_size
@@ -49,7 +57,8 @@ class DeepQNetwork(_Policy):
         next_q_values = self.model(next_state)
         return torch.max(next_q_values, 1)[0]
 
-    def compute_td_loss(self, state, action, reward, next_state, done) -> torch.tensor:
+    def compute_td_loss(self, state: torch.tensor, action: torch.tensor, reward: torch.tensor, next_state: torch.tensor,
+                        done: torch.tensor) -> torch.tensor:
         """
         Method to compute the loss for a given iteration
 
@@ -81,7 +90,7 @@ class DeepQNetwork(_Policy):
 
         return loss
 
-    def compute_td_loss_memory(self) -> torch.tensor:
+    def compute_td_loss_memory(self) -> torch.Tensor:
         """
         Method that computes the loss of a batch. The batch is sample for memory to take in consideration
         situations that happens before.
@@ -158,7 +167,7 @@ class DoubleDeepQNetwork(DeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, eps_calculator: Schedule, memory_eps_calculator: Schedule,
                  memory_size: int = 10000, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  memory_delay: int = 5000, representation_network: torch.nn.Module = None) -> None:
-        # Configure parent parameters
+        # configure parent parameters
         super().__init__(num_features, num_actions, eps_calculator, memory_eps_calculator, memory_size, batch_size,
                          learning_rate, gamma, memory_delay, representation_network)
         # target model needs repr network as well because otherwise copying over parameters will be non trivial
@@ -205,7 +214,7 @@ class DuelingDeepQNetwork(DoubleDeepQNetwork):
     def __init__(self, num_features: int, num_actions: int, eps_calculator: Schedule, memory_eps_calculator: Schedule,
                  memory_size: int = 10000, batch_size: int = 32, learning_rate: float = 2e-3, gamma: float = 0.99,
                  memory_delay: int = 5000, representation_network: torch.nn.Module = None) -> None:
-        # Configure parent parameters
+        # configure parent parameters
         super().__init__(num_features, num_actions, eps_calculator, memory_eps_calculator, memory_size, batch_size,
                          learning_rate, gamma, memory_delay, representation_network)
         self.model = DuelingDQN(num_features=num_features, num_actions=num_actions,

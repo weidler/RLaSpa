@@ -11,7 +11,6 @@ from src.policy.policy import _Policy
 from src.representation.learners import JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.logger import Logger
 from src.utils.model_handler import save_checkpoint, apply_checkpoint
 
 
@@ -36,8 +35,6 @@ class HistoryAgent(_Agent):
 
         self.history = []
         self.is_pretrained = False
-
-        self.logger = Logger('logs')
 
     def load_history(self, file_name: str) -> None:
         """

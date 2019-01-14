@@ -3,26 +3,26 @@ import torch
 import numpy
 import matplotlib.pyplot as plt
 
-class Evasion(gym.Env):
+class Tunnel(gym.Env):
 
     AGENT_PIXEL = 0.3
     OBSTACLE_PIXEL = 0.6
 
-    def __init__(self, width: int=30, height: int=30, obstacle_chance: float=0.05):
+    def __init__(self, width: int=30, height: int=30):
         self.width = width
         self.height = height
         self.action_space = gym.spaces.Discrete(3) # UP, DOWN, STRAIGHT
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))
 
         self.dungeon, self.pos_agent = self._init_dungeon()
-        self.obstacle_chance = torch.empty(self.height, 1).new_full((self.height, 1), obstacle_chance)  # 0.1 = 10% chance that an obstacle is spawned
+        self.tunnel_center = torch.randint(low=1, high=self.height, size=(1,)).int()
         self.max_steps = 500
         self.steps = 0
 
     def _init_dungeon(self):
         track = torch.zeros((self.height, self.width))
         pos = self.height//2
-        track[pos, 0] = Evasion.AGENT_PIXEL
+        track[pos, 0] = Tunnel.AGENT_PIXEL
         return track, pos
 
     def reset(self):
@@ -46,10 +46,14 @@ class Evasion(gym.Env):
         else:
             reward = 10
 
-        new_row = torch.zeros(self.height, 1)
-        new_row[torch.bernoulli(self.obstacle_chance).byte()] = Evasion.OBSTACLE_PIXEL
+        new_row = torch.empty(self.height, 1).new_full((self.height, 1), Tunnel.OBSTACLE_PIXEL)
+        # create tunnel
+        new_row[max(0, self.tunnel_center-3):min(self.tunnel_center+3, self.height)] = 0
+        # move tunnel up or down
+        self.tunnel_center = min(max(1, self.tunnel_center + torch.randint(low=-1, high=2, size=(1,)).int()), self.height-1)
+        # new_row[torch.bernoulli(self.obstacle_chance).byte()] = Tunnel.OBSTACLE_PIXEL
         self.dungeon = torch.cat((self.dungeon[:, 1:], new_row), 1)
-        self.dungeon[self.pos_agent, 0] = Evasion.AGENT_PIXEL
+        self.dungeon[self.pos_agent, 0] = Tunnel.AGENT_PIXEL
 
         return self.dungeon, reward, done, None
 
@@ -64,12 +68,14 @@ class Evasion(gym.Env):
 
 
 if __name__ == "__main__":
-    env = Evasion()
+    env = Tunnel()
     # env = gym.make('Evasion-v0')
-    done = False
-    while not done:
-        env.render()
-        observation, reward, done, _ = env.step(2)
+    for _ in range(5):
+        env.reset()
+        done = False
+        while not done:
+            env.render()
+            observation, reward, done, _ = env.step(2)
     # env.step(1)
     # observation, reward, done, _ = env.step(2)
     # print('Observation:', type(observation), 'size:', observation.shape)

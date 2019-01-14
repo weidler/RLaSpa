@@ -16,14 +16,26 @@ class Tunnel(gym.Env):
         self.action_space = gym.spaces.Discrete(3) # UP, DOWN, STRAIGHT
         self.observation_space = gym.spaces.Box(low=0, high=1, dtype=numpy.float16, shape=(self.width, self.height))
 
-        self.dungeon, self.pos_agent = self._init_dungeon()
         self.tunnel_center = torch.randint(low=1, high=self.height, size=(1,)).int()
+        self.dungeon, self.pos_agent = self._init_dungeon()
         self.max_steps = 500
         self.steps = 0
 
     def _init_dungeon(self):
         track = torch.zeros((self.height, self.width))
-        pos = self.height//2
+        pos = 0
+        self.tunnel_center = torch.Tensor([self.height // 2]).int()
+        for row in range(self.width):
+            new_row = torch.empty(self.height, 1).new_full((self.height, 1), Tunnel.OBSTACLE_PIXEL)
+            # create tunnel
+            new_row[max(0, self.tunnel_center - 3):min(self.tunnel_center + 3, self.height)] = 0
+            # move tunnel up or down
+            self.tunnel_center = min(max(torch.Tensor([1]).int(), self.tunnel_center + torch.randint(low=-1, high=2, size=(1,)).int()),
+                                     torch.Tensor([self.height - 1]).int())
+            # new_row[torch.bernoulli(self.obstacle_chance).byte()] = Tunnel.OBSTACLE_PIXEL
+            track = torch.cat((track[:, 1:], new_row), 1)
+            # remember leftmost rows center for agent start position
+            if row == 0: pos = self.tunnel_center.long()
         track[pos, 0] = Tunnel.AGENT_PIXEL
         return track, pos
 
@@ -52,7 +64,7 @@ class Tunnel(gym.Env):
         # create tunnel
         new_row[max(0, self.tunnel_center-3):min(self.tunnel_center+3, self.height)] = 0
         # move tunnel up or down
-        self.tunnel_center = min(max(1, self.tunnel_center + torch.randint(low=-1, high=2, size=(1,)).int()), self.height-1)
+        self.tunnel_center = min(max(torch.Tensor([1]).int(), self.tunnel_center + torch.randint(low=-1, high=2, size=(1,)).int()), torch.Tensor([self.height - 1]).int())
         # new_row[torch.bernoulli(self.obstacle_chance).byte()] = Tunnel.OBSTACLE_PIXEL
         self.dungeon = torch.cat((self.dungeon[:, 1:], new_row), 1)
         self.dungeon[self.pos_agent, 0] = Tunnel.AGENT_PIXEL

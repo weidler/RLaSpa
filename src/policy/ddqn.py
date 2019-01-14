@@ -146,7 +146,7 @@ class DoubleDeepQNetwork(_Policy):
         return self.current_model.act(state=state, epsilon=epsilon)
 
     def choose_action_policy(self, state) -> int:
-        return self.current_model.act(state=state, epsilon=0)
+        return self.current_model.act(state=state, epsilon=-1)
 
     def finish_training(self) -> None:
         self.total_steps_done = 0

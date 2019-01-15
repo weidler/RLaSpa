@@ -141,7 +141,7 @@ class _Agent(abc.ABC):
              self.policy.__class__.__name__])
 
     def save(self, episode: int, save_repr_learner: bool=True, save_policy_learner: bool=True) -> None:
-        ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
+        ckpt_dir = self.path_manager.get_ckpt_dir(self.get_config_name())
 
         if save_repr_learner:
             save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')

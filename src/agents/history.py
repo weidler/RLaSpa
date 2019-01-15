@@ -90,7 +90,7 @@ class HistoryAgent(_Agent):
         # check if it is a visual task that needs flattening
         is_visual = False
         flattener = Flatten()
-        if len(self.environments.observation_space.shape) == 2:
+        if len(self.environments[0].observation_space.shape) == 2:
             is_visual = True
 
         rewards = []
@@ -247,15 +247,13 @@ if __name__ == "__main__":
 
     size = 30
 
-    env = ObstaclePathing(30, 30,
-                          [[0, 18, 18, 21],
-                           [21, 24, 10, 30]],
-                          True
-                          )
+    env = [
+        gym.make("VisualObstaclePathing-v0")
+    ]
 
     repr_learner = JanusPixel(width=size,
                               height=size,
-                              n_actions=env.action_space.n,
+                              n_actions=env[0].action_space.n,
                               n_hidden=size)
     memory_delay = 5000
     init_eps = 1.0
@@ -264,10 +262,10 @@ if __name__ == "__main__":
     eps_decay = 10000
     linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
     exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
-    policy = PrioritizedDoubleDeepQNetwork(20, env.action_space.n, eps_calculator=linear,
+    policy = PrioritizedDoubleDeepQNetwork(30, env[0].action_space.n, eps_calculator=linear,
                                            memory_eps_calculator=exponential, memory_delay=memory_delay)
 
-    pretraining_policy = DeepQNetwork(900, 2, eps_calculator=linear, memory_eps_calculator=exponential,
+    pretraining_policy = DeepQNetwork(30, 2, eps_calculator=linear, memory_eps_calculator=exponential,
                                       memory_delay=memory_delay)
 
     agent = HistoryAgent(repr_learner, policy, env)
@@ -283,7 +281,6 @@ if __name__ == "__main__":
     # SAVE
     # agent.save(episode=0, save_policy_learner=False)
     # LOAD
-    # agent.load(ckpt_dir='../../ckpt/HistoryAgent_ObstaclePathing_JanusPixel_DoubleDeepQNetwork/2019-01-13_18-17-16',
     #            load_policy_learner=False)
 
     agent.train_agent(1000)

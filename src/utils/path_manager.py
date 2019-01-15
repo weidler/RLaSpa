@@ -11,7 +11,13 @@ class PathManager(object):
         return os.path.join(self.project_root, subdir)
 
     def get_ckpt_dir(self, subdir: str) -> str:
-        return os.path.join(self.project_root, 'ckpt', subdir, self.start_timestamp)
+        res = os.path.join(self.project_root, 'ckpt', subdir, self.start_timestamp)
+        if not os.path.exists(res):
+            os.makedirs(res)
+        return res
 
     def get_data_dir(self, subdir: str) -> str:
-        return os.path.join(self.project_root, 'data', subdir)
+        data_dir = os.path.join(self.project_root, 'data')
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        return os.path.join(data_dir, subdir)

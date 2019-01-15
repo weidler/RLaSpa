@@ -18,7 +18,7 @@ representation_module = CerberusPixel(width=env.observation_space.shape[0],
                                  height=env.observation_space.shape[1],
                                  n_actions=env.action_space.n,
                                  n_hidden=30)
-representation_module = Flatten()
+# representation_module = Flatten()
 
 memory_delay = 5000
 init_eps = 1.0
@@ -27,7 +27,7 @@ min_eps = 0.01
 eps_decay = 10000
 linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
 exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
-policy = PrioritizedDoubleDeepQNetwork(30, env.action_space.n, eps_calculator=linear,
+policy = PrioritizedDoubleDeepQNetwork(representation_module.n_hidden, env.action_space.n, eps_calculator=linear,
                                        memory_eps_calculator=exponential, memory_delay=memory_delay)
 
 agent = ParallelAgent(representation_module, policy, [env])

@@ -127,7 +127,7 @@ class SimplePathing(gym.Env):
         return pixels
 
     def render(self, mode='human', close=False):
-        img = self.get_pixelbased_representation()
+        img = self.get_pixelbased_representation().cpu()
         plt.clf()
         plt.imshow(img, cmap="binary", origin="upper")
         plt.gca().axes.get_xaxis().set_visible(False)

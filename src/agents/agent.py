@@ -99,7 +99,7 @@ class _Agent(abc.ABC):
 
         return next_state, step_reward, env_done
 
-    def test(self, env: Env, numb_runs: int = 1, render: bool = False) -> None:
+    def test(self, env: Env, numb_runs: int = 1, render: bool = False, visual=True) -> None:
         """
         Run a test in the environment using the current policy without exploration.
 
@@ -121,27 +121,27 @@ class _Agent(abc.ABC):
                     state, reward, done = self.act(state, env)
                     step += 1
                     total_reward += reward
-                    ims.append([plt.imshow(state.cpu(), cmap="binary", origin="upper", animated=True)])
+                    if visual: ims.append([plt.imshow(state.cpu(), cmap="binary", origin="upper", animated=True)])
                     if render:
                         env.render()
                 all_rewards.append(total_reward)
                 print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
-                if not render:
+                if not render and visual:
                     ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
                     ani.save(f'../../data/{env.__class__.__name__}_testrun_{i}.gif', writer='imagemagick', fps=15)
-            except Exception as e:
+            except ValueError as e:
                 print(f"Episode {i} went wrong: " + str(e))
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)}')
 
     def get_config_name(self):
         return "_".join(
             [self.__class__.__name__,
-             self.environments.__class__.__name__,
+             "_".join([env.spec.id for env in self.environments]),
              self.representation_learner.__class__.__name__,
              self.policy.__class__.__name__])
 
     def save(self, episode: int, save_repr_learner: bool=True, save_policy_learner: bool=True) -> None:
-        ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
+        ckpt_dir = self.path_manager.get_ckpt_dir(self.get_config_name())
 
         if save_repr_learner:
             save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')

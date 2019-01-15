@@ -27,5 +27,6 @@ agent = ParallelAgent(representation_module, policy, [env])
 policy.model.to(device)
 policy.target_model.to(device)
 
-agent.train_agent(10000, log=True)
+
+agent.train_agent(100000, log=True)
 agent.test(numb_runs=20, env=env)

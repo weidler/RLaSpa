@@ -10,5 +10,8 @@ class PathManager(object):
     def get_subdir_under_root(self, subdir: str) -> str:
         return os.path.join(self.project_root, subdir)
 
-    def get_ckpt_idr(self, subdir: str) -> str:
+    def get_ckpt_dir(self, subdir: str) -> str:
         return os.path.join(self.project_root, 'ckpt', subdir, self.start_timestamp)
+
+    def get_data_dir(self, subdir: str) -> str:
+        return os.path.join(self.project_root, 'data', subdir)

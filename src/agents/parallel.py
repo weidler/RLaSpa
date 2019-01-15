@@ -59,9 +59,9 @@ class ParallelAgent(_Agent):
         episodes_per_report = episodes // 100
         start_time = time.time()
         if not (ckpt_to_load is None):
-            self.start_episode = apply_checkpoint(ckpt_to_load, policy=self.policy, repr=self.representation_learner)
+            self.load(ckpt_dir=ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_dir(self.get_config_name())
         else:
             ckpt_dir = None
 
@@ -76,7 +76,6 @@ class ParallelAgent(_Agent):
         for episode in range(self.start_episode, episodes):
             # choose environment
             env = random.choice(self.environments)
-
             # initialize episode
             current_state = reset_env(env)
             latent_state = self.representation_learner.encode(current_state.reshape(-1))
@@ -137,21 +136,19 @@ class ParallelAgent(_Agent):
                 self.logger.scalar_summary_dict(info, episode)
 
             # progress report
-            if episode % episodes_per_report == 0:
-                last_episodes_rewards = rewards[-episodes_per_report:]
-                print(f"\t|-- {round(episode / episodes * 100):3d}%; "
-                      + f"r-avg: {(sum(last_episodes_rewards) / episodes_per_report):8.2f}; "
-                      + f"r-peak: {max(last_episodes_rewards):4f}; "
-                      + f"r-slack: {min(last_episodes_rewards):4f}; "
-                      + f"r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4f}; "
-                      + f"Avg. repr_loss: {sum(all_repr_loss[-episodes_per_report:]) / episodes_per_report :10.4f}; "
-                      + f"Avg. policy_loss: {sum(all_policy_loss[-episodes_per_report:]) / episodes_per_report :15.4f}; "
-                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; "
-                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
 
-            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
-                save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
-                save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+            if episode % (episodes_per_report) == 0:
+                last_episodes_rewards = rewards[-(episodes_per_report):]
+                print(f"\t|-- {round(episode / episodes * 100):3d}% ({episode}); " \
+                      + f"r-avg: {(sum(last_episodes_rewards) / (episodes_per_report)):8.2f}; r-peak: {max(last_episodes_rewards):4d};"
+                        f" r-slack: {min(last_episodes_rewards):4d}; r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4d}; " \
+                      + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes_per_report):]) / (episodes_per_report):10.4f}; " \
+                      + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes_per_report):]) / (episodes_per_report):15.4f}; " \
+                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; ")
+#                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
+
+            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0 and episode != 0:
+                self.save(episode=episode)
 
             # plotting the representation heads
             if not (plot_every is None) and episode % plot_every == 0:
@@ -202,7 +199,7 @@ if __name__ == "__main__":
     # TRAIN
     start_time = time.time()
 
-    agent.train_agent(episodes=100, batch_size=32, plot_every=10, log=False)
+    agent.train_agent(episodes=100, batch_size=32, plot_every=100, log=False)
     print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 
     # TEST

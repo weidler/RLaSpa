@@ -1,4 +1,5 @@
 import abc
+import statistics
 import time
 from typing import List
 from typing import Tuple
@@ -108,7 +109,7 @@ class _Agent(abc.ABC):
             f"r-avg: {(sum(last_rewards) / numb_reported_episodes):8.2f}; "
             f"r-peak: {int(max(last_rewards)):4d}; "
             f"r-slack: {int(min(last_rewards)):4d}; "
-            f"r-common: {int(max(set(last_rewards), key=last_rewards.count)):4d}; "
+            f"r-median: {int(statistics.median(last_rewards)):4d}; "
             f"Avg. repr_loss: {sum(last_repr_losses) / numb_reported_episodes:10.4f}; "
             f"Avg. policy_loss: {sum(last_policy_losses) / numb_reported_episodes:15.4f}; "
             f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; "

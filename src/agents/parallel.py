@@ -190,7 +190,7 @@ if __name__ == "__main__":
     # TRAIN
     start_time = time.time()
 
-    agent.train_agent(episodes=100, batch_size=32, plot_every=100, log=False, ckpt_to_load='../../ckpt/ParallelAgent_list_CerberusPixel_DoubleDeepQNetwork/2019-01-15_01-40-21')
+    agent.train_agent(episodes=100, batch_size=32, plot_every=100, log=False)
     print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 
     # TEST

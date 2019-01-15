@@ -124,7 +124,7 @@ class ConvolutionalNetwork(torch.nn.Module):
         latent = self.fc1(unflatten)
 
         flatten = self.activation(self.fc2(latent))
-        deconv1 = self.activation(self.deconv1(flatten))
+        deconv1 = self.activation(self.deconv1(flatten.view(-1, 128, 3, 3)))
         deconv2 = self.activation(self.deconv2(deconv1))
         out = self.activation(self.deconv3(deconv2))
 

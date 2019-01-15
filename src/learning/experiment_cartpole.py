@@ -22,11 +22,11 @@ exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps
 policy = PrioritizedDoubleDeepQNetwork(4, env[0].action_space.n, eps_calculator=linear,
                                        memory_eps_calculator=exponential, memory_delay=memory_delay)
 
-agent = ParallelAgent(representation_module, policy, env)
+agent = ParallelAgent(representation_module, policy, [env])
 
 # repr_learner.network.to(device)
 policy.model.to(device)
 policy.target_model.to(device)
 
-agent.train_agent(50000, log=True, episodes_per_saving=1000)
-agent.test(numb_runs=10, env=env)
+agent.train_agent(10000, log=True, episodes_per_saving=1000)
+agent.test(numb_runs=10, env=env, visual=False)

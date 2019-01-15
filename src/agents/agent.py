@@ -1,5 +1,6 @@
 import abc
-from typing import Tuple, List
+import time
+from typing import List
 from typing import Tuple
 
 import matplotlib.animation as animation
@@ -10,9 +11,10 @@ from torch import Tensor
 
 from src.policy.policy import _Policy
 from src.representation.representation import _RepresentationLearner
+from src.utils.logger import Logger
 from src.utils.model_handler import save_checkpoint, apply_checkpoint
 from src.utils.path_manager import PathManager
-from src.utils.logger import Logger
+
 
 def reset_env(env: Env) -> Tensor:
     """ Resets the environment and returns the starting state as a Tensor.
@@ -57,7 +59,8 @@ class _Agent(abc.ABC):
 
         # check if environments given as list
         if not isinstance(environments, list):
-            raise ValueError("Need to provide list of environment. For single environment training provide single-element list.")
+            raise ValueError(
+                "Need to provide list of environment. For single environment training provide single-element list.")
 
         # check if the environments are having same action space
         if not len(set([env.action_space.n for env in self.environments])) == 1:
@@ -66,7 +69,6 @@ class _Agent(abc.ABC):
         # check if the environments are having same state space
         if not len(set([env.observation_space.shape for env in self.environments])) == 1:
             raise ValueError("All environments need to have the same state dimensionality!")
-
 
     @abc.abstractmethod
     def train_agent(self, episodes: int, ckpt_to_load: str = None, episodes_per_saving: int = None,
@@ -99,6 +101,19 @@ class _Agent(abc.ABC):
 
         return next_state, step_reward, env_done
 
+    def report_progress(self, episode, total_episodes, start_time, last_rewards, last_repr_losses, last_policy_losses):
+        numb_reported_episodes = len(last_rewards)
+        print(
+            f"\t|-- {int(round(episode / total_episodes * 100)):3d}% ({episode}); "
+            f"r-avg: {(sum(last_rewards) / (numb_reported_episodes)):8.2f}; "
+            f"r-peak: {int(max(last_rewards)):4d}; "
+            f"r-slack: {int(min(last_rewards)):4d}; "
+            f"r-common: {int(max(set(last_rewards), key=last_rewards.count)):4d}; "
+            f"Avg. repr_loss: {sum(last_repr_losses) / (numb_reported_episodes):10.4f}; "
+            f"Avg. policy_loss: {sum(last_policy_losses) / (numb_reported_episodes):15.4f}; "
+            f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; "
+            f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
+
     def test(self, env: Env, numb_runs: int = 1, render: bool = False, visual=True) -> None:
         """
         Run a test in the environment using the current policy without exploration.
@@ -125,7 +140,7 @@ class _Agent(abc.ABC):
                     if render:
                         env.render()
                 all_rewards.append(total_reward)
-                print(f"Tested episode took {step} steps and gathered a reward of {total_reward}.")
+                print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
                 if not render and visual:
                     ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
                     ani.save(f'../../data/{env.__class__.__name__}_testrun_{i}.gif', writer='imagemagick', fps=15)
@@ -140,7 +155,7 @@ class _Agent(abc.ABC):
              self.representation_learner.__class__.__name__,
              self.policy.__class__.__name__])
 
-    def save(self, episode: int, save_repr_learner: bool=True, save_policy_learner: bool=True) -> None:
+    def save(self, episode: int, save_repr_learner: bool = True, save_policy_learner: bool = True) -> None:
         ckpt_dir = self.path_manager.get_ckpt_dir(self.get_config_name())
 
         if save_repr_learner:
@@ -149,7 +164,7 @@ class _Agent(abc.ABC):
         if save_policy_learner:
             save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
 
-    def load(self, ckpt_dir: str, load_repr_learner: bool=True, load_policy_learner: bool=True) -> None:
+    def load(self, ckpt_dir: str, load_repr_learner: bool = True, load_policy_learner: bool = True) -> None:
 
         if load_repr_learner and load_policy_learner:
             self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy, repr=self.representation_learner)

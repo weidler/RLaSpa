@@ -85,6 +85,7 @@ class ParallelAgent(_Agent):
             done = False
             while not done:
                 # choose action
+                latent_state = self.representation_learner.encode(current_state)
                 action = self.policy.choose_action(latent_state)
                 one_hot_action_vector = self.one_hot_actions[action]
 

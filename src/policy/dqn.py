@@ -1,5 +1,6 @@
 import torch
 from torch import optim
+from torch.nn import functional as F
 
 from src.policy.network.dqn_agent import DQN
 from src.policy.network.dueling_dqn_agent import DuelingDQN
@@ -98,6 +99,7 @@ class DeepQNetwork(_Policy):
 
         loss = (q_value - expected_q_value.detach()).pow(2)
 
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -123,6 +125,7 @@ class DeepQNetwork(_Policy):
         expected_q_value = reward + self.gamma * next_q_value * (1 - done)
 
         loss = (q_value - expected_q_value.detach()).pow(2).mean()
+        # loss = F.smooth_l1_loss(q_value, expected_q_value)
 
         self.optimizer.zero_grad()
         loss.backward()

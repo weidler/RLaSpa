@@ -61,11 +61,6 @@ class ParallelAgent(_Agent):
         if not (ckpt_to_load is None):
             self.load(ckpt_dir=ckpt_to_load)
 
-        if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = self.path_manager.get_ckpt_dir(self.get_config_name())
-        else:
-            ckpt_dir = None
-
         print("Starting parallel training process.")
         rewards = []
         all_repr_loss = []

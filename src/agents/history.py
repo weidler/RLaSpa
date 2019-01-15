@@ -179,10 +179,7 @@ class HistoryAgent(_Agent):
         """
         if not (ckpt_to_load is None):
             self.load(ckpt_dir=ckpt_to_load)
-        if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = self.path_manager.get_ckpt_dir(agent.get_config_name())
-        else:
-            ckpt_dir = None
+
         print("Training Agent.")
         if not self.is_pretrained:
             print("[WARNING]: You are using an untrained representation learner!")

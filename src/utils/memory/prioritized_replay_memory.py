@@ -137,7 +137,8 @@ class PrioritizedReplayMemory(Memory):
             rewards.append(reward)
             next_states.append(next_state)
             dones.append(done)
-        return torch.cat(states), torch.stack(actions), torch.stack(rewards), torch.cat(next_states), torch.stack(dones)
+        return torch.cat(states).detach(), torch.stack(actions), torch.stack(rewards), torch.cat(
+            next_states).detach(), torch.stack(dones)
 
     def __len__(self):
         return len(self._storage)

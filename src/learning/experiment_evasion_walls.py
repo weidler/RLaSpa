@@ -7,7 +7,7 @@ import gym
 from src.agents.parallel import ParallelAgent
 from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
-from src.representation.learners import Flatten, CerberusPixel
+from src.representation.learners import Flatten, CerberusPixel, ConvolutionalPixel
 
 if torch.cuda.is_available():
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -19,9 +19,10 @@ env = gym.make("EvasionWalls-v0")
 #                                  n_actions=env.action_space.n,
 #                                  n_hidden=30)
 
-representation_module = Flatten()
+# representation_module = Flatten()
+representation_module = ConvolutionalPixel(n_output=30)
 
-policy = DoubleDeepQNetwork(900, env.action_space.n, eps_decay=20000, memory_delay=100000)
+policy = DoubleDeepQNetwork(30, env.action_space.n, eps_decay=10000)
 
 agent = ParallelAgent(representation_module, policy, [env])
 
@@ -30,6 +31,6 @@ policy.current_model.to(device)
 policy.target_model.to(device)
 
 start_time = time.time()
-agent.train_agent(30000, log=False, episodes_per_saving=1000)
+agent.train_agent(10000, log=False, episodes_per_saving=1000)
 print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 agent.test(numb_runs=10, env=env)

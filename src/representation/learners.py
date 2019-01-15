@@ -9,7 +9,7 @@ from src.representation.network.janus import JanusAutoencoder
 from src.representation.network.variational_autoencoder import VariationalAutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder, \
-    CVAE
+    CVAE, ConvolutionalNetwork
 
 import matplotlib.pyplot as plt
 import gym
@@ -181,6 +181,32 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         self.optimizer.zero_grad()
         out, mu, logvar = self.network(state)
         loss = self.loss_function(out, state, mu, logvar)
+        loss.backward()
+
+        self.optimizer.step()
+        return loss.data.item()
+
+
+class ConvolutionalPixel(_RepresentationLearner):
+
+    def __init__(self, n_output: int, lr: float = 1e-3):
+
+        self.n_output = n_output
+        self.learning_rate = lr
+
+        self.network = ConvolutionalNetwork(self.n_output)
+        self.criterion = nn.MSELoss()
+        self.optimizer = optim.RMSprop(self.network.parameters(), self.learning_rate)
+
+    def encode(self, state: Tensor) -> Tensor:
+        return self.network.forward(state)
+
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
+        # convert to tensor if necessary
+
+        self.optimizer.zero_grad()
+        out = self.network(state)
+        loss = self.criterion(out, state)
         loss.backward()
 
         self.optimizer.step()

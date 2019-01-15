@@ -93,25 +93,63 @@ class VariationalPixelEncoder(torch.nn.Module):
         return deflattened_out, mu, logvar
 
 
+class ConvolutionalNetwork(torch.nn.Module):
+
+    def __init__(self, out_features: int = 512):
+        super(ConvolutionalNetwork, self).__init__()
+
+        # Encoder
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
+        self.fc1 = nn.Linear(128*3*3, out_features)
+
+        # Decoder
+        self.fc2 = nn.Linear(out_features, 128*3*3)
+        self.deconv1 = nn.ConvTranspose2d(128, 32, kernel_size=3, stride=1, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(32, 64, kernel_size=4, stride=2, padding=1)
+        self.deconv3 = nn.ConvTranspose2d(64, 32, kernel_size=8, stride=4, padding=1)
+
+        # Activation
+        self.activation = nn.ReLU()
+
+    def forward(self, input: Tensor):
+        # DECODER
+        input = input.view(-1, 1, 30, 30)
+        conv1 = self.activation(self.conv1(input))
+        conv2 = self.activation(self.conv2(conv1))
+        conv3 = self.activation(self.conv3(conv2))
+        unflatten = conv3.view(-1, 1, 128*3*3)
+
+        latent = self.fc1(unflatten)
+
+        flatten = self.activation(self.fc2(latent))
+        deconv1 = self.activation(self.deconv1(flatten))
+        deconv2 = self.activation(self.deconv2(deconv1))
+        out = self.activation(self.deconv3(deconv2))
+
+        return out
+
+
 class CVAE(torch.nn.Module):
 
     def __init__(self, width: int, height: int, n_middle: int, n_hidden: int=10):
         super(CVAE, self).__init__()
 
         # Encoder
-        self.conv1 = nn.Conv2d(1, n_middle, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(n_middle)
-        self.conv2 = nn.Conv2d(n_middle, 2*n_middle, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(2*n_middle)
-        self.conv3 = nn.Conv2d(2*n_middle, 2*n_middle, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(2*n_middle)
-        self.conv4 = nn.Conv2d(2*n_middle, n_middle, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn4 = nn.BatchNorm2d(n_middle)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
+        self.bn3 = nn.BatchNorm2d(64)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1, bias=False)
+        self.bn4 = nn.BatchNorm2d(32)
 
-        self.fc1 = nn.Linear(8 * 8 * 16, 512)
-        self.fc_bn1 = nn.BatchNorm1d(512)
+        self.fc1 = nn.Linear(128 * 99 * 99, 512)
+        # self.fc_bn1 = nn.BatchNorm1d(512)
         self.fc21 = nn.Linear(512, 512)
-        self.fc22 = nn.Linear(512, 512)
+        # self.fc22 = nn.Linear(512, 512)
 
         # Decoder
         self.fc3 = nn.Linear(512, 512)

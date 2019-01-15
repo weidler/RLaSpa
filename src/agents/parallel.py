@@ -76,7 +76,7 @@ class ParallelAgent(_Agent):
 
             # initialize episode
             current_state = reset_env(env)
-            latent_state = self.representation_learner.encode(current_state.reshape(-1))
+            latent_state = self.representation_learner.encode(current_state)
 
             # trackers
             episode_reward = 0

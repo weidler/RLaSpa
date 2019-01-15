@@ -99,7 +99,6 @@ class DeepQNetwork(_Policy):
 
         loss = (q_value - expected_q_value.detach()).pow(2)
 
-
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -143,10 +142,11 @@ class DeepQNetwork(_Policy):
             # when saved plays are greater than the batch size calculate losses
             if len(self.memory) > self.batch_size:
                 loss = self.compute_td_loss_memory()
-        else:
-            loss = self.compute_td_loss(state, action, reward, next_state, done)
+
             if self.total_steps_done == self.memory_delay:
                 print("\tPolicy-DQN begins memorizing now.")
+        else:
+            loss = self.compute_td_loss(state, action, reward, next_state, done)
 
         return 0 if loss is None else loss.item()
 

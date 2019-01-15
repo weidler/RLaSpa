@@ -136,7 +136,7 @@ class _Agent(abc.ABC):
     def get_config_name(self):
         return "_".join(
             [self.__class__.__name__,
-             self.environments.__class__.__name__,
+             "_".join([env.spec.id for env in self.environments]),
              self.representation_learner.__class__.__name__,
              self.policy.__class__.__name__])
 

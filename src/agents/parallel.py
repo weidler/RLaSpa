@@ -137,7 +137,7 @@ class ParallelAgent(_Agent):
             # progress report
             if episode % (episodes_per_report) == 0:
                 last_episodes_rewards = rewards[-(episodes_per_report):]
-                print(f"\t|-- {round(episode / episodes * 100):3d}%; " \
+                print(f"\t|-- {round(episode / episodes * 100):3d}% ({episode}); " \
                       + f"r-avg: {(sum(last_episodes_rewards) / (episodes_per_report)):8.2f}; r-peak: {max(last_episodes_rewards):4d};"
                         f" r-slack: {min(last_episodes_rewards):4d}; r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4d}; " \
                       + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes_per_report):]) / (episodes_per_report):10.4f}; " \

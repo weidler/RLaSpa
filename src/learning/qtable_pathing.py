@@ -7,13 +7,14 @@ from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.tablebased import QTableOffPolicy
 from src.representation.learners import Flatten, PassThrough
 
-if torch.cuda.is_available():
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# if torch.cuda.is_available():
+#     torch.set_default_tensor_type('torch.cuda.FloatTensor')
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 env = gym.make("SimplePathing-v1")
+
 representation_module = PassThrough()
-policy = QTableOffPolicy([10, 10], 4, temperature=3)
+policy = QTableOffPolicy([30, 30], 4, temperature=3)
 
 agent = ParallelAgent(representation_module, policy, [env])
 

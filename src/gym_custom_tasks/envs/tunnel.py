@@ -23,8 +23,7 @@ class Tunnel(gym.Env):
 
     def _init_dungeon(self):
         track = torch.zeros((self.height, self.width))
-        pos = 0
-        self.tunnel_center = torch.Tensor([self.height // 2]).int()
+        pos = self.tunnel_center
         for row in range(self.width):
             new_row = torch.empty(self.height, 1).new_full((self.height, 1), Tunnel.OBSTACLE_PIXEL)
             # create tunnel

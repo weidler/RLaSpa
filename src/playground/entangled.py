@@ -1,8 +1,9 @@
-from src.policy.ddqn import DoubleDeepQNetwork
+from src.task.pathing import VisualObstaclePathing
+
+from src.policy.dqn_prioritized import DoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
-from src.task.pathing import VisualObstaclePathing
 
 
 class EntangledAgent:

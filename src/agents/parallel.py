@@ -8,12 +8,12 @@ import torch
 from gym import Env
 
 from src.agents.agent import _Agent, reset_env, step_env
-from src.policy.ddqn import DoubleDeepQNetwork
+from src.policy.dqn_prioritized import PrioritizedDoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import CerberusPixel
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
-from src.utils.model_handler import save_checkpoint, apply_checkpoint
+from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 
 class ParallelAgent(_Agent):
@@ -37,7 +37,8 @@ class ParallelAgent(_Agent):
         self.one_hot_actions = torch.eye(self.environments[0].action_space.n)
         self.representation_memory = deque(maxlen=representation_memory_size)
 
-        print(f"Created Agent using {self.representation_learner.__class__.__name__} and {self.policy.__class__.__name__}.")
+        print(
+            f"Created Agent using {self.representation_learner.__class__.__name__} and {self.policy.__class__.__name__}.")
 
     # REINFORCEMENT LEARNING #
 
@@ -140,7 +141,8 @@ class ParallelAgent(_Agent):
                 last_episodes_rewards = rewards[-(episodes_per_report):]
                 last_policy_losses = all_policy_loss[-(episodes_per_report):]
                 last_repr_losses = all_repr_loss[-(episodes_per_report):]
-                self.report_progress(episode, episodes, start_time, last_episodes_rewards, last_repr_losses, last_policy_losses)
+                self.report_progress(episode, episodes, start_time, last_episodes_rewards, last_repr_losses,
+                                     last_policy_losses)
 
             if not (episodes_per_saving is None) and episode % episodes_per_saving == 0 and episode != 0:
                 self.save(episode=episode)
@@ -172,7 +174,15 @@ if __name__ == "__main__":
                                  n_hidden=20)
 
     # POLICY
-    policy = DoubleDeepQNetwork(20, environments[0].action_space.n, eps_decay=5000)
+    memory_delay = 5000
+    init_eps = 1.0
+    memory_eps = 0.8
+    min_eps = 0.01
+    eps_decay = 10000
+    linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
+    exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
+    policy = PrioritizedDoubleDeepQNetwork(20, environments[0].action_space.n, eps_calculator=linear,
+                                           memory_eps_calculator=exponential, memory_delay=memory_delay)
 
     # AGENT
     agent = ParallelAgent(repr_learner, policy, environments)
@@ -180,14 +190,14 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     repr_learner.network.to(device)  # if using passthrough or Flatten comment this
-    policy.current_model.to(device)
+    policy.model.to(device)
     policy.target_model.to(device)
 
     # TRAIN
     start_time = time.time()
 
     agent.train_agent(episodes=100, batch_size=32, plot_every=100, log=False)
-    print(f'Total training took {(time.time()-start_time)/60:.2f} min')
+    print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
 
     # TEST
     # Gifs will only be produced when render is off

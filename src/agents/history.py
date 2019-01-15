@@ -7,13 +7,14 @@ from gym import Env
 
 from src.agents.agent import _Agent, reset_env, step_env
 from src.gym_custom_tasks.envs import ObstaclePathing
-from src.policy.ddqn import DoubleDeepQNetwork
 from src.policy.dqn import DeepQNetwork
+from src.policy.dqn_prioritized import PrioritizedDoubleDeepQNetwork
 from src.policy.policy import _Policy
 from src.representation.learners import JanusPixel, Flatten
 from src.representation.representation import _RepresentationLearner
 from src.utils.container import SARSTuple
 from src.utils.model_handler import save_checkpoint, apply_checkpoint
+from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 
 class HistoryAgent(_Agent):
@@ -259,9 +260,18 @@ if __name__ == "__main__":
                               height=size,
                               n_actions=env.action_space.n,
                               n_hidden=size)
-    policy = DoubleDeepQNetwork(30, 2, eps_decay=2000)
+    memory_delay = 5000
+    init_eps = 1.0
+    memory_eps = 0.8
+    min_eps = 0.01
+    eps_decay = 10000
+    linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
+    exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
+    policy = PrioritizedDoubleDeepQNetwork(20, env.action_space.n, eps_calculator=linear,
+                                           memory_eps_calculator=exponential, memory_delay=memory_delay)
 
-    pretraining_policy = DeepQNetwork(900, 2)
+    pretraining_policy = DeepQNetwork(900, 2, eps_calculator=linear, memory_eps_calculator=exponential,
+                                      memory_delay=memory_delay)
 
     agent = HistoryAgent(repr_learner, policy, env)
 

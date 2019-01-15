@@ -55,7 +55,7 @@ class DuelingDQN(nn.Module):
         :return: the action that the agent will take
         """
         if random.random() > epsilon:
-            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+            state = state.unsqueeze(0)
             q_value = self.forward(state)
             action = torch.argmax(q_value).item()
         else:

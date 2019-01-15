@@ -2,72 +2,34 @@ import argparse
 
 import gym
 import torch
-from torch import optim
 
-from src.policy.network.dqn_agent import DQN
-from src.utils.memory.replay_memory import ReplayMemory
-from src.utils.schedules import ExponentialSchedule
+from src.policy.dqn_prioritized import PrioritizedDuelingDeepQNetwork
+from src.utils.schedules import ExponentialSchedule, LinearSchedule
 
 
-def compute_td_loss(batch_size: int):
-    """
-    Method that computes the loss of a batch. The batch is sample for memory to take in consideration
-    situations that happens before.
-
-    :param batch_size: number of plays that will be used
-    :return: loss for the whole batch
-    """
-    state, action, reward, next_state, done = memory.sample(batch_size)
-
-    state = torch.tensor(state, dtype=torch.float32)
-    next_state = torch.tensor(next_state, dtype=torch.float32)
-    action = torch.tensor(action, dtype=torch.long)
-    reward = torch.tensor(reward, dtype=torch.float32)
-    done = torch.tensor(done, dtype=torch.float32)
-
-    q_values = model(state)
-    next_q_values = model(next_state)
-
-    # calculate the q-values of state with the action taken
-    q_value = q_values.gather(1, action.unsqueeze(1)).squeeze(1)
-    # calculate the q-values of the next state
-    next_q_value = torch.max(next_q_values, 1)[0]
-    # 0 if next state was 0
-    expected_q_value = reward + args.gamma * next_q_value * (1 - done)
-
-    loss = (q_value - expected_q_value.detach()).pow(2).mean()
-
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    return loss
-
-
-def train(iterations: int, batch_size: int):
-    state = env.reset()
+def train(iterations: int):
+    state = torch.tensor(env.reset()).float()
     losses = []
     all_rewards = []
     episode_reward = 0
+    episode_loss = 0
     for iteration in range(1, iterations + 1):
-        epsilon = epsilon_calculator.value(time_step=iteration)
-        action = model.act(state=state, epsilon=epsilon)
+        action = model.choose_action(state=state)
 
         next_state, reward, done, _ = env.step(action)
-        memory.push(state, action, reward, next_state, done)
+        next_state = torch.tensor(next_state).float()
+
+        episode_loss += model.update(state, action, reward, next_state, done)
 
         state = next_state
         episode_reward += reward
 
         if done:
-            state = env.reset()
+            torch.tensor(env.reset()).float()
             all_rewards.append(episode_reward)
+            losses.append(episode_loss)
             episode_reward = 0
-
-        if len(memory) > batch_size:
-            # when saved plays are greater than the batch size calculate losses
-            loss = compute_td_loss(batch_size=batch_size)
-            losses.append(loss.item())
+            episode_loss = 0
 
         if iteration % 200 == 0:
             print('Iteration: {0}'.format(iteration))
@@ -75,18 +37,19 @@ def train(iterations: int, batch_size: int):
 
 
 def play(iterations: int, render=True):
-    state = env.reset()
+    state = torch.tensor(env.reset()).float()
     rewards = []
     episode_reward = 0
     for iteration in range(1, iterations + 1):
         if render:
             env.render()
-        action = model.act(state=state, epsilon=0)
+        action = model.choose_action_policy(state=state)
         next_state, reward, done, _ = env.step(action)
+        next_state = torch.tensor(next_state).float()
         episode_reward += reward
         state = next_state
         if done:
-            state = env.reset()
+            state = torch.tensor(env.reset()).float()
             rewards.append(episode_reward)
             episode_reward = 0
     if render:
@@ -103,16 +66,21 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=int, metavar='G', default=0.99, help='Gamma')
     parser.add_argument('--memory_size', type=int, metavar='S', default=10000, help='Memory size')
     parser.add_argument('--batch_size', type=int, metavar='B', default=32, help='Batch size')
-    parser.add_argument('--iterations', type=int, metavar='IT', default=10000, help='Training iterations')
+    parser.add_argument('--iterations', type=int, metavar='IT', default=30000, help='Training iterations')
     args = parser.parse_args()
 
     env = gym.make(args.env)
     number_of_observations = env.observation_space.shape[0]
     number_of_actions = env.action_space.n
-    model = DQN(num_features=number_of_observations, num_actions=number_of_actions)
-    optimizer = optim.Adam(model.parameters())
-    memory = ReplayMemory(capacity=args.memory_size)
-    epsilon_calculator = ExponentialSchedule(initial_p=args.init_eps, min_p=args.min_eps, decay=args.eps_decay)
-    train(iterations=args.iterations, batch_size=args.batch_size)
+    memory_delay = 0
+    init_eps = 1.0
+    memory_eps = 0.8
+    min_eps = 0.01
+    eps_decay = 10000
+    linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
+    exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
+    model = PrioritizedDuelingDeepQNetwork(num_features=number_of_observations, num_actions=number_of_actions,
+                                           eps_calculator=linear, memory_eps_calculator=exponential,
+                                           memory_delay=memory_delay)
+    train(iterations=args.iterations)
     play(iterations=10000, render=True)
-    torch.save(model.state_dict(), "../../models/dqn.model")

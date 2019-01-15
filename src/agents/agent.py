@@ -144,7 +144,8 @@ class _Agent(abc.ABC):
                 print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
                 if not render and visual:
                     ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
-                    ani.save(f'../../data/{env.__class__.__name__}_testrun_{i}.gif', writer='imagemagick', fps=15)
+                    ani.save(self.path_manager.get_data_dir(f'{env.__class__.__name__}_testrun_{i}.gif'),
+                             writer='imagemagick', fps=15)
             except ValueError as e:
                 print(f"Episode {i} went wrong: " + str(e))
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)}')

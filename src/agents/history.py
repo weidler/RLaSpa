@@ -50,7 +50,7 @@ class HistoryAgent(_Agent):
         :param file_name: name of the file where the history is saved.
         """
         print(f"Loading from {file_name}.")
-        with open(f"../../data/{file_name}", "r") as f:
+        with open(self.path_manager.get_data_dir(f"{file_name}"), "r") as f:
             lines = f.readlines()
         tuples = 0
         for line in lines:
@@ -68,9 +68,9 @@ class HistoryAgent(_Agent):
         :param file_name: name of the file where the history is saved.
         """
         print(f"Saving to {file_name}.")
-        with open(f"../../data/{file_name}", "w+") as f:
+        with open(self.path_manager.get_data_dir(f"{file_name}"), "w+") as f:
             pass  # clear file
-        with open(f"../../data/{file_name}", "a") as f:  # write
+        with open(self.path_manager.get_data_dir(f"{file_name}"), "a") as f:  # write
             for sars in self.history:
                 f.write(f"{sars.state.tolist()}\t{sars.action.tolist()}\t{sars.reward}\t{sars.next_state.tolist()}\n")
         print("Done.")

@@ -75,7 +75,6 @@ class ParallelAgent(_Agent):
         for episode in range(self.start_episode, episodes):
             # choose environment
             env = random.choice(self.environments)
-
             # initialize episode
             current_state = reset_env(env)
             latent_state = self.representation_learner.encode(current_state.reshape(-1))
@@ -143,8 +142,8 @@ class ParallelAgent(_Agent):
                         f" r-slack: {min(last_episodes_rewards):4d}; r-common: {max(set(last_episodes_rewards), key=last_episodes_rewards.count):4d}; " \
                       + f"Avg. repr_loss: {sum(all_repr_loss[-(episodes_per_report):]) / (episodes_per_report):10.4f}; " \
                       + f"Avg. policy_loss: {sum(all_policy_loss[-(episodes_per_report):]) / (episodes_per_report):15.4f}; " \
-                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; " \
-                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
+                      + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; ")
+#                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
 
             if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
                 save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')

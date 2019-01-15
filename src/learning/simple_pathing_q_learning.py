@@ -1,4 +1,4 @@
-from src.task.pathing import SimplePathing, ObstaclePathing
+from src.gym_custom_tasks.envs.simplePathing import SimplePathing
 from src.utils.exploration import boltzmann_explore
 
 # PARAMETERS
@@ -8,32 +8,24 @@ gamma = 0.999
 epochs = 10000
 
 # ENVIRONMENT
-if not OBSTACLES:
-    env = SimplePathing(100, 100)
-else:
-    env = ObstaclePathing(30, 30,
-                          [[0, 13, 18, 20],
-                           [16, 18, 11, 30],
-                           [0, 25, 6, 8]]
-                          )
+env = SimplePathing(100, 100, False)
 
-    env.visualize()
 
 # TRAINING
-q_table = [[[0 for _ in range(len(env.action_space))] for _ in range(env.width)] for _ in range(env.height)]
+q_table = [[[0 for _ in range(env.action_space.n)] for _ in range(env.width)] for _ in range(env.height)]
 for epoch in range(epochs):
     observation = env.reset()
 
     timesteps = 0
     done = False
     while not done and timesteps <= 10000:
-        state = observation.copy()
+        state = observation
 
         # choose action with exploration
         action = boltzmann_explore(q_table[state[1]][state[0]], T)
 
         # observe
-        observation, reward, done = env.step(action)  # observation is pos, velo
+        observation, reward, done, _ = env.step(action)  # observation is pos, velo
 
         # update
         state_value = max(q_table[observation[1]][observation[0]])
@@ -49,10 +41,10 @@ done = False
 timesteps = 0
 while not done:
     action = max(list(enumerate((q_table[observation[1]][observation[0]]))), key=lambda x: x[1])[0]
-    observation, reward, done = env.step(action)  # observation is pos, velo
+    observation, reward, done, _ = env.step(action)  # observation is pos, velo
     timesteps += 1
 
 env.show_breadcrumbs = True
-print(env)
+print(env.get_pixelbased_representation())
 
 print("Finished in {0} time steps using final policy.".format(timesteps))

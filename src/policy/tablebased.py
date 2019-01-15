@@ -19,7 +19,7 @@ def _change_entry_at(table, indices, new_value):
 
 class QTableOffPolicy(_Policy):
 
-    def __init__(self, features: list, n_actions: int, learning_rate=1, gamma=0.99, temperature=2.0):
+    def __init__(self, features: list, n_actions: int, learning_rate=1, gamma=0.99, temperature=3):
         """
         Q-Table approach learning off-policy. Default learning rate is 1 and therefore applies to
         deterministic environments.
@@ -37,17 +37,24 @@ class QTableOffPolicy(_Policy):
         self.temperature = temperature  # TODO: Maybe this should decrease over time using an Schedule?
 
     def update(self, state, action, reward, next_state, done):
+        state = state.cpu().int().tolist()
+        action = action
+        next_state = next_state.cpu().int().tolist()
         state_value = max(self._get_entry(next_state))
         old_q_value = self._get_entry(state)[action]
         new_q_value = old_q_value * (1 - self.learning_rate) + self.learning_rate * (reward + self.gamma * state_value)
         self.q_table = _change_entry_at(self.q_table, state + [action], new_q_value)
 
+        return 0
+
     def choose_action(self, state):
+        state = state.cpu().int().tolist()
         entry = self._get_entry(state)
         action = boltzmann_explore(entry, self.temperature)  # Here depending of the iteration calculate the temperature
         return action
 
     def choose_action_policy(self, state):
+        state = state.cpu().int().tolist()
         entry = self._get_entry(state)
         action = np.argmax(entry)
         return action

@@ -5,6 +5,13 @@ register(
     entry_point='src.gym_custom_tasks.envs:SimplePathing',
     kwargs={'width': 30, 'height': 30, 'visual': False},
 )
+
+register(
+    id='SimplePathing-v1',
+    entry_point='src.gym_custom_tasks.envs:SimplePathing',
+    kwargs={'width': 10, 'height': 10, 'visual': False},
+)
+
 register(
     id='VisualSimplePathing-v0',
     entry_point='src.gym_custom_tasks.envs:SimplePathing',

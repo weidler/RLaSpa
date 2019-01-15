@@ -22,16 +22,16 @@ env = gym.make("EvasionWalls-v0")
 # representation_module = Flatten()
 representation_module = ConvolutionalPixel(n_output=30)
 
-policy = DoubleDeepQNetwork(30, env.action_space.n, eps_decay=10000)
+policy = DeepQNetwork(30, env.action_space.n, eps_decay=10000)
 
 agent = ParallelAgent(representation_module, policy, [env])
 
 # representation_module.network.to(device)  # if using passthrough or Flatten comment this
-policy.current_model.to(device)
-policy.target_model.to(device)
+# policy.current_model.to(device)
+policy.model.to(device)
 
 # agent.load('test')
 # start_time = time.time()
-agent.train_agent(10000, log=False, episodes_per_saving=1000)
+agent.train_agent(10000, log=False, print_every=1000)
 print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 agent.test(numb_runs=10, env=env)

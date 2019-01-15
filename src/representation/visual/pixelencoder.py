@@ -100,35 +100,35 @@ class ConvolutionalNetwork(torch.nn.Module):
 
         # Encoder
         self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0)
         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
         self.fc1 = nn.Linear(128*3*3, out_features)
 
         # Decoder
         self.fc2 = nn.Linear(out_features, 128*3*3)
-        self.deconv1 = nn.ConvTranspose2d(128, 32, kernel_size=3, stride=1, padding=1)
-        self.deconv2 = nn.ConvTranspose2d(32, 64, kernel_size=4, stride=2, padding=1)
-        self.deconv3 = nn.ConvTranspose2d(64, 32, kernel_size=8, stride=4, padding=1)
+        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0)
+        self.deconv3 = nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1)
 
         # Activation
         self.activation = nn.ReLU()
 
     def forward(self, input: Tensor):
         # DECODER
-        input = input.view(-1, 1, 30, 30)
+        input = input.view(-1, 1, 30, 30)  # the 1 is the channel
         conv1 = self.activation(self.conv1(input))
         conv2 = self.activation(self.conv2(conv1))
         conv3 = self.activation(self.conv3(conv2))
-        unflatten = conv3.view(-1, 1, 128*3*3)
+        flatten = conv3.view(input.size(0), -1)
 
-        latent = self.fc1(unflatten)
+        latent = self.fc1(flatten)
 
-        flatten = self.activation(self.fc2(latent))
-        deconv1 = self.activation(self.deconv1(flatten.view(-1, 128, 3, 3)))
+        unflatten = self.activation(self.fc2(latent)).view(-1, 128, 3, 3)
+        deconv1 = self.activation(self.deconv1(unflatten))
         deconv2 = self.activation(self.deconv2(deconv1))
-        out = self.activation(self.deconv3(deconv2))
+        deconv3 = self.activation(self.deconv3(deconv2))
 
-        return out
+        return deconv3.view(-1, 30, 30)
 
 
 class CVAE(torch.nn.Module):

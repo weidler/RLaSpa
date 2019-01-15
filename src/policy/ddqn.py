@@ -75,8 +75,7 @@ class DoubleDeepQNetwork(_Policy):
         next_state_value = self.target_model(next_state)
 
         # calculate the q-values of state with the action taken
-        print("q", q_values, "a", action)
-        q_value = q_values[:, :, action]
+        q_value = q_values[action]
         # calculate the q-values of the next state
         next_q_value = next_state_value[:, :, torch.argmax(next_q_values)]
         # 0 if next state was 0

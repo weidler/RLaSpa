@@ -6,7 +6,7 @@ RL in its original form, however, is task-specific.
 This means that when the agent is facing a new environment, learning has to restart.
 This limitation calls for transfer learning, which aims at transferring learned skills across tasks.
 Besides reducing time-consuming re-learning on new tasks, transfer learning can potentially enable RL agents to operate in environments where learning is otherwise too challenging \citep{barreto2018transfer}.
-Deep learning methods aims at discovering good representations that are abstract and domain-invariant \citep{bengio2012deep,ganin2014unsupervised}.
+Deep learning methods aim at discovering good representations that are abstract and domain-invariant \citep{bengio2012deep,ganin2014unsupervised}.
 %Different domain in reinforcement learning naturally correspond to different tasks.
 This characteristic can be utilized in transfer learning in RL.
 
@@ -14,7 +14,7 @@ In this work, we explore the possibility of using the latent representation crea
 More specially, we seek to answer the following research questions:
 \begin{itemize}
 	\item How to create a latent space that captures commonalities of several similar yet different tasks, such that an RL agent can learn to perform all these tasks only based on the latent representation?
-	\item After learning a task based on the latent representation, can the agent learn to perform a previously unseen but similar task more easily (e.g. taking less time)? Or can the agent do so without learning?
+	\item After learning a task based on the latent representation, can the agent learn to perform a previously unseen but similar task more easily (e.g. taking less time to train)? Or can the agent do so without learning?
 \end{itemize}
 
 %%%% About DQN

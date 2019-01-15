@@ -177,9 +177,9 @@ class HistoryAgent(_Agent):
         :param log: logging flag.
         """
         if not (ckpt_to_load is None):
-            self.start_episode = apply_checkpoint(self.policy, self.representation_learner, ckpt_to_load)
+            self.load(ckpt_dir=ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = self.path_manager.get_ckpt_idr(agent.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_dir(agent.get_config_name())
         else:
             ckpt_dir = None
         print("Training Agent.")
@@ -216,8 +216,7 @@ class HistoryAgent(_Agent):
 
             if episodes_per_saving and episode % episodes_per_saving == 0 and episode != 0:
                 # save check point every n episodes
-                save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
-                save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+                self.save(episode=episode)
 
             if log:
                 info = {'policy_loss': policy_loss, 'reward': episode_reward}

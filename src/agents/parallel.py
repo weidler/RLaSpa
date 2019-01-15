@@ -58,9 +58,9 @@ class ParallelAgent(_Agent):
         episodes_per_report = episodes // 100
         start_time = time.time()
         if not (ckpt_to_load is None):
-            self.start_episode = apply_checkpoint(ckpt_to_load, policy=self.policy, repr=self.representation_learner)
+            self.load(ckpt_dir=ckpt_to_load)
         if not (episodes_per_saving is None):  # if asked to save checkpoints
-            ckpt_dir = self.path_manager.get_ckpt_idr(self.get_config_name())
+            ckpt_dir = self.path_manager.get_ckpt_dir(self.get_config_name())
         else:
             ckpt_dir = None
 
@@ -145,9 +145,8 @@ class ParallelAgent(_Agent):
                       + f"Time elapsed: {(time.time()-start_time)/60:6.2f} min; ")
 #                      + f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}")
 
-            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0:
-                save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
-                save_checkpoint(self.representation_learner.current_state(), episode, ckpt_dir, 'repr')
+            if not (episodes_per_saving is None) and episode % episodes_per_saving == 0 and episode != 0:
+                self.save(episode=episode)
 
             # plotting the representation heads
             if not (plot_every is None) and episode % plot_every == 0:
@@ -190,7 +189,7 @@ if __name__ == "__main__":
     # TRAIN
     start_time = time.time()
 
-    agent.train_agent(episodes=100, batch_size=32, plot_every=10, log=False)
+    agent.train_agent(episodes=100, batch_size=32, plot_every=100, log=False)
     print(f'Total training took {(time.time()-start_time)/60:.2f} min')
 
     # TEST

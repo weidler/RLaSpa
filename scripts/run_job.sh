@@ -1,30 +1,16 @@
 #!/usr/bin/env zsh
 
+if [[ $# -eq 0 ]] ; then
+    echo '>>>>>>>>>>>>>>>>>No task name is given!'
+    exit 0
+fi
+
 RIGHT_NOW=$(date +"%Y-%m-%d_%H-%M-%S")
+
+export TASK=${1}
+
 echo '>>>>>>>>>>>>>>>>>timestamp = \t' $RIGHT_NOW
-echo '>>>>>>>>>>>>>>>>>task = \t' $1
-
-### Job name
-#BSUB -J $1
- 
-### File / path where STDOUT & STDERR will be written
-###    %J is the job ID, %I is the array ID
-#BSUB -o job_output/$1/%J.%I.%RIGHT_NOW
- 
-### Request the time you need for execution in minutes
-### The format for the parameter is: [hour:]minute,
-### that means for 80 minutes you could also use this: 1:20
-#BSUB -W 00:03
- 
-### Request memory you need for your job in TOTAL in MB
-#BSUB -M 12288
-
-### Request a gpu machine
-#BSUB -gpu -
-###BSUB -a gpu Joel said this is deprecated
-#BSUB -P um_dke
-###BSUB -R kepler
-
+echo '>>>>>>>>>>>>>>>>>task = \t' $TASK
 
 module switch intel gcc
 module load python/3.6.0
@@ -39,14 +25,9 @@ cd /home/hn217262/RLaSpa
 #pip3 install --user gym
 ### <-- only needed at first time running 
 
-###PYTHONPATH=$PYTHONPATH:/home/hn217262/RLaSpa/src 
-
 export PYTHONPATH="${PYTHONPATH}:/home/hn217262/RLaSpa/src:/home/hn217262/RLaSpa"
-#echo $PYTHONPATH
 
-#python3 src/learning/experiment_tunnel.py
-
-SCRIPT_PATH="src/learning/experiment_$1.py"
+SCRIPT_PATH="src/learning/experiment_$TASK.py"
 echo '>>>>>>>>>>>>>>>>>trying to run \t' $SCRIPT_PATH
 
 python3 $SCRIPT_PATH

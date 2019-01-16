@@ -77,18 +77,19 @@ class ConvolutionalPixel(_RepresentationLearner):
 
         self.network = ConvolutionalNetwork(self.n_output)
         self.criterion = nn.MSELoss()
-        self.optimizer = optim.RMSprop(self.network.parameters(), self.learning_rate)
+        self.optimizer = optim.Adam(self.network.parameters(), self.learning_rate)
 
     def encode(self, state: Tensor) -> Tensor:
-        input = state.view(-1, 1, 30, 30)
-        conv1 = self.network.activation(self.network.conv1(input))
-        conv2 = self.network.activation(self.network.conv2(conv1))
-        conv3 = self.network.activation(self.network.conv3(conv2))
-        unflatten = conv3.view(-1)
-
-        latent = self.network.fc1(unflatten)
-
-        return latent
+        # input = state.view(-1, 1, 30, 30)
+        # conv1 = self.network.activation(self.network.conv1(input))
+        # conv2 = self.network.activation(self.network.conv2(conv1))
+        # conv3 = self.network.activation(self.network.conv3(conv2))
+        # unflatten = conv3.view(-1)
+        #
+        # latent = self.network.fc1(unflatten)
+        #
+        # return latent
+        return self.network.encoder(state)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         # convert to tensor if necessary

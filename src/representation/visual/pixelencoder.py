@@ -3,6 +3,55 @@ import torch.nn as nn
 from torch import Tensor
 from torch.autograd import Variable
 
+class FlattenerLayer(nn.Module):
+
+    def __init__(self):
+        super(FlattenerLayer, self).__init__()
+
+    def forward(self, input: Tensor):
+        return input.view(-1)
+
+
+class UnflattenerLayer(nn.Module):
+
+    def __init__(self):
+        super(UnflattenerLayer, self).__init__()
+
+    def forward(self, input):
+        return input.view(-1, 128, 3, 3)
+
+
+class Convolute(nn.Module):
+
+    def __init__(self, out_features: int = 128):
+        super(Convolute, self).__init__()
+
+        # Encoder
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            FlattenerLayer(),
+            nn.Linear(128 * 3 * 3, out_features),
+        )
+
+        # Decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(out_features, 128 * 3 * 3),
+            nn.ReLU(),
+            UnflattenerLayer(),
+            nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0),
+            nn.ReLU(),
+            nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1),
+        )
+
+    def forward(self, input: Tensor):
+        return self.decoder(self.encoder(input))
 
 class PixelEncoder(torch.nn.Module):
 
@@ -31,7 +80,6 @@ class PixelEncoder(torch.nn.Module):
 
         return unconved
 
-
 class SimplePixelEncoder(torch.nn.Module):
 
     def __init__(self, width: int, height: int, repr_size: int):
@@ -56,10 +104,9 @@ class SimplePixelEncoder(torch.nn.Module):
 
         return deflattened
 
-
 class VariationalPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int=10):
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int = 10):
         super(VariationalPixelEncoder, self).__init__()
 
         self.fullyConnected = nn.Linear(width * height, n_middle)
@@ -92,57 +139,61 @@ class VariationalPixelEncoder(torch.nn.Module):
 
         return deflattened_out, mu, logvar
 
-
-class ConvolutionalNetwork(torch.nn.Module):
+class ConvolutionalNetwork(nn.Module):
 
     def __init__(self, out_features: int = 512):
         super(ConvolutionalNetwork, self).__init__()
+        # super(Convolute, self).__init__()
 
         # Encoder
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
-        self.fc1 = nn.Linear(128*3*3, out_features)
-
-        # Decoder
-        self.fc2 = nn.Linear(out_features, 128*3*3)
-        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1)
-        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0)
-        self.deconv3 = nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1)
-
-        # Activation
-        self.activation = nn.ReLU()
+        # self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
+        # self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0)
+        # self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
+        # self.fc1 = nn.Linear(128 * 3 * 3, out_features)
+        #
+        # # Decoder
+        # self.fc2 = nn.Linear(out_features, 128 * 3 * 3)
+        # self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1)
+        # self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0)
+        # self.deconv3 = nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1)
+        #
+        # # Activation
+        # self.activation = nn.ReLU()
+        conv = Convolute(out_features=out_features)
+        self.encoder = conv.encoder
+        self.decoder = conv.decoder
 
     def forward(self, input: Tensor):
-        # DECODER
-        input = input.view(-1, 1, 30, 30)  # the 1 is the channel
-        conv1 = self.activation(self.conv1(input))
-        conv2 = self.activation(self.conv2(conv1))
-        conv3 = self.activation(self.conv3(conv2))
-        flatten = conv3.view(input.size(0), -1)
-
-        latent = self.fc1(flatten)
-
-        unflatten = self.activation(self.fc2(latent)).view(-1, 128, 3, 3)
-        deconv1 = self.activation(self.deconv1(unflatten))
-        deconv2 = self.activation(self.deconv2(deconv1))
-        deconv3 = self.activation(self.deconv3(deconv2))
-
-        return deconv3.view(-1, 30, 30)
+        # # DECODER
+        # input = input.view(-1, 1, 30, 30)  # the 1 is the channel
+        # conv1 = self.activation(self.conv1(input))
+        # conv2 = self.activation(self.conv2(conv1))
+        # conv3 = self.activation(self.conv3(conv2))
+        # flatten = conv3.view(input.size(0), -1)
+        #
+        # latent = self.fc1(flatten)
+        #
+        # unflatten = self.activation(self.fc2(latent)).view(-1, 128, 3, 3)
+        # deconv1 = self.activation(self.deconv1(unflatten))
+        # deconv2 = self.activation(self.deconv2(deconv1))
+        # deconv3 = self.activation(self.deconv3(deconv2))
+        #
+        # return deconv3.view(-1, 30, 30)
+        return self.decoder(self.encoder).view(-1, 30, 30)
 
 class CVAE(torch.nn.Module):
 
-    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int=10):
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int = 10):
         super(CVAE, self).__init__()
 
         # Encoder
         self.conv1 = nn.Conv2d(1, n_middle, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(n_middle)
-        self.conv2 = nn.Conv2d(n_middle, 2*n_middle, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(2*n_middle)
-        self.conv3 = nn.Conv2d(2*n_middle, 2*n_middle, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(2*n_middle)
-        self.conv4 = nn.Conv2d(2*n_middle, n_middle, kernel_size=3, stride=2, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(n_middle, 2 * n_middle, kernel_size=3, stride=2, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(2 * n_middle)
+        self.conv3 = nn.Conv2d(2 * n_middle, 2 * n_middle, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(2 * n_middle)
+        self.conv4 = nn.Conv2d(2 * n_middle, n_middle, kernel_size=3, stride=2, padding=1, bias=False)
         self.bn4 = nn.BatchNorm2d(n_middle)
 
         self.fc1 = nn.Linear(8 * 8 * 16, 512)
@@ -170,7 +221,7 @@ class CVAE(torch.nn.Module):
         conv1 = self.relu(self.bn1(self.conv1(x)))
         conv2 = self.relu(self.bn2(self.conv2(conv1)))
         conv3 = self.relu(self.bn3(self.conv3(conv2)))
-        conv4 = self.relu(self.bn4(self.conv4(conv3))).view(-1, 20*30)
+        conv4 = self.relu(self.bn4(self.conv4(conv3))).view(-1, 20 * 30)
 
         fc1 = self.relu(self.fc_bn1(self.fc1(conv4)))
         return self.fc21(fc1), self.fc22(fc1)
@@ -197,10 +248,9 @@ class CVAE(torch.nn.Module):
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
 
-
 class JanusPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int=10):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int = 10):
         super(JanusPixelEncoder, self).__init__()
 
         self.encoder = torch.nn.Linear(width * height, n_hidden)
@@ -234,10 +284,9 @@ class JanusPixelEncoder(torch.nn.Module):
 
         return deflattened_reconstruction, deflattened_next_state
 
-
 class CerberusPixelEncoder(torch.nn.Module):
 
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int=10):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int = 10):
         super(CerberusPixelEncoder, self).__init__()
 
         self.encoder = torch.nn.Linear(width * height, n_hidden)

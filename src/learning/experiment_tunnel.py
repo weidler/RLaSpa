@@ -17,8 +17,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # MODULES
 env = gym.make("Tunnel-v0")
+env2 = gym.make("EvasionWalls-v0")
 
-representation_module = ConvolutionalPixel(128)
+representation_module = ConvolutionalPixel(32)
 
 memory_delay = 20000
 init_eps = 1.0
@@ -27,7 +28,7 @@ min_eps = 0.01
 eps_decay = 20000
 linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
 exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
-policy = DoubleDeepQNetwork(128, env.action_space.n, eps_calculator=linear,
+policy = DoubleDeepQNetwork(32, env.action_space.n, eps_calculator=linear,
                       memory_eps_calculator=exponential, memory_delay=memory_delay,
                       representation_network=representation_module.network)
 
@@ -41,6 +42,7 @@ policy.target_model.to(device)
 
 # TRAIN/TEST
 start_time = time.time()
-agent.train_agent(100000, plot_every=10000, log=True, episodes_per_saving=10000)
+# agent.load('../../ckpt/ParallelAgent_Tunnel-v0_ConvolutionalPixel_DoubleDeepQNetwork/2019-01-16_01-18-19')
+agent.train_agent(20000, plot_every=500, log=True, episodes_per_saving=1000)
 print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
 agent.test(numb_runs=100, env=env)

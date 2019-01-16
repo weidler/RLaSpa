@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.autograd import Variable
 from torch.nn import functional as F
+
 
 class Convolute(nn.Module):
 
@@ -56,7 +56,6 @@ class DeConvolute(nn.Module):
         return self.sig(unchanneled)
 
 
-
 class PixelEncoder(torch.nn.Module):
 
     def __init__(self):
@@ -84,6 +83,7 @@ class PixelEncoder(torch.nn.Module):
 
         return unconved
 
+
 class SimplePixelEncoder(torch.nn.Module):
 
     def __init__(self, width: int, height: int, repr_size: int):
@@ -107,6 +107,7 @@ class SimplePixelEncoder(torch.nn.Module):
         deflattened = decoded.reshape(original_shape)
 
         return deflattened
+
 
 class VariationalPixelEncoder(torch.nn.Module):
 
@@ -151,7 +152,6 @@ class ConvolutionalNetwork(nn.Module):
 
         self.convolutionizer = Convolute(out_features=out_features)
         self.deconvolutionizer = DeConvolute(in_features=out_features)
-
 
     def forward(self, input: Tensor):
         convolved = self.convolutionizer(input)
@@ -311,7 +311,6 @@ class CerberusPixelEncoder(torch.nn.Module):
         self.decoder_diff = DeConvolute(in_features=n_hidden + n_actions)
 
         self.activation = torch.sigmoid
-
 
     def forward(self, state: Tensor, action: Tensor) -> (Tensor, Tensor, Tensor):
         latent_space = self.encoder(state)

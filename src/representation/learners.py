@@ -45,7 +45,7 @@ class Flatten(_RepresentationLearner):
 
 class SimpleAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1, step_size: int = 500,
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 1e-3, step_size: int = 500,
                  maintained_lr: int = 0.9):
         """
 
@@ -99,15 +99,6 @@ class ConvolutionalPixel(_RepresentationLearner):
         self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
-        # input = state.view(-1, 1, 30, 30)
-        # conv1 = self.network.activation(self.network.conv1(input))
-        # conv2 = self.network.activation(self.network.conv2(conv1))
-        # conv3 = self.network.activation(self.network.conv3(conv2))
-        # unflatten = conv3.view(-1)
-        #
-        # latent = self.network.fc1(unflatten)
-        #
-        # return latent
         return self.network.convolutionizer(state).view(-1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
@@ -122,17 +113,12 @@ class ConvolutionalPixel(_RepresentationLearner):
         return loss.data.item()
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
-        difference_tensor = (state != next_state)
         reconstruction = self.network(torch.unsqueeze(state, 0))
         plt.clf()
 
         vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
         reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(
             reconstruction).tolist()
-        # next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
-        # difference_image = torch.squeeze(difference_tensor).tolist() + vertical_seperator + torch.squeeze(difference).tolist()
-        # horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
-        # full_image = [l[0] + l[1] + l[2] + l[3] + l[4] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image, horizontal_seperator, difference_image))]
 
         plt.imshow(reconstruction_image, cmap="binary", origin="upper")
 
@@ -199,7 +185,7 @@ class VariationalAutoencoder(_RepresentationLearner):
 class VariationalAutoencoderPixel(_RepresentationLearner):
 
     def __init__(self, width: int, height: int, n_middle: int, n_hidden: int,
-                 lr: float = 1e-3, step_size: int = 500, maintained_lr: int = 0.9):  # 1e-3 is the one originally used
+                 lr: float = 1e-3, step_size: int = 500, maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width
         self.height = height
@@ -345,7 +331,7 @@ class CVAEPixel(_RepresentationLearner):
 
 class Janus(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1, step_size: int = 500,
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 1e-3, step_size: int = 500,
                  maintained_lr: int = 0.9):
         # PARAMETERS
         self.d_states = d_states
@@ -385,7 +371,7 @@ class Janus(_RepresentationLearner):
 
 
 class JanusPixel(_RepresentationLearner):
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1, step_size: int = 500,
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 1e-3, step_size: int = 500,
                  maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width
@@ -449,7 +435,7 @@ class JanusPixel(_RepresentationLearner):
 
 class Cerberus(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1, step_size: int = 500,
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 1e-3, step_size: int = 500,
                  maintained_lr: int = 0.9):
         # PARAMETERS
         self.d_states = d_states
@@ -493,7 +479,7 @@ class Cerberus(_RepresentationLearner):
 
 
 class CerberusPixel(_RepresentationLearner):
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1, step_size: int = 500,
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 1e-3, step_size: int = 500,
                  maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width
@@ -563,39 +549,4 @@ class CerberusPixel(_RepresentationLearner):
 
 
 if __name__ == "__main__":
-    # ae = Cerberus(d_states=5, d_actions=2, d_latent=5)
-    ae = VariationalAutoencoder(d_states=900, d_actions=2, d_middle=400, d_latent=20)
-    # ae = VariationalAutoencoder(d_states=8, d_actions=2, d_middle=4, d_latent=2)
-
-    # for i in range(2500):
-    #     # sample = [1, 2, 3, 4, 5]
-    #
-    #     # '''One hot encoded vector reconstruction test'''
-    #     # samples = numpy.eye(8, dtype=int)
-    #     # random.shuffle(samples)
-    #     # sample = samples[random.randint(0, 7)]
-    #
-    #     '''Obstacle pathing test'''
-    #
-    #     env = ObstaclePathing(30, 30,
-    #                           [[0, 18, 18, 21],
-    #                            [21, 24, 10, 30]],
-    #                           True
-    #                           )
-    #     sample = env.static_pixels
-    #     loss = ae.learn(torch.Tensor(sample), None, None, None)
-    #     if i % 100 == 0:
-    #         print("Epoch ", i, " loss: ", loss)
-    # #
-    # for i in range(1):
-    #     # sample = [1, 2, 3, 4, 5]
-    #
-    #     # '''One hot encoded vector reconstruction test'''
-    #     # random.shuffle(sample)
-    #     # samples = numpy.eye(8, dtype=int)
-    #     # random.shuffle(samples)
-    #     # sample = samples[random.randint(0, 7)]
-    #     # # print(f"{sample} --> {[round(e) for e in ae.network(torch.Tensor(sample).float(), torch.Tensor([1,2]).float())[0].tolist()]}")
-    #     # print(f"{sample} --> {[e for e in ae.network(torch.Tensor(sample))]}")
-    #
-    # print()
+   pass

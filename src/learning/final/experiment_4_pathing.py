@@ -39,12 +39,12 @@ if __name__ == '__main__':
     else:
         raise ValueError('No such repr learner {}'.format(repr_learner_name))
 
-    memory_delay = 0
+    episode = 1000000
+    memory_delay = 100000
     init_eps = 1.0
     memory_eps = 0.8
-    min_eps = 0.0
-    eps_decay = 20000
-    episode = 1000000
+    min_eps = 0.01
+    eps_decay = 40000000
 
     linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
     exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
@@ -57,8 +57,9 @@ if __name__ == '__main__':
     policy.model.to(device)
     policy.target_model.to(device)
 
-    agent.train_agent(episodes=episode, log=True)
+    agent.train_agent(episodes=episode, log=True, episodes_per_saving=10000)
     agent.save(episode=episode)  # save last
 
+    # print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
     for env in environments:
-        agent.test(env, numb_runs=5, render=True)
+        agent.test(numb_runs=100, env=env)

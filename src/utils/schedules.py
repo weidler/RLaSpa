@@ -84,8 +84,8 @@ class LinearSchedule(Schedule):
         returned.
 
         :param schedule_timesteps: Number of timesteps for which to linearly anneal initial_p to final_p
-        :param final_p: initial output value
-        :param initial_p: final output value
+        :param initial_p: initial output value
+        :param final_p: final output value
         """
         self.schedule_timesteps = schedule_timesteps
         self.final_p = final_p

@@ -9,7 +9,7 @@ from src.representation.network.janus import JanusAutoencoder
 from src.representation.network.variational_autoencoder import VariationalAutoencoderNetwork
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder, \
-    CVAE
+    CVAE, ConvolutionalNetwork
 
 import matplotlib.pyplot as plt
 import gym
@@ -67,6 +67,58 @@ class SimpleAutoencoder(_RepresentationLearner):
 
         self.optimizer.step()
         return loss.data.item()
+
+class ConvolutionalPixel(_RepresentationLearner):
+
+    def __init__(self, n_output: int, lr: float = 1e-3):
+
+        self.n_output = n_output
+        self.learning_rate = lr
+
+        self.network = ConvolutionalNetwork(self.n_output)
+        self.criterion = nn.MSELoss()
+        self.optimizer = optim.RMSprop(self.network.parameters(), self.learning_rate)
+
+    def encode(self, state: Tensor) -> Tensor:
+        input = state.view(-1, 1, 30, 30)
+        conv1 = self.network.activation(self.network.conv1(input))
+        conv2 = self.network.activation(self.network.conv2(conv1))
+        conv3 = self.network.activation(self.network.conv3(conv2))
+        unflatten = conv3.view(-1)
+
+        latent = self.network.fc1(unflatten)
+
+        return latent
+
+    def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
+        # convert to tensor if necessary
+
+        self.optimizer.zero_grad()
+        out = self.network(state)
+        loss = self.criterion(out, state)
+        loss.backward()
+
+        self.optimizer.step()
+        return loss.data.item()
+
+    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+        difference_tensor = (state != next_state)
+        reconstruction = self.network(torch.unsqueeze(state, 0))
+        plt.clf()
+
+        vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
+        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(reconstruction).tolist()
+        # next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
+        # difference_image = torch.squeeze(difference_tensor).tolist() + vertical_seperator + torch.squeeze(difference).tolist()
+        # horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
+        # full_image = [l[0] + l[1] + l[2] + l[3] + l[4] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image, horizontal_seperator, difference_image))]
+
+        plt.imshow(reconstruction_image, cmap="binary", origin="upper")
+
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.draw()
+        plt.pause(0.001)
 
 
 class VariationalAutoencoder(_RepresentationLearner):
@@ -315,14 +367,15 @@ class JanusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
-    # def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
-    #     reconstruction, next_state_construction = self.network(torch.unsqueeze(state, 0),
-    #                                                            torch.unsqueeze(action, 0))
-    #     plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
-    #                origin="upper")
-    #     plt.gca().axes.get_xaxis().set_visible(False)
-    #     plt.gca().axes.get_yaxis().set_visible(False)
-    #     plt.show()
+    def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
+        reconstruction, next_state_construction = self.network(torch.unsqueeze(state, 0),
+                                                               torch.unsqueeze(action, 0))
+        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
+                   origin="upper")
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.gca().axes.get_yaxis().set_visible(False)
+        plt.draw()
+        plt.pause(0.001)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state.view(-1)))

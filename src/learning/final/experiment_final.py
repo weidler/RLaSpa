@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     # MODULES
     # ENV
-    envs_name = sys.argv[0].lower()
+    envs_name = sys.argv[1].lower()
     if envs_name == 'tunnel':
         envs = [gym.make("Tunnel-v0")]
     elif envs_name == 'scrollers':
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         raise ValueError('No such env {}'.format(envs_name))
 
     # REPRESENTATION
-    repr_learner_name = sys.argv[1].lower()
+    repr_learner_name = sys.argv[2].lower()
     if repr_learner_name == 'janus':
         representation_module = JanusPixel(width=envs[0].observation_space.shape[0],
                                            height=envs[0].observation_space.shape[1],

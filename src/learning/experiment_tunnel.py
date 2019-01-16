@@ -6,7 +6,7 @@ import torch
 from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DeepQNetwork, DoubleDeepQNetwork
 from src.policy.dqn_prioritized import PrioritizedDoubleDeepQNetwork
-from src.representation.learners import CerberusPixel, Flatten, ConvolutionalPixel
+from src.representation.learners import CerberusPixel, Flatten, ConvolutionalPixel, JanusPixel
 from src.representation.visual.pixelencoder import ConvolutionalNetwork
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
@@ -19,7 +19,16 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 env = gym.make("Tunnel-v0")
 env2 = gym.make("EvasionWalls-v0")
 
-representation_module = ConvolutionalPixel(32)
+representation_module = CerberusPixel(
+    height=30,
+    width=30,
+    n_actions=3,
+    n_hidden=32
+)
+
+# representation_module = ConvolutionalPixel(
+#     n_output=32
+# )
 
 memory_delay = 20000
 init_eps = 1.0

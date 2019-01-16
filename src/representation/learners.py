@@ -10,7 +10,10 @@ from src.representation.network.variational_autoencoder import VariationalAutoen
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder, \
     CVAE, ConvolutionalNetwork
-
+import platform
+if 'rwth' in platform.uname().node.lower():
+    import matplotlib
+    matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 import gym
 

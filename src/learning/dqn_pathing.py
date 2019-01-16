@@ -1,5 +1,8 @@
 import argparse
-
+import platform
+if 'rwth' in platform.uname().node.lower():
+    import matplotlib
+    matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import torch

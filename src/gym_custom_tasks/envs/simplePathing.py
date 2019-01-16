@@ -6,7 +6,10 @@ import gym
 import torch
 from gym import error, spaces, utils
 from gym.utils import seeding
-
+import platform
+if 'rwth' in platform.uname().node.lower():
+    import matplotlib
+    matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 
 

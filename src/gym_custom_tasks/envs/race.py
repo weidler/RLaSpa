@@ -1,6 +1,10 @@
 import gym
 import torch
 import numpy
+import platform
+if 'rwth' in platform.uname().node.lower():
+    import matplotlib
+    matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 import src.gym_custom_tasks
 # from gym import spaces

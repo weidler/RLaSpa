@@ -268,11 +268,11 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
 
 class CVAEPixel(_RepresentationLearner):
 
-    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int,
+    def __init__(self, n_middle: int, n_hidden: int,
                  lr: float = 1e-3, step_size: int = 500, maintained_lr: int = 0.9):  # 1e-3 is the one originally used
         # PARAMETERS
-        self.width = width
-        self.height = height
+        # self.width = width
+        # self.height = height
         self.n_middle = n_middle
         self.n_hidden = n_hidden
 
@@ -280,8 +280,6 @@ class CVAEPixel(_RepresentationLearner):
 
         # NETWORK
         self.network = CVAE(
-            width=self.width,
-            height=self.height,
             n_middle=self.n_middle,
             n_hidden=self.n_hidden
         )
@@ -295,7 +293,7 @@ class CVAEPixel(_RepresentationLearner):
         self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
-        BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
+        BCE = nn.functional.binary_cross_entropy(recon_x, x_tens, reduction='sum')
         # BCE = self.criterion(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
         # MSE = self.criterion(recon_x, x_tens)
 
@@ -308,7 +306,7 @@ class CVAEPixel(_RepresentationLearner):
         return BCE + KLD
         # return MSE + KLD
 
-    def visualize_output(self, state: Tensor):
+    def visualize_output(self, state: Tensor, action=None, current_state=None):
         reconstruction, mu, logvar = self.network(torch.unsqueeze(state, 0))
         plt.clf()
         plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
@@ -319,13 +317,21 @@ class CVAEPixel(_RepresentationLearner):
         plt.pause(0.001)
 
     def encode(self, x: Tensor):
-        conv1 = self.network.relu(self.network.bn1(self.network.conv1(x.reshape(16, 1, 3, 3))))
-        conv2 = self.network.relu(self.network.bn2(self.network.conv2(conv1)))
-        conv3 = self.network.relu(self.network.bn3(self.network.conv3(conv2)))
-        conv4 = self.network.relu(self.network.bn4(self.network.conv4(conv3))).view(-1, )
+        # conv1 = self.network.relu(self.network.bn1(self.network.conv1(x.reshape(16, 1, 3, 3))))
+        # conv2 = self.network.relu(self.network.bn2(self.network.conv2(conv1)))
+        # conv3 = self.network.relu(self.network.bn3(self.network.conv3(conv2)))
+        # conv4 = self.network.relu(self.network.bn4(self.network.conv4(conv3))).view(-1, )
+        #
+        # fc1 = self.network.relu(self.network.fc_bn1(self.network.fc1(conv4)))
+        # return self.network.fc21(fc1), self.network.fc22(fc1)
+        convolved = self.network.encoder(x).view(-1)
 
-        fc1 = self.network.relu(self.network.fc_bn1(self.network.fc1(conv4)))
-        return self.network.fc21(fc1), self.network.fc22(fc1)
+        mean = self.network.encoderMean(convolved)
+        logvar = self.network.encoderStDev(convolved)
+
+        latent_space = self.network.reparameterize(mean, logvar)
+
+        return latent_space
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         self.optimizer.zero_grad()

@@ -2,10 +2,11 @@ import time
 
 import gym
 import torch
-
+import src.gym_custom_tasks
 from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DoubleDeepQNetwork
-from src.representation.learners import JanusPixel, CerberusPixel
+from src.representation.learners import JanusPixel, CerberusPixel, CVAEPixel
+from src.representation.visual.pixelencoder import CVAE
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 if torch.cuda.is_available():
@@ -16,10 +17,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # MODULES
 env = gym.make("Tunnel-v0")
 
-representation_module = CerberusPixel(width=env.observation_space.shape[0],
-                                   height=env.observation_space.shape[1],
-                                   n_actions=env.action_space.n,
-                                   n_hidden=32)
+representation_module = CVAEPixel(n_middle=32, n_hidden=16)
 
 memory_delay = 20000
 init_eps = 1.0

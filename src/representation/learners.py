@@ -15,7 +15,8 @@ from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPi
 
 if 'rwth' in platform.uname().node.lower():
     import matplotlib
-    matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
+
+    matplotlib.use('Agg')  # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
 
 
@@ -44,7 +45,17 @@ class Flatten(_RepresentationLearner):
 
 class SimpleAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1):
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1, step_size: int = 500,
+                 maintained_lr: int = 0.9):
+        """
+
+        :param d_states:
+        :param d_actions:
+        :param d_latent:
+        :param lr:
+        :param step_size: Number of episodes between learning revisions
+        :param maintained_lr: Percentage of the learning rate that will be maintained
+        """
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -58,7 +69,7 @@ class SimpleAutoencoder(_RepresentationLearner):
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
@@ -74,10 +85,10 @@ class SimpleAutoencoder(_RepresentationLearner):
         self.optimizer.step()
         return loss.data.item()
 
+
 class ConvolutionalPixel(_RepresentationLearner):
 
-    def __init__(self, n_output: int, lr: float = 1e-3):
-
+    def __init__(self, n_output: int, lr: float = 1e-3, step_size: int = 500, maintained_lr: int = 0.9):
         self.n_output = n_output
         self.learning_rate = lr
 
@@ -85,7 +96,7 @@ class ConvolutionalPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self.network.parameters(), self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
         # input = state.view(-1, 1, 30, 30)
@@ -116,7 +127,8 @@ class ConvolutionalPixel(_RepresentationLearner):
         plt.clf()
 
         vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
-        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(reconstruction).tolist()
+        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(
+            reconstruction).tolist()
         # next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
         # difference_image = torch.squeeze(difference_tensor).tolist() + vertical_seperator + torch.squeeze(difference).tolist()
         # horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
@@ -132,7 +144,8 @@ class ConvolutionalPixel(_RepresentationLearner):
 
 class VariationalAutoencoder(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_middle: int, d_latent: int, lr: float = 0.005): # 1e-3 is the one originally used
+    def __init__(self, d_states: int, d_actions: int, d_middle: int, d_latent: int,
+                 lr: float = 0.005, step_size: int = 500, maintained_lr: int = 0.9):  # 1e-3 is the one originally used
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -149,7 +162,7 @@ class VariationalAutoencoder(_RepresentationLearner):
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
@@ -185,7 +198,8 @@ class VariationalAutoencoder(_RepresentationLearner):
 
 class VariationalAutoencoderPixel(_RepresentationLearner):
 
-    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int, lr: float = 1e-3): # 1e-3 is the one originally used
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int,
+                 lr: float = 1e-3, step_size: int = 500, maintained_lr: int = 0.9):  # 1e-3 is the one originally used
         # PARAMETERS
         self.width = width
         self.height = height
@@ -208,7 +222,7 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
@@ -254,7 +268,8 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
 
 class CVAEPixel(_RepresentationLearner):
 
-    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int, lr: float = 1e-3): # 1e-3 is the one originally used
+    def __init__(self, width: int, height: int, n_middle: int, n_hidden: int,
+                 lr: float = 1e-3, step_size: int = 500, maintained_lr: int = 0.9):  # 1e-3 is the one originally used
         # PARAMETERS
         self.width = width
         self.height = height
@@ -277,7 +292,7 @@ class CVAEPixel(_RepresentationLearner):
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
@@ -324,7 +339,8 @@ class CVAEPixel(_RepresentationLearner):
 
 class Janus(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1):
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1, step_size: int = 500,
+                 maintained_lr: int = 0.9):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -344,7 +360,7 @@ class Janus(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
@@ -363,7 +379,8 @@ class Janus(_RepresentationLearner):
 
 
 class JanusPixel(_RepresentationLearner):
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1, step_size: int = 500,
+                 maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width
         self.height = height
@@ -384,7 +401,7 @@ class JanusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
         reconstruction, next_state_reconstruction = self.network(torch.unsqueeze(state, 0),
@@ -392,10 +409,13 @@ class JanusPixel(_RepresentationLearner):
         plt.clf()
 
         vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
-        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(reconstruction).tolist()
-        next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
+        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(
+            reconstruction).tolist()
+        next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(
+            next_state_reconstruction).tolist()
         horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
-        full_image = [l[0] + l[1] + l[2] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image))]
+        full_image = [l[0] + l[1] + l[2] for l in
+                      list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image))]
 
         plt.imshow(full_image, cmap="binary", origin="upper")
 
@@ -423,7 +443,8 @@ class JanusPixel(_RepresentationLearner):
 
 class Cerberus(_RepresentationLearner):
 
-    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1):
+    def __init__(self, d_states: int, d_actions: int, d_latent: int, lr: float = 0.1, step_size: int = 500,
+                 maintained_lr: int = 0.9):
         # PARAMETERS
         self.d_states = d_states
         self.d_actions = d_actions
@@ -442,7 +463,7 @@ class Cerberus(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
@@ -466,7 +487,8 @@ class Cerberus(_RepresentationLearner):
 
 
 class CerberusPixel(_RepresentationLearner):
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1):
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1, step_size: int = 500,
+                 maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width
         self.height = height
@@ -487,7 +509,7 @@ class CerberusPixel(_RepresentationLearner):
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
         # So every 200 episodes the lr is reduced a 10 %
-        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.encoder(state).view(-1)
@@ -511,15 +533,20 @@ class CerberusPixel(_RepresentationLearner):
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
         difference_tensor = (state != next_state)
         reconstruction, next_state_reconstruction, difference = self.network(torch.unsqueeze(state, 0),
-                                                                           torch.unsqueeze(action, 0))
+                                                                             torch.unsqueeze(action, 0))
         plt.clf()
 
         vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
-        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(reconstruction).tolist()
-        next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
-        difference_image = torch.squeeze(difference_tensor).tolist() + vertical_seperator + torch.squeeze(difference).tolist()
+        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(
+            reconstruction).tolist()
+        next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(
+            next_state_reconstruction).tolist()
+        difference_image = torch.squeeze(difference_tensor).tolist() + vertical_seperator + torch.squeeze(
+            difference).tolist()
         horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
-        full_image = [l[0] + l[1] + l[2] + l[3] + l[4] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image, horizontal_seperator, difference_image))]
+        full_image = [l[0] + l[1] + l[2] + l[3] + l[4] for l in list(
+            zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image, horizontal_seperator,
+                difference_image))]
 
         plt.imshow(full_image, cmap="binary", origin="upper")
 
@@ -527,6 +554,7 @@ class CerberusPixel(_RepresentationLearner):
         plt.gca().axes.get_yaxis().set_visible(False)
         plt.draw()
         plt.pause(0.001)
+
 
 if __name__ == "__main__":
     # ae = Cerberus(d_states=5, d_actions=2, d_latent=5)

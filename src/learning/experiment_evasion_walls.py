@@ -1,12 +1,11 @@
 import time
 
-import torch
-
 import gym
+import torch
 
 from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DoubleDeepQNetwork
-from src.representation.learners import CerberusPixel, Flatten, ConvolutionalPixel
+from src.representation.learners import ConvolutionalPixel
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 if torch.cuda.is_available():
@@ -31,7 +30,7 @@ min_eps = 0.01
 eps_decay = 10000
 linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
 exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
-policy = DoubleDeepQNetwork(representation_module.n_hidden, env.action_space.n, eps_calculator=linear,
+policy = DoubleDeepQNetwork(representation_module.n_output, env.action_space.n, eps_calculator=linear,
                             memory_eps_calculator=exponential, memory_delay=memory_delay, representation_network=representation_module.network)
 
 agent = ParallelAgent(representation_module, policy, [env])

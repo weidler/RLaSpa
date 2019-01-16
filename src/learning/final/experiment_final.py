@@ -31,7 +31,7 @@ elif envs_name == 'pathing':
             gym.make("VisualObstaclePathing-v3")
             ]
 else:
-    raise ValueError('No such repr learner {}'.format(envs_name))
+    raise ValueError('No such env {}'.format(envs_name))
 
 # REPRESENTATION
 repr_learner_name = sys.argv[1].lower()

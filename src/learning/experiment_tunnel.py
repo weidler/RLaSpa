@@ -17,13 +17,14 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # MODULES
 env = gym.make("Tunnel-v0")
 
-# representation_module = CVAEPixel(n_middle=32, n_hidden=16)
-representation_module = CerberusPixel(
-    width=30,
-    height=30,
-    n_actions=3,
-    n_hidden=32
-)
+representation_module = CVAEPixel(n_middle=32, n_hidden=16)
+# representation_module = CerberusPixel(
+#     width=30,
+#     height=30,
+#     n_actions=3,
+#     n_hidden=32,
+#     lr=0.1
+# )
 
 memory_delay = 20000
 init_eps = 1.0

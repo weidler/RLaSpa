@@ -23,8 +23,7 @@ if __name__ == '__main__':
     elif envs_name == 'scrollers':
         envs = [gym.make("Tunnel-v0"),
                 gym.make("Evasion-v0"),
-                gym.make("EvasionWalls-v0")
-                ]
+                gym.make("EvasionWalls-v0")]
     elif envs_name == 'pathing':
         envs = [gym.make("VisualObstaclePathing-v0"),
                 gym.make("VisualObstaclePathing-v1"),

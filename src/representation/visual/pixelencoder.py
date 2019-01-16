@@ -9,7 +9,7 @@ class FlattenerLayer(nn.Module):
         super(FlattenerLayer, self).__init__()
 
     def forward(self, input: Tensor):
-        return input.view(-1)
+        return input.view(input.size(0), -1)
 
 
 class UnflattenerLayer(nn.Module):
@@ -179,7 +179,7 @@ class ConvolutionalNetwork(nn.Module):
         # deconv3 = self.activation(self.deconv3(deconv2))
         #
         # return deconv3.view(-1, 30, 30)
-        return self.decoder(self.encoder).view(-1, 30, 30)
+        return self.decoder(self.encoder(input.view(-1, 1, 30, 30))).view(-1, 30, 30)
 
 class CVAE(torch.nn.Module):
 

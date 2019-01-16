@@ -74,7 +74,7 @@ class ParallelAgent(_Agent):
             env = random.choice(self.environments)
             # initialize episode
             current_state = reset_env(env)
-            latent_state = self.representation_learner.encode(current_state.reshape(-1))
+            # latent_state = self.representation_learner.encode(current_state.reshape(-1))
 
             # trackers
             episode_reward = 0

@@ -6,7 +6,7 @@ import gym
 
 from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DoubleDeepQNetwork
-from src.representation.learners import CerberusPixel, Flatten
+from src.representation.learners import CerberusPixel, Flatten, ConvolutionalPixel
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 if torch.cuda.is_available():
@@ -14,11 +14,15 @@ if torch.cuda.is_available():
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 env = gym.make("EvasionWalls-v0")
-representation_module = CerberusPixel(width=env.observation_space.shape[0],
-                                 height=env.observation_space.shape[1],
-                                 n_actions=env.action_space.n,
-                                 n_hidden=30)
+
+# representation_module = CerberusPixel(width=env.observation_space.shape[0],
+#                                  height=env.observation_space.shape[1],
+#                                  n_actions=env.action_space.n,
+#                                  n_hidden=30)
 # representation_module = Flatten()
+
+representation_module = ConvolutionalPixel(512)
+
 
 memory_delay = 10000
 init_eps = 1.0

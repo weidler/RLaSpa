@@ -123,6 +123,9 @@ class ParallelAgent(_Agent):
                 # trackers
                 episode_reward += reward
 
+            # If we want to change the lr per episode
+            self.representation_learner.scheduler.step()
+
             rewards.append(episode_reward)
             all_repr_loss.append(repr_loss)
             all_policy_loss.append(policy_loss)

@@ -1,7 +1,8 @@
 import abc
+from typing import List
+
 import torch
 from torch import Tensor
-from typing import List
 
 from src.utils.container import SARSTuple
 
@@ -15,6 +16,7 @@ class _RepresentationLearner(abc.ABC):
     def __init__(self):
         self.network: torch.nn.Module = None  # placeholder in superclass, for the convenience of saving/loading
         self.optimizer: torch.optim.Optimizer = None
+        self.scheduler: torch.optim.lr_scheduler = None
 
     @abc.abstractmethod
     def encode(self, state: Tensor) -> Tensor:

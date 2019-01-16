@@ -1,8 +1,10 @@
+import platform
+
 import torch
 from torch import Tensor
 from torch import nn, optim
+from torch.optim.lr_scheduler import StepLR
 
-from src.gym_custom_tasks.envs import ObstaclePathing
 from src.representation.network.autoencoder import AutoencoderNetwork
 from src.representation.network.cerberus import CerberusNetwork
 from src.representation.network.janus import JanusAutoencoder
@@ -10,12 +12,12 @@ from src.representation.network.variational_autoencoder import VariationalAutoen
 from src.representation.representation import _RepresentationLearner
 from src.representation.visual.pixelencoder import JanusPixelEncoder, CerberusPixelEncoder, VariationalPixelEncoder, \
     CVAE, ConvolutionalNetwork
-import platform
+
 if 'rwth' in platform.uname().node.lower():
     import matplotlib
     matplotlib.use('Agg') # Force matplotlib to not use any Xwindows backend.
 import matplotlib.pyplot as plt
-import gym
+
 
 class PassThrough(_RepresentationLearner):
     def __init__(self):
@@ -56,6 +58,7 @@ class SimpleAutoencoder(_RepresentationLearner):
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
@@ -81,6 +84,8 @@ class ConvolutionalPixel(_RepresentationLearner):
         self.network = ConvolutionalNetwork(self.n_output)
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self.network.parameters(), self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def encode(self, state: Tensor) -> Tensor:
         # input = state.view(-1, 1, 30, 30)
@@ -143,6 +148,8 @@ class VariationalAutoencoder(_RepresentationLearner):
         # self.criterion = nn.functional.binary_cross_entropy()
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.d_states), reduction='sum')
@@ -200,6 +207,8 @@ class VariationalAutoencoderPixel(_RepresentationLearner):
         # self.criterion = nn.functional.binary_cross_entropy()
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
@@ -267,6 +276,8 @@ class CVAEPixel(_RepresentationLearner):
         # self.criterion = nn.functional.binary_cross_entropy()
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         # self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def loss_function(self, recon_x, x_tens, mu, logvar) -> float:
         BCE = nn.functional.binary_cross_entropy(recon_x, x_tens.view(-1, self.width * self.height), reduction='sum')
@@ -332,6 +343,8 @@ class Janus(_RepresentationLearner):
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
@@ -370,6 +383,8 @@ class JanusPixel(_RepresentationLearner):
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
         reconstruction, next_state_reconstruction = self.network(torch.unsqueeze(state, 0),
@@ -426,6 +441,8 @@ class Cerberus(_RepresentationLearner):
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.activation(self.network.encoder(state))
@@ -469,6 +486,8 @@ class CerberusPixel(_RepresentationLearner):
         # PARTS
         self.criterion = nn.MSELoss()
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        # So every 200 episodes the lr is reduced a 10 %
+        self.scheduler = StepLR(optimizer=self.optimizer, step_size=200, gamma=0.9)
 
     def encode(self, state: Tensor) -> Tensor:
         return self.network.encoder(state).view(-1)

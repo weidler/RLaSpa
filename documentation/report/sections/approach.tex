@@ -48,11 +48,13 @@ Once learned, this intermediate latent space is expected to create a more compac
 \end{figure}
 
 \subsubsection{Simple and Variational Autoencoder}
-The simplest representation learner is an autoencoder, which compresses and reconstructs the current state representation. 
+One of the simplest representation learner is an autoencoder, which in our case compresses and reconstructs the current state. %representation. 
 Figure \ref{subfig:repr_learner_simple_autoencoder} illustrates the simple autoencoder, and \ref{subfig:repr_learner_vae} a variational autoencoder (VAE). 
-Insert here difference of VAE and AE. 
-One theoretical drawback of such a simple structure for representation learning is that since the latent space only aims at compressing the state and no dynamics of the task are encoded, it is not necessarily a useful basis for transfer learning.
-The upcoming architectures account for this.
+%Insert here difference of VAE and AE. 
+VAE is a generative approach that models the latent distribution with a Gaussian distribution.
+Whether it is simple or variational autoencoder,
+one theoretical drawback of using such a simple structure for representation learning is that since the latent space only aims at compressing the state and no dynamics of the task are encoded, it is not necessarily a useful basis for transfer learning.
+The upcoming architectures aim to account for this.
 
 \subsubsection{Janus}
 To create more guidance in the construction of the latent space, we add another sub-network to capture the dynamics of the environment. 
@@ -135,11 +137,11 @@ As the RL agent explores the environment, it chooses an action based on the enco
 After executing the chosen action, the RL observes the new state and reward, which provide feedback to the representation and policy learners for their loss calculation respectively.
 The loss of the policy learner is further back-propagated to the representation learner.
 
-\subsection{Full backpropagation(?)}
+%\subsection{Full backpropagation(?)}
 
 \subsection{Multi-task Learning}
 \begin{itemize}
 	\item structure easy to incorporate MTL
-	\item every time randomly choose an env
+	\item every time randomly choose an environment
 	\item save previously seen training instances in experience stacks
 \end{itemize}

@@ -371,7 +371,7 @@ class Janus(_RepresentationLearner):
 
 
 class JanusPixel(_RepresentationLearner):
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 1e-3, step_size: int = 500,
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1, step_size: int = 500,
                  maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width
@@ -479,7 +479,7 @@ class Cerberus(_RepresentationLearner):
 
 
 class CerberusPixel(_RepresentationLearner):
-    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 1e-3, step_size: int = 500,
+    def __init__(self, width: int, height: int, n_actions: int, n_hidden: int, lr: float = 0.1, step_size: int = 500,
                  maintained_lr: int = 0.9):
         # PARAMETERS
         self.width = width

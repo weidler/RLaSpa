@@ -132,7 +132,8 @@ class ParallelAgent(_Agent):
 
             # logging for tensorboard
             if log:
-                info = {'loss': repr_loss, 'policy_loss': policy_loss, 'reward': episode_reward}
+                info = {'loss': repr_loss, 'policy_loss': policy_loss, 'reward': episode_reward,
+                        'representation_lr': self.representation_learner.optimizer.param_groups[0]['lr']}
                 self.logger.scalar_summary_dict(info, episode)
 
             # progress report

@@ -6,6 +6,7 @@ from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DoubleDeepQNetwork
 from src.representation.learners import JanusPixel, CerberusPixel, CVAEPixel
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
+import src.gym_custom_tasks
 
 import sys
 
@@ -23,6 +24,7 @@ if __name__ == '__main__':
 
     # REPRESENTATION
     repr_learner_name = sys.argv[0].lower()
+    repr_learner_name = 'cvae'
 
     if repr_learner_name == 'janus':
         repr_learner = JanusPixel(width=environments[0].observation_space.shape[0],

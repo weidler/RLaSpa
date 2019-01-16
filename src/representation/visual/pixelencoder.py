@@ -2,24 +2,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.autograd import Variable
-
-class FlattenerLayer(nn.Module):
-
-    def __init__(self):
-        super(FlattenerLayer, self).__init__()
-
-    def forward(self, input: Tensor):
-        return input.view(input.size(0), -1)
-
-
-class UnflattenerLayer(nn.Module):
-
-    def __init__(self):
-        super(UnflattenerLayer, self).__init__()
-
-    def forward(self, input):
-        return input.view(-1, 128, 3, 3)
-
+from torch.nn import functional as F
 
 class Convolute(nn.Module):
 
@@ -33,25 +16,45 @@ class Convolute(nn.Module):
             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0),
             nn.ReLU(),
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            FlattenerLayer(),
-            nn.Linear(128 * 3 * 3, out_features),
+            nn.ReLU()
         )
+        self.ffnn = nn.Linear(128 * 3 * 3, out_features)
+
+    def forward(self, input: Tensor):
+        input = input.view(-1, 1, 30, 30)
+        encoded = self.encoder(input)
+        flattened = encoded.view(input.size(0), -1)
+        out = self.ffnn(flattened)
+
+        return out
+
+
+class DeConvolute(nn.Module):
+
+    def __init__(self, in_features: int = 128):
+        super(DeConvolute, self).__init__()
+
+        self.ffnn = nn.Linear(in_features, 128 * 3 * 3)
 
         # Decoder
         self.decoder = nn.Sequential(
-            nn.Linear(out_features, 128 * 3 * 3),
-            nn.ReLU(),
-            UnflattenerLayer(),
             nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0),
             nn.ReLU(),
             nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1),
+            nn.ReLU()
         )
 
     def forward(self, input: Tensor):
-        return self.decoder(self.encoder(input))
+        input = F.relu(self.ffnn(input))
+        unflattened = input.view(-1, 128, 3, 3)
+        decoded = self.decoder(unflattened)
+        unchanneled = decoded.view(-1, 30, 30)
+
+        return unchanneled
+
+
 
 class PixelEncoder(torch.nn.Module):
 
@@ -139,47 +142,60 @@ class VariationalPixelEncoder(torch.nn.Module):
 
         return deflattened_out, mu, logvar
 
+
 class ConvolutionalNetwork(nn.Module):
 
     def __init__(self, out_features: int = 512):
         super(ConvolutionalNetwork, self).__init__()
-        # super(Convolute, self).__init__()
 
-        # Encoder
-        # self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
-        # self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0)
-        # self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
-        # self.fc1 = nn.Linear(128 * 3 * 3, out_features)
-        #
-        # # Decoder
-        # self.fc2 = nn.Linear(out_features, 128 * 3 * 3)
-        # self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1)
-        # self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0)
-        # self.deconv3 = nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1)
-        #
-        # # Activation
-        # self.activation = nn.ReLU()
-        conv = Convolute(out_features=out_features)
-        self.encoder = conv.encoder
-        self.decoder = conv.decoder
+        self.convolutionizer = Convolute(out_features=out_features)
+        self.deconvolutionizer = DeConvolute(in_features=out_features)
+
 
     def forward(self, input: Tensor):
-        # # DECODER
-        # input = input.view(-1, 1, 30, 30)  # the 1 is the channel
-        # conv1 = self.activation(self.conv1(input))
-        # conv2 = self.activation(self.conv2(conv1))
-        # conv3 = self.activation(self.conv3(conv2))
-        # flatten = conv3.view(input.size(0), -1)
-        #
-        # latent = self.fc1(flatten)
-        #
-        # unflatten = self.activation(self.fc2(latent)).view(-1, 128, 3, 3)
-        # deconv1 = self.activation(self.deconv1(unflatten))
-        # deconv2 = self.activation(self.deconv2(deconv1))
-        # deconv3 = self.activation(self.deconv3(deconv2))
-        #
-        # return deconv3.view(-1, 30, 30)
-        return self.decoder(self.encoder(input.view(-1, 1, 30, 30))).view(-1, 30, 30)
+        convolved = self.convolutionizer(input)
+        deconvolved = self.deconvolutionizer(convolved)
+        return deconvolved
+
+
+# class ConvolutionalNetwork(nn.Module):
+#
+#     def __init__(self, out_features: int = 512):
+#         super(ConvolutionalNetwork, self).__init__()
+#         # super(Convolute, self).__init__()
+#
+#         # Encoder
+#         # self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4, padding=1)
+#         # self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=0)
+#         # self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
+#         # self.fc1 = nn.Linear(128 * 3 * 3, out_features)
+#         #
+#         # # Decoder
+#         # self.fc2 = nn.Linear(out_features, 128 * 3 * 3)
+#         # self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1)
+#         # self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0)
+#         # self.deconv3 = nn.ConvTranspose2d(32, 1, kernel_size=8, stride=4, padding=1)
+#         #
+#         # # Activation
+#         # self.activation = nn.ReLU()
+#
+#     def forward(self, input: Tensor):
+#         # # DECODER
+#         # input = input.view(-1, 1, 30, 30)  # the 1 is the channel
+#         # conv1 = self.activation(self.conv1(input))
+#         # conv2 = self.activation(self.conv2(conv1))
+#         # conv3 = self.activation(self.conv3(conv2))
+#         # flatten = conv3.view(input.size(0), -1)
+#         #
+#         # latent = self.fc1(flatten)
+#         #
+#         # unflatten = self.activation(self.fc2(latent)).view(-1, 128, 3, 3)
+#         # deconv1 = self.activation(self.deconv1(unflatten))
+#         # deconv2 = self.activation(self.deconv2(deconv1))
+#         # deconv3 = self.activation(self.deconv3(deconv2))
+#         #
+#         # return deconv3.view(-1, 30, 30)
+#         return self.decoder(self.encoder(input.view(-1, 1, 30, 30))).view(-1, 30, 30)
 
 class CVAE(torch.nn.Module):
 

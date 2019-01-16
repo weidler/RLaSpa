@@ -89,7 +89,7 @@ class ConvolutionalPixel(_RepresentationLearner):
         # latent = self.network.fc1(unflatten)
         #
         # return latent
-        return self.network.encoder(state.view(-1, 1, 30, 30))
+        return self.network.convolutionizer(state).view(-1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         # convert to tensor if necessary

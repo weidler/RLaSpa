@@ -43,6 +43,6 @@ policy.target_model.to(device)
 # TRAIN/TEST
 start_time = time.time()
 # agent.load('../../ckpt/ParallelAgent_Tunnel-v0_ConvolutionalPixel_DoubleDeepQNetwork/2019-01-16_01-18-19')
-agent.train_agent(20000, plot_every=500, log=True, episodes_per_saving=1000)
+agent.train_agent(20000, plot_every=100, log=True, episodes_per_saving=1000)
 print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
 agent.test(numb_runs=100, env=env)

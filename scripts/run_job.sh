@@ -28,7 +28,7 @@ cd /home/hn217262/RLaSpa
 
 export PYTHONPATH="${PYTHONPATH}:/home/hn217262/RLaSpa/src:/home/hn217262/RLaSpa"
 
-SCRIPT_PATH="src/learning/final/experiment_$TASK.py $REPR"
+SCRIPT_PATH="src/learning/final/experiment_final.py $TASK $REPR"
 echo '>>>>>>>>>>>>>>>>>trying to run \t' $SCRIPT_PATH
 
 python3 $SCRIPT_PATH

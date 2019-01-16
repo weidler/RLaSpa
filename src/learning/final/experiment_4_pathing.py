@@ -15,6 +15,8 @@ if __name__ == '__main__':
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
+
     environments = [
         gym.make("VisualObstaclePathing-v0"),
         gym.make("VisualObstaclePathing-v1"),

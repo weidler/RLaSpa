@@ -5,7 +5,7 @@ import torch
 
 from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DoubleDeepQNetwork
-from src.representation.learners import JanusPixel
+from src.representation.learners import JanusPixel, CerberusPixel
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
 
 if torch.cuda.is_available():
@@ -15,12 +15,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # MODULES
 env = gym.make("Tunnel-v0")
-representation_module = JanusPixel(width=env.observation_space.shape[0],
+
+representation_module = CerberusPixel(width=env.observation_space.shape[0],
                                    height=env.observation_space.shape[1],
                                    n_actions=env.action_space.n,
                                    n_hidden=32)
 
-memory_delay = 10000
+memory_delay = 20000
 init_eps = 1.0
 memory_eps = 0.8
 min_eps = 0.01

@@ -80,18 +80,19 @@ class ConvolutionalPixel(_RepresentationLearner):
 
         self.network = ConvolutionalNetwork(self.n_output)
         self.criterion = nn.MSELoss()
-        self.optimizer = optim.RMSprop(self.network.parameters(), self.learning_rate)
+        self.optimizer = optim.Adam(self.network.parameters(), self.learning_rate)
 
     def encode(self, state: Tensor) -> Tensor:
-        input = state.view(-1, 1, 30, 30)
-        conv1 = self.network.activation(self.network.conv1(input))
-        conv2 = self.network.activation(self.network.conv2(conv1))
-        conv3 = self.network.activation(self.network.conv3(conv2))
-        unflatten = conv3.view(-1)
-
-        latent = self.network.fc1(unflatten)
-
-        return latent
+        # input = state.view(-1, 1, 30, 30)
+        # conv1 = self.network.activation(self.network.conv1(input))
+        # conv2 = self.network.activation(self.network.conv2(conv1))
+        # conv3 = self.network.activation(self.network.conv3(conv2))
+        # unflatten = conv3.view(-1)
+        #
+        # latent = self.network.fc1(unflatten)
+        #
+        # return latent
+        return self.network.convolutionizer(state).view(-1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         # convert to tensor if necessary
@@ -371,17 +372,25 @@ class JanusPixel(_RepresentationLearner):
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
     def visualize_output(self, state: Tensor, action: Tensor, next_state: Tensor):
-        reconstruction, next_state_construction = self.network(torch.unsqueeze(state, 0),
-                                                               torch.unsqueeze(action, 0))
-        plt.imshow(torch.squeeze(state).tolist() + torch.squeeze(reconstruction).tolist(), cmap="binary",
-                   origin="upper")
+        reconstruction, next_state_reconstruction = self.network(torch.unsqueeze(state, 0),
+                                                                 torch.unsqueeze(action, 0))
+        plt.clf()
+
+        vertical_seperator = [[1 for _ in range(len(torch.squeeze(state).tolist()[1]))]]
+        reconstruction_image = torch.squeeze(state).tolist() + vertical_seperator + torch.squeeze(reconstruction).tolist()
+        next_state_reconstruction_image = torch.squeeze(next_state).tolist() + vertical_seperator + torch.squeeze(next_state_reconstruction).tolist()
+        horizontal_seperator = [[1] for _ in range(len(reconstruction_image))]
+        full_image = [l[0] + l[1] + l[2] for l in list(zip(reconstruction_image, horizontal_seperator, next_state_reconstruction_image))]
+
+        plt.imshow(full_image, cmap="binary", origin="upper")
+
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
         plt.draw()
         plt.pause(0.001)
 
     def encode(self, state: Tensor) -> Tensor:
-        return self.network.activation(self.network.encoder(state.view(-1)))
+        return self.network.encoder(state).view(-1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         self.optimizer.zero_grad()
@@ -462,7 +471,7 @@ class CerberusPixel(_RepresentationLearner):
         self.optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
 
     def encode(self, state: Tensor) -> Tensor:
-        return self.network.activation(self.network.encoder(state.view(-1)))
+        return self.network.encoder(state).view(-1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         difference_target = state != next_state

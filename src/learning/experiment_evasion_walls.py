@@ -18,7 +18,7 @@ env = gym.make("EvasionWalls-v0")
 # representation_module = CerberusPixel(width=env.observation_space.shape[0],
 #                                  height=env.observation_space.shape[1],
 #                                  n_actions=env.action_space.n,
-#                                  n_hidden=30)
+#                                  n_hidden=32)
 # representation_module = Flatten()
 
 representation_module = ConvolutionalPixel(512)

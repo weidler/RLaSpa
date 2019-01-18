@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     # TRAIN/TEST
     start_time = time.time()
-    agent.train_agent(episode, log=True, episodes_per_saving=10000)
+    agent.train_agent(episode, experience_warmup_length=4, log=True, episodes_per_saving=10000)
     agent.save(episode=episode)  # save last
     print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
     for env in envs:

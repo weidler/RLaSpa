@@ -1,3 +1,4 @@
+import math
 import random
 import time
 from collections import deque
@@ -56,7 +57,7 @@ class ParallelAgent(_Agent):
         :param log: logging flag.
         """
 
-        episodes_per_report = episodes // 100
+        episodes_per_report = math.ceil(episodes / 100)
         start_time = time.time()
         if not (ckpt_to_load is None):
             self.load(ckpt_dir=ckpt_to_load)

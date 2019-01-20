@@ -1,48 +1,24 @@
 \section{Introduction}
 \label{sec:introduction}
-Among machine learning methods, reinforcement learning (RL) distinguishes itself with the ability to solve complex tasks with minimal feedback \citep{taylor2007cross}, and has led to successful applications 
-in different areas such as game playing \citep{silver2016mastering}, robotics \citep{levine2016end} and resource management \citep{mao2016resource}. 
-RL in its original form, however, is task-specific.
-This means that when the agent is facing a new environment, learning has to restart.
-This limitation calls for transfer learning, which aims at transferring learned skills across tasks.
-Besides reducing time-consuming re-learning on new tasks, transfer learning can potentially enable RL agents to operate in environments where learning is otherwise too challenging \citep{barreto2018transfer}.
-Deep learning methods aim at discovering good representations that are abstract and domain-invariant \citep{bengio2012deep,ganin2014unsupervised}.
-%Different domain in reinforcement learning naturally correspond to different tasks.
-This characteristic can be utilized in transfer learning in RL.
 
-In this work, we explore the possibility of using the latent representation created by neural networks to achieve transfer learning in RL.
+% topic introduction & motivation
+Reinforcement learning (RL) addresses machine learning problems where complex tasks with minimal feedback \citep{taylor2007cross} need to be solved by agents in a sequence of actions as reactions to a changing environment. RL methods were successfully applied in different areas such as game playing \citep{silver2016mastering}, robotics \citep{levine2016end} and resource management \citep{mao2016resource}. 
+Most common approaches to RL create task-specific solutions. This means that when facing a new environment, the agent needs to restart learning. This limitation calls for transfer learning, which aims at transferring gained knowledge across different tasks. Besides reducing time-consuming re-training of similar tasks, transfer learning can potentially enable RL agents to operate in environments where learning is otherwise too challenging \citep{barreto2018transfer} or expensive. In RL, transfer faces two key challenges. Firstly, albeit the tasks are similar, state and action spaces may be of \textit{different dimensions} between them. Secondly, the agent's policy need to be not \textit{overfitted} to the source task, so to make the underlying knowledge reusable. % example pathing?
+The first issue can be solved by only taking information into account that is available in all tasks, such as pixels\footnote{Obviously, this requires the task to be visualizable.}. In fact, this is a rather obvious requirement: The agent can only learn transferable knowledge, if it is presented with information that allows it to find common patterns. Learning generalizable policies is more challenging and requires models that guide the agent towards a transferable policy. 
+
+
+
+% approach
+In this work, we explore the possibility of using a latent representation created by a deep neural network to achieve transfer learning in RL. Deep learning methods can discover representations that are abstract and domain-invariant \citep{bengio2012deep,ganin2014unsupervised}. This characteristic can be utilized for transfer learning in RL: Instead of presenting the agent with the raw state of an environment, a representation module first encodes the pixels into a latent space using a stack of convolutional layers. In contrast to previous research (CITE SOME DQN USERS), we not only train this representation on the given task but also calculate loss using an autoencoder architecture. This guides the encoder into creating representations that can be used to reconstruct the given image. We hypothesize such representations to make the resulting latent space to be easier to generalize to new tasks.
+
+
+% research questions & contributions
 More specially, we seek to answer the following research questions:
 \begin{itemize}
 	\item How to create a latent space that captures commonalities of several similar yet different tasks, such that an RL agent can learn to perform all these tasks only based on the latent representation?
 	\item After learning a task based on the latent representation, can the agent learn to perform a previously unseen but similar task more easily (e.g. taking less time to train)? Or can the agent do so without learning?
 \end{itemize}
 
-%%%% About DQN
 
-
-%\subsection{Research Questions}
-
-%\subsection{Approach}
-
-
-\iffalse
-\subsection{Related Work}
-\label{sec:related-work}
-
-Early work on transfer learning for reinforcement learning mostly relied on human intervention to create a mapping between source and target tasks \citep[e.g.][]{taylor2007cross}. \citet{taylor2007cross}, for example, developed a method called \textit{Rule Transfer}. Their algorithm learns a policy in the source task that gets transformed into rules, serving as advise to the agent when training in the new environment. To use these rules in the target task, hand-coded translation functions were applied. In contrast, \citet{taylor2008autonomous} published the first system that automatically mapped source and target task. They use little data from a short exploration period in the target task to approximate a one-to-many mapping between the state and action space. This is achieved by comparing all possible state-state and action-action pairs and choosing the ones with the smallest MSE when predicting the next action using neural networks trained on the target task observations. While their method effectively facilitated learning in the target task, it needs to be noted that transfer was performed on modifications of the same task. Hence, they were fairly similar and there was no attempt to tackle cross-domain transfer. 
-
-
-\citet{gupta2017learning} used a proxy task learnt in both the source and target domains, and a test task where transfer should occur. Firstly, with the proxy task, pairs of corresponding states are found using time-based alignment or dynamic time warping. Based on these state pairs, a common latent state space is learnt by minimizing reconstruction errors and pairwise distances. In the test task, to incentivize policy transfer from source to task, the distance to source optimal policy in the common space is incorporated the reward function.
-
-\cite{MAML} objective was to find a model capable of learning a new task from a small amount of new data. To do so, the agent is trained in a set of task with the goal of building a representation of the learning that will allow it to use to learn new tasks in few trials. The idea behind this objective is that some internals representations are more transferable than others, for so, to emerge the use of them, gradient-based learning is used with the aim of generating a model that can quickly in the different tasks.
-
-For tasks where the reward can not be found in few steps or were the search, \citet{MAESN} use the latent space and meta-learning to improve the exploration phase for the new task the agent is tackling. To do so, model-agnostic meta-learning was used to generate knowledge that could be easily adapted for different tasks (latent space). In addition, policy gradients methods in conjunction with meta-learning were utilized to generate and train the policies. 
-
-\citet{parisotto2015actor} trained an agent to learn multiple (related) games of the Atari Learning Environment simultaneously to later generalize from the learned experiences. The training was done by teaching the agent to mimic an expert (hence, actor-mimic) and then doing a feature regression of the learned mimicking. This can be seen as telling the agent what to do and later telling him why he should do it this way. They proposed to use Actor-mimic as a pre-training to increase learning speed on a set of tasks.
-
-\citet{mnih2016asynchronous} used asynchronous gradient descent to train deep neural networks. This framework is lightweight so that it can run on a CPU instead of a GPU. They "execute multiple agents in parallel on multiple instances of the environment" \citet{mnih2016asynchronous}. This stabilized learning and reduced the training time. The reduction in training time was roughly linear to the number of processes. Asynchronous advantage actor-critic (A3C) achieved new state-of-the-art performances in 57 Atari games.
-
-\citet{andrychowicz2017hindsight} say that one of the biggest challenges in RL are sparse rewards. They constructed an algorithm that learns from undesired results as well as from desired results. This way the agent can learn from more experiences and thus constructing a reward function is not necessary. Constructing a good reward function is challenging (\cite{ng1999policy}) and can be complicated (\cite{popov2017data}). They showed that with their approach tasks were able to be learned that previously were not possible. Furthermore, they proposed to train an agent "on multiple goals even if we care only about one of them." \citet{andrychowicz2017hindsight}.
-
-In the following sections ...
-\fi
+% outlook
+In the following we first review previous research on reinforcement learning relevant to our approach. We then introduce our approach and describe the different techniques used in the final system in detail. In Section \ref{sec:experiments} the experimental setup is described, followed by the results in section \ref{sec:results}. We discuss these results in Section \ref{sec:discussion} and draw a conclusion in Section \ref{sec:conclusion}.

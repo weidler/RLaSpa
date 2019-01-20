@@ -1,12 +1,28 @@
 \section{Experiments}
-%\lipsum[2-3]
+\label{sec:experiments}
+
+Experiments are designed to cover different modules combination of the framework and to investigate effectiveness of our approach. Specifically, each representation learner architecture is used for a variety of tasks, with the same policy module. 
 
 \subsection{Tasks}
-Short explanation of why we created our own tasks
-\begin{enumerate}
+\label{sec:tasks}
+Various tasks were explored as candidates and finding the most suitable ones.
+
+\textbf{Classic control tasks} (citation) from OpenAI GYM are a popular benchmark for Reinforcement Learning algorithms. Despite having similar physics properties like the sinusoidal nature of the tasks, some interior aspects make them less indicated for our goal. For example, the number of features used to describe the environment changes between different tasks (e.g.: cartpole has two and mountain car has three possible actions). Furthermore, experiments from OpenAI may have different dimensions of their state representation and therefore would require a mapping or a padding.
+
+To overcome this, tasks that have the same action space and state representation were created. They are therefore more comparable to each other and do not require a mapping of the actions or visual input. 
+  \begin{enumerate}
 	\item Classic control tasks
 	\item Simple pathing, obstacle pathing
 	\item Dynamic scroller games (tunnel, evasion)
 \end{enumerate}
+
+\paragraph{Classic control tasks}
+In order to test our framework and different implementations of policy learners it was put to test on classic control tasks such as the cartpole and mountain car task. Since in their implementation the state is not visual, but physical properties such as angle speed and speed, no convolution in the representation learners are used. 
+
+\paragraph{Pathing tasks}
+To introduce visual states and to test whether the convolutional representation learners are correctly learning different pathing tasks are created. In each of these the agent needs to find a way from a starting point to an endpoint. In the simple pathing task there are no obstacles and the agent only needs to find the shortest path to the endpoint. In obstacle pathing there are obstacles blocking the agent's way and he therefore needs to go around them.
+
+\paragraph{Scroller games}
+Four different scroller games were created: Race, Evasion, Wall Evasion and Tunnel. The goal in all of these is the same: To survive by not hitting a black obstacle. The dynamics of the environment differ tho. In Race the obstacles come from the top and have the same size as the agent itself. Evasion is very similar, but the obstacles come from the right. Wall Evasion is similar to Evasion, but the obstacles are bigger, this should force the agent to plan a bit ahead when evading. Lastly, Tunnel puts the agent in the middle of a tunnel that randomly goes up or down and when the agent touches the edge of the tunnel it dies.
 
 \subsection{Experiment Setup}

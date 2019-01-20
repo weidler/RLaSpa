@@ -1,10 +1,10 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{acl2014}
 \usepackage[utf8]{inputenc}
 \usepackage{times}
 \usepackage{url}
 \usepackage{amsmath}
-\usepackage[natbib=true,backend=bibtex,style=authoryear,language=english,maxbibnames=99,firstinits=false]{biblatex}
+\usepackage[natbib=true,backend=biber,style=authoryear]{biblatex}
 \usepackage{lipsum}
 \usepackage{latexsym}
 \usepackage[normalem]{ulem}
@@ -18,28 +18,28 @@
 \pagestyle{plain} 
 \usepackage{graphicx}
 \usepackage{subcaption}
-\captionsetup[table]{skip=10pt}
 \title{Reinforcement Learning in Latent Space}
 
-\addbibresource{../references.bib}
+\addbibresource{references.bib}
+\addbibresource{references_lit_review.bib}
 \AtBeginBibliography{\small}
 
-\author{We, the authors}
-  
+\author{Adrián Rodríguez Grillo, Danni Liu, Alessandro Scoppio, Kevin Trebing and Tonio Weidler}
+
+\setlength{\parskip}{0.5em}
 \begin{document}
 
 \maketitle
 \begin{abstract}
 
-\lipsum[1]
-
 {{\it \bf Keywords: transfer learning, reinforcement learning, deep learning}}
 \end{abstract}
- 
+
 \input{sections/introduction}
+\input{sections/related}
 \input{sections/approach}
 \input{sections/experiments}
-%\input{sections/results}
+\input{sections/results}
 \input{sections/discussion}
 \input{sections/conclusion}
 

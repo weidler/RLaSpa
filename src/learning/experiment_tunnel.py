@@ -26,7 +26,7 @@ representation_module = CerberusPixel(
     lr=0.1
 )
 
-memory_delay = 0
+memory_delay = 100
 init_eps = 1.0
 memory_eps = 0.8
 min_eps = 0.01
@@ -47,6 +47,7 @@ policy.target_model.to(device)
 
 # TRAIN/TEST
 start_time = time.time()
-agent.train_agent(50, log=True, episodes_per_saving=1000, train_on_ae_loss=False)
+# agent.load("/home/weidler/workspace/RLaSpa/ckpt/ParallelAgent_Race-v0_CerberusPixel_DoubleDeepQNetwork/2019-01-21_17-04-47")
+agent.train_agent(50000, log=True, episodes_per_saving=1000, train_on_ae_loss=False)
 print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
 agent.test(numb_runs=100, env=env)

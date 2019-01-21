@@ -88,10 +88,14 @@ class DeepQNetwork(_Policy):
         reward = torch.tensor(reward, dtype=torch.float32)
         done = torch.tensor(done, dtype=torch.float32)
 
+        # making batches of one
+        state = state.unsqueeze(0)
+        next_state = next_state.unsqueeze(0)
+
         q_values = self.model(state)
 
         # calculate the q-values of state with the action taken
-        q_value = q_values[action]
+        q_value = q_values[0][action]
         # calculate the q-values of the next state
         next_q_value = self.calculate_next_q_value(next_state)
         # 0 if next state was 0
@@ -195,7 +199,7 @@ class DoubleDeepQNetwork(DeepQNetwork):
     def calculate_next_q_value(self, next_state: torch.Tensor) -> torch.Tensor:
         next_q_values = self.model(next_state)
         next_state_value = self.target_model(next_state)
-        return next_state_value[torch.argmax(next_q_values)]
+        return next_state_value[0][torch.argmax(next_q_values, 1)]
 
     def calculate_next_q_value_memory(self, next_state: torch.Tensor) -> torch.Tensor:
         next_q_values = self.model(next_state)

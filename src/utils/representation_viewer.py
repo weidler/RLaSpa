@@ -81,7 +81,8 @@ class RepresentationViewer(object):
             self.policy = RandomPolicy(num_actions=self.num_actions)
         print('Loaded representation learner {0} with {1} training steps.'.format(repr_learner_name, steps_trained))
 
-    def get_representation(self, environment: gym.Env, number_of_snapshots: int, per_steps: int) -> List[Tensor]:
+    def get_representation(self, environment: gym.Env, number_of_snapshots: int,
+                           steps_per_snapshot: int) -> List[Tensor]:
         state = reset_env(environment)
         steps = 0
         snapshots_taken = 0
@@ -90,7 +91,7 @@ class RepresentationViewer(object):
             action = self.policy.choose_action_policy(state)
             next_state, _, done, _ = step_env(action=action, env=environment)
             steps += 1
-            if steps % per_steps == 0:
+            if steps % steps_per_snapshot == 0:
                 latent_representation.append(self.representation_module.encode(state))
                 one_hot_action_vector = self.one_hot_actions[action]
                 self.representation_module.visualize_output(state, one_hot_action_vector, next_state)
@@ -110,6 +111,7 @@ if __name__ == '__main__':
     # Load environments and representation learner
     visualizer = RepresentationViewer(env_name=env_name, repr_learner_name=repr_learner_name,
                                       ckpt_path=ckpt_path, load_policy=False)
-    visualizer.get_representation(environment=visualizer.environments[1], number_of_snapshots=20,
-                                  per_steps=5)
+    latent_representations = visualizer.get_representation(environment=visualizer.environments[2],
+                                                           number_of_snapshots=20, steps_per_snapshot=5)
     print('done')
+

@@ -40,9 +40,10 @@ class DuelingDQN(nn.Module):
         :param x: network input
         :return: network output
         """
-        x = self.feature(x)
-        advantage = self.advantage(x)
-        value = self.value(x)
+        encoded = self.representation_network.encoder(x)
+        encoded = self.feature(encoded)
+        advantage = self.advantage(encoded)
+        value = self.value(encoded)
         return value + (advantage - advantage.mean())
 
     def act(self, state, epsilon: float) -> int:

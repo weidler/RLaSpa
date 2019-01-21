@@ -99,7 +99,7 @@ class ConvolutionalPixel(_RepresentationLearner):
         self.scheduler = StepLR(optimizer=self.optimizer, step_size=step_size, gamma=maintained_lr)
 
     def encode(self, state: Tensor) -> Tensor:
-        return self.network.convolutionizer(state).view(-1)
+        return self.network.encoder(state).view(-1)
 
     def learn(self, state: Tensor, action: Tensor, reward: Tensor, next_state: Tensor) -> float:
         # convert to tensor if necessary

@@ -127,30 +127,30 @@ class _Agent(abc.ABC):
         """
 
         all_rewards = []
-        fig = plt.figure(figsize=(10, 6))
+
         for i in range(numb_runs):
-            try:
-                plt.clf()
-                ims = []
-                done = False
-                state = reset_env(env)
-                step = 0
-                total_reward = 0
-                while not done:
-                    state, reward, done = self.act(state, env)
-                    step += 1
-                    total_reward += reward
-                    if visual: ims.append([plt.imshow(state.cpu(), cmap="binary", origin="upper", animated=True)])
-                    if render:
-                        env.render()
-                all_rewards.append(total_reward)
-                print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
-                if not render and visual:
-                    ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
-                    ani.save(self.path_manager.get_data_dir(f'{env.__class__.__name__}_testrun_{i}.gif'),
-                             writer='imagemagick', fps=15)
-            except ValueError as e:
-                print(f"Episode {i} went wrong: " + str(e))
+            fig = plt.figure(figsize=(10, 6))
+            # try:
+            plt.clf()
+            ims = []
+            done = False
+            state = reset_env(env)
+            step = 0
+            total_reward = 0
+            while not done:
+                state, reward, done = self.act(state, env)
+                step += 1
+                total_reward += reward
+                if visual: ims.append([plt.imshow(state.cpu(), cmap="binary", origin="upper", animated=True)])
+                if render:
+                    env.render()
+            all_rewards.append(total_reward)
+            print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
+            if not render and visual:
+                ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
+                ani.save(self.path_manager.get_data_dir(f'{env.__class__.__name__}_testrun_{i}.gif'), writer="pillow", fps=15)
+            # except ValueError as e:
+            #     print(f"Episode {i} went wrong: " + str(e))
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)} with a peak of {max(all_rewards)} at episode {all_rewards.index(max(all_rewards))}')
 
     def get_config_name(self):

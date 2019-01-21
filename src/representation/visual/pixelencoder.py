@@ -150,12 +150,12 @@ class ConvolutionalNetwork(nn.Module):
     def __init__(self, out_features: int = 512):
         super(ConvolutionalNetwork, self).__init__()
 
-        self.convolutionizer = Convolute(out_features=out_features)
-        self.deconvolutionizer = DeConvolute(in_features=out_features)
+        self.encoder = Convolute(out_features=out_features)
+        self.decoder = DeConvolute(in_features=out_features)
 
     def forward(self, input: Tensor):
-        convolved = self.convolutionizer(input)
-        deconvolved = self.deconvolutionizer(convolved)
+        convolved = self.encoder(input)
+        deconvolved = self.decoder(convolved)
         return deconvolved
 
 

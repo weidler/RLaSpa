@@ -173,14 +173,12 @@ class DeepQNetwork(_Policy):
         self.model.load_state_dict(input['model'])
         self.optimizer.load_state_dict(input['optimizer'])
         self.total_steps_done = input['total_steps']
-        self.memory = input['memory']
 
     def get_current_training_state(self):
         return {
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'total_steps': self.total_steps_done,
-            'memory': self.memory
         }
 
 

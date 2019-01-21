@@ -55,7 +55,8 @@ def save_checkpoint(state: {}, episode: int, out_dir: str, learner: str) -> None
     torch.save(state, os.path.join(final_dir, "{}_{}.ckpt".format(learner, episode)))
 
 
-def apply_checkpoint(ckpt_path: str, policy: _Policy=None, repr: _RepresentationLearner=None) -> int:
+def apply_checkpoint(ckpt_path: str, policy: _Policy = None, repr: _RepresentationLearner = None,
+                     gpu: bool = True) -> int:
     """
     Method that loads training status stored in checkpoint
 
@@ -72,13 +73,19 @@ def apply_checkpoint(ckpt_path: str, policy: _Policy=None, repr: _Representation
     if policy is not None:
         policy_path = os.path.join(ckpt_path, str(latest_episode), 'policy_{}.ckpt'.format(latest_episode))
         assert os.path.isfile(policy_path)
-        policy.restore_from_state(torch.load(policy_path))
+        if gpu:
+            policy.restore_from_state(torch.load(policy_path))
+        else:
+            policy.restore_from_state(torch.load(policy_path, map_location='cpu'))
         print("=> loaded checkpoint '{}'".format(policy_path))
 
     if repr is not None:
         repr_path = os.path.join(ckpt_path, str(latest_episode), 'repr_{}.ckpt'.format(latest_episode))
         assert os.path.isfile(repr_path)
-        repr.restore_from(torch.load(repr_path))
+        if gpu:
+            repr.restore_from(torch.load(repr_path))
+        else:
+            repr.restore_from(torch.load(repr_path, map_location='cpu'))
         print("=> loaded checkpoint '{}'".format(repr_path))
 
     return latest_episode

@@ -39,13 +39,13 @@ class ParallelAgent(_Agent):
         self.representation_memory = deque(maxlen=representation_memory_size)
 
         print(
-            f"Created Agent using {self.representation_learner.__class__.__name__} and {self.policy.__class__.__name__}.")
+            f"Created Agent using {self.representation_learner.__class__.__name__} and {self.policy.__class__.__name__} performing {[e.__class__.__name__ for e in environments]}.")
 
     # REINFORCEMENT LEARNING #
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
                     episodes_per_saving: int = None, plot_every: int = None, numb_intermediate_tests: int = 0,
-                    experience_warmup_length=0, log: bool = False) -> None:
+                    experience_warmup_length=0, log: bool = False, train_on_ae_loss=True) -> None:
         """
         Method that trains the agent policy learner using the pretrained representation learner.
 
@@ -86,21 +86,22 @@ class ParallelAgent(_Agent):
             done = False
             while not done:
                 # choose action
-                latent_state = self.representation_learner.encode(current_state)
-                action = self.policy.choose_action(latent_state)
+                # latent_state = self.representation_learner.encode(current_state)
+                action = self.policy.choose_action(current_state)
                 one_hot_action_vector = self.one_hot_actions[action]
 
                 # step and observe
                 observation, reward, done, _ = step_env(action, env)
 
-                # store sars tuple for batch learning
-                sars_tuple = SARSTuple(current_state, one_hot_action_vector, reward, observation)
-                self.representation_memory.append(sars_tuple)
+                if train_on_ae_loss:
+                    # store sars tuple for batch learning
+                    sars_tuple = SARSTuple(current_state, one_hot_action_vector, reward, observation)
+                    self.representation_memory.append(sars_tuple)
 
-                # train representation module
-                if len(self.representation_memory) >= batch_size:
-                    batch_tuples = random.sample(self.representation_memory, batch_size)
-                    repr_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
+                    # train representation module
+                    if len(self.representation_memory) >= batch_size:
+                        batch_tuples = random.sample(self.representation_memory, batch_size)
+                        repr_loss += self.representation_learner.learn_batch_of_tuples(batch_tuples)
 
                 # store experience for multitask learning
                 experience = (current_state, action, reward, observation, done)
@@ -108,14 +109,18 @@ class ParallelAgent(_Agent):
 
                 # train policy
                 if episode >= experience_warmup_length:
+                    #encoder_before = self.policy.model.representation_network.encoder.ffnn.weight.data.clone()
+
                     # transformations into the latent space need to be done here such that the update is based on the
                     # current state of the encoder!
                     exp_state, exp_action, exp_reward, exp_next_state, exp_done = experience_stack.pop(
-                        random.randint(0, len(experience_stack) - 1))
-                    exp_latent_state = self.representation_learner.encode(exp_state)
-                    exp_latent_observation = self.representation_learner.encode(exp_next_state)
-                    policy_loss += self.policy.update(exp_latent_state, exp_action, exp_reward, exp_latent_observation,
+                         random.randint(0, len(experience_stack) - 1))
+                    # exp_latent_state = self.representation_learner.encode(exp_state)
+                    # exp_latent_observation = self.representation_learner.encode(exp_next_state)
+                    policy_loss += self.policy.update(exp_state, exp_action, exp_reward, exp_next_state,
                                                       exp_done)
+                    #encoder_after = self.policy.model.representation_network.encoder.ffnn.weight.data.clone()
+                    #print(f"Weights stayed the same: {torch.equal(encoder_before, encoder_after)}")
 
                 # update states (both, to avoid redundant encoding)
                 last_state = current_state
@@ -123,6 +128,8 @@ class ParallelAgent(_Agent):
 
                 # trackers
                 episode_reward += reward
+
+
 
             # If we want to change the lr per episode
             self.representation_learner.scheduler.step()

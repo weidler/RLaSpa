@@ -42,8 +42,8 @@ class ReplayMemory(Memory):
         :return: batch of memories
         """
         state, action, reward, next_state, done = zip(*random.sample(self.memory, batch_size))
-        return torch.cat(state).detach(), torch.stack(action), torch.stack(reward), torch.cat(
-            next_state).detach(), torch.stack(done)
+        return torch.cat(state), torch.stack(action), torch.stack(reward), torch.cat(
+            next_state), torch.stack(done)
 
     def __len__(self):
         return len(self.memory)

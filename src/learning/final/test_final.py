@@ -5,7 +5,7 @@ import torch
 import src.gym_custom_tasks
 from src.agents.parallel import ParallelAgent
 from src.policy.dqn import DoubleDeepQNetwork
-from src.representation.learners import JanusPixel, CerberusPixel, CVAEPixel
+from src.representation.learners import JanusPixel, CerberusPixel, CVAEPixel, ConvolutionalPixel
 from src.utils.schedules import LinearSchedule, ExponentialSchedule
 import sys
 
@@ -20,6 +20,8 @@ if __name__ == '__main__':
     envs_name = sys.argv[1].lower()
     if envs_name == 'tunnel':
         envs = [gym.make("Tunnel-v0")]
+    elif envs_name == 'race':
+        envs = [gym.make("Race-v0")]
     elif envs_name == 'scrollers':
         envs = [gym.make("Tunnel-v0"),
                 gym.make("Evasion-v0"),
@@ -48,6 +50,8 @@ if __name__ == '__main__':
                                               n_hidden=32)
     elif repr_learner_name == 'cvae':
         representation_module = CVAEPixel(n_middle=32, n_hidden=16)
+    elif repr_learner_name == 'cae':
+        representation_module = ConvolutionalPixel(n_output=32)
     else:
         raise ValueError('No such repr learner {}'.format(repr_learner_name))
 
@@ -59,7 +63,7 @@ if __name__ == '__main__':
     episode = 1000000
     linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
     exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
-    policy = DoubleDeepQNetwork(representation_module.n_hidden, envs[0].action_space.n, eps_calculator=linear,
+    policy = DoubleDeepQNetwork(32, envs[0].action_space.n, eps_calculator=linear,
                                 memory_eps_calculator=exponential, memory_delay=memory_delay,
                                 representation_network=representation_module.network)
 
@@ -73,7 +77,7 @@ if __name__ == '__main__':
 
     # TRAIN/TEST
     start_time = time.time()
-    agent.load("experiment_results/tunnel_cerb")  # save last
+    agent.load(sys.argv[3])
     print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
     for env in envs:
-        agent.test(numb_runs=100, env=env)
+        agent.test(numb_runs=20, env=env)

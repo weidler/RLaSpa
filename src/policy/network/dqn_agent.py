@@ -31,10 +31,11 @@ class DQN(nn.Module):
         """
         Network forward pass.
 
-        :param x: network input
-        :return: network output
+        :param x:   network input NOT LATENT
+        :return:    network output
         """
-        return self.layers(x)
+        encoded = self.representation_network.encoder(x)
+        return self.layers(encoded)
 
     def act(self, state: torch.Tensor, epsilon: float) -> int:
         """

@@ -99,8 +99,7 @@ class _Agent(abc.ABC):
         the episode is finished
         """
 
-        latent_state = self.representation_learner.encode(current_state)
-        action = self.policy.choose_action_policy(latent_state)
+        action = self.policy.choose_action_policy(current_state)
         next_state, step_reward, env_done, _ = step_env(action, env)
 
         return next_state, step_reward, env_done
@@ -152,7 +151,7 @@ class _Agent(abc.ABC):
                              writer='imagemagick', fps=15)
             except ValueError as e:
                 print(f"Episode {i} went wrong: " + str(e))
-        print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)}')
+        print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)} with a peak of {max(all_rewards)} at episode {all_rewards.index(max(all_rewards))}')
 
     def get_config_name(self):
         return "_".join(

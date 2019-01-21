@@ -82,8 +82,8 @@ class PrioritizedDoubleDeepQNetwork(PrioritizedDeepQNetwork):
         update_agent_model(current=self.model, target=self.target_model)
 
     def calculate_next_q_value(self, next_state: torch.Tensor) -> torch.Tensor:
-        next_q_values = self.model(next_state)
-        next_state_value = self.target_model(next_state)
+        next_q_values = self.model(next_state).squeeze(0)
+        next_state_value = self.target_model(next_state).squeeze(0)
         return next_state_value[torch.argmax(next_q_values)]
 
     def calculate_next_q_value_memory(self, next_state: torch.Tensor) -> torch.Tensor:
@@ -134,7 +134,7 @@ class PrioritizedDuelingDeepQNetwork(PrioritizedDoubleDeepQNetwork):
         update_agent_model(current=self.model, target=self.target_model)
 
     def calculate_next_q_value(self, next_state: torch.Tensor) -> torch.Tensor:
-        next_q_values = self.target_model(next_state)
+        next_q_values = self.target_model(next_state).squeeze(0)
         return torch.max(next_q_values)
 
     def calculate_next_q_value_memory(self, next_state: torch.Tensor) -> torch.Tensor:

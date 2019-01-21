@@ -165,13 +165,13 @@ class _Agent(abc.ABC):
         if save_policy_learner:
             save_checkpoint(self.policy.get_current_training_state(), episode, ckpt_dir, 'policy')
 
-    def load(self, ckpt_dir: str, load_repr_learner: bool = True, load_policy_learner: bool = True) -> None:
+    def load(self, ckpt_dir: str, load_repr_learner: bool = True, load_policy_learner: bool = True, gpu: bool = True) -> None:
 
         if load_repr_learner and load_policy_learner:
-            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy, repr=self.representation_learner)
+            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy, repr=self.representation_learner, gpu=gpu)
 
         elif load_repr_learner:
-            self.start_episode = apply_checkpoint(ckpt_dir, repr=self.representation_learner)
+            self.start_episode = apply_checkpoint(ckpt_dir, repr=self.representation_learner, gpu=gpu)
 
         elif load_policy_learner:
-            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy)
+            self.start_episode = apply_checkpoint(ckpt_dir, policy=self.policy, gpu=gpu)

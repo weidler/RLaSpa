@@ -15,7 +15,7 @@ if torch.cuda.is_available():
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # MODULES
-env = gym.make("Tunnel-v0")
+env = gym.make("Race-v0")
 
 # representation_module = ConvolutionalPixel(32)
 representation_module = CerberusPixel(
@@ -47,6 +47,6 @@ policy.target_model.to(device)
 
 # TRAIN/TEST
 start_time = time.time()
-agent.train_agent(50000, log=True, episodes_per_saving=1000, train_on_ae_loss=False)
+agent.train_agent(50, log=True, episodes_per_saving=1000, train_on_ae_loss=False)
 print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
 agent.test(numb_runs=100, env=env)

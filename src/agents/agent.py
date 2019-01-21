@@ -127,10 +127,8 @@ class _Agent(abc.ABC):
         """
 
         all_rewards = []
-
+        fig = plt.figure(figsize=(10, 6))
         for i in range(numb_runs):
-            fig = plt.figure(figsize=(10, 6))
-            # try:
             plt.clf()
             ims = []
             done = False
@@ -149,8 +147,6 @@ class _Agent(abc.ABC):
             if not render and visual:
                 ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
                 ani.save(self.path_manager.get_data_dir(f'{env.__class__.__name__}_testrun_{i}.gif'), writer="pillow", fps=15)
-            # except ValueError as e:
-            #     print(f"Episode {i} went wrong: " + str(e))
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)} with a peak of {max(all_rewards)} at episode {all_rewards.index(max(all_rewards))}')
 
     def get_config_name(self):

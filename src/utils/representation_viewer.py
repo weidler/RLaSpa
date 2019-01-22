@@ -43,8 +43,12 @@ class RepresentationViewer(object):
         elif env_name == 'scrollers':
             self.environments = [gym.make("Tunnel-v0"),
                                  gym.make("Evasion-v0"),
-                                 gym.make("EvasionWalls-v0")
-                                 ]
+                                 gym.make("EvasionWalls-v0")]
+        elif env_name == 'all':
+            self.environments = [gym.make("Tunnel-v0"),
+                                 gym.make("Evasion-v0"),
+                                 gym.make("EvasionWalls-v0"),
+                                 gym.make("Race-v0")]
         elif env_name == 'pathing':
             self.environments = [gym.make("VisualObstaclePathing-v0"),
                                  gym.make("VisualObstaclePathing-v1"),
@@ -116,7 +120,7 @@ class RepresentationViewer(object):
         for i in range(len(x)):
             x0, y0 = x[i], y[i]
             # Convert to image
-            img = imageData[i] * 255.
+            img = (1- imageData[i]) * 255.
             if latent_repr:
                 size = 32
             else:
@@ -161,24 +165,30 @@ class RepresentationViewer(object):
 
 
 if __name__ == '__main__':
-    env_name = 'scrollers'
+    env_name = 'all'
     repr_learner_name = 'cerberus'
-    ckpt_path = '/home/adrigrillo/Documents/RLaSpa/ckpt/ParallelAgent_Tunnel-v0_Evasion-v0_EvasionWalls-v0_CerberusPixel_DoubleDeepQNetwork/'
-
-    # Creating race
-    race_env = gym.make("Race-v0")
+    # savefiles names
+    tunel_ckpt = 'ParallelAgent_Tunnel-v0'
+    scrollers_ckpt = 'ParallelAgent_Tunnel-v0_Evasion-v0_EvasionWalls-v0'
+    cerberus_ckpt = '_CerberusPixel_DoubleDeepQNetwork'
+    janus_ckpt = '_JanusPixel_DoubleDeepQNetwork'
+    cvae_ckpt = '_CVAEPixel_DoubleDeepQNetwork'
+    # Final path
+    ckpt_path = '/home/adrigrillo/Documents/RLaSpa/ckpt/' + scrollers_ckpt + cerberus_ckpt
     # Load environments and representation learner
     visualizer = RepresentationViewer(env_name=env_name, repr_learner_name=repr_learner_name,
                                       ckpt_path=ckpt_path, load_policy=False)
-    states_t, latent_repr_t = visualizer.get_representation(environment=visualizer.environments[0],
-                                                            number_of_snapshots=20, steps_per_snapshot=5)
-    states_e, latent_repr_e = visualizer.get_representation(environment=visualizer.environments[1],
-                                                            number_of_snapshots=20, steps_per_snapshot=5)
-    states_ew, latent_repr_ew = visualizer.get_representation(environment=visualizer.environments[2],
-                                                              number_of_snapshots=20, steps_per_snapshot=5)
-    states_r, latent_repr_r = visualizer.get_representation(environment=race_env,
-                                                            number_of_snapshots=20, steps_per_snapshot=5)
-    states = np.concatenate((states_t, states_e, states_ew, states_r), axis=0)
-    latent_repr = np.concatenate((latent_repr_t, latent_repr_e, latent_repr_ew, latent_repr_r), axis=0)
+    # Graph configuration
+    number_of_snapshots = 20
+    states = np.empty((number_of_snapshots * len(visualizer.environments), visualizer.height, visualizer.width))
+    latent_repr = np.empty((number_of_snapshots * len(visualizer.environments), 32))
+
+    for i in range(len(visualizer.environments)):
+        new_states, new_latent_repr = visualizer.get_representation(environment=visualizer.environments[i],
+                                                                    number_of_snapshots=number_of_snapshots,
+                                                                    steps_per_snapshot=5)
+        states[i*number_of_snapshots:(i+1)*number_of_snapshots] = new_states
+        latent_repr[i * number_of_snapshots:(i + 1) * number_of_snapshots] = new_latent_repr
+    # visualize
     visualizer.compute_tsne_states(states)
     visualizer.represent_latent_space(states, latent_repr)

@@ -1,19 +1,88 @@
 \section{Related Work}
 \label{sec:related-work}
 
-Early work on transfer learning for reinforcement learning mostly relied on human intervention to create a mapping between source and target tasks \citep[e.g.][]{taylor2007cross}. \citet{taylor2007cross}, for example, developed a method called \textit{Rule Transfer}. Their algorithm learns a policy in the source task that gets transformed into rules, serving as advise to the agent when training in the new environment. To use these rules in the target task, hand-coded translation functions were applied. In contrast, \citet{taylor2008autonomous} published the first system that automatically mapped source and target task. They use little data from a short exploration period in the target task to approximate a one-to-many mapping between the state and action space. This is achieved by comparing all possible state-state and action-action pairs and choosing the ones with the smallest MSE when predicting the next action using neural networks trained on the target task observations. While their method effectively facilitated learning in the target task, it needs to be noted that transfer was performed on modifications of the same task. Hence, they were fairly similar and there was no attempt to tackle cross-domain transfer. 
+In the following we review previous research on topics relevant to this work. First, we summarize recent work on RL, focusing on such publications that explore tasks with visual input. Subsequently, an overview on transfer learning in the field of RL is given. 
+
+\subsection{Reinforcement Learning for Visual Input}
+The great development that occurred in Deep Learning (DL) in recent years has had a significant impact in the different areas of machine learning (\citet{deep_learning_development}), including reinforcement learning. The main property of DL is the automatic capability of extracting low-dimensional representation, called features, from raw or high-dimensional data like sounds, images or text. This characteristic has allowed the use of RL algorithms in environments that were previously intractable, with high-dimensional or continuous states and actions.
+
+The use of deep learning algorithms in RL has defined a field named ``Deep Reinforcement Learning’’ (DRL) whose first breakthrough came with the development of an algorithm capable of playing Atari 2600 video games, called Deep Q-Network (DQN) (\citet{DQN}). This RL agent used a neural network to extract the information from the raw pixel of the screen and the game reward to learn a policy that outperformed humans in different games.
+
+Experience Replay (ER) (\citet{replay_memory_oc}) is used to improve the learning process of a DQN. This mechanism stores the situations that the agent previously encountered as ``memories'' and randomly samples them to train the network. The sampling of memories is meant to remove correlation between training instances and to avoid forgetting previous experiences, facilitating learning.
+
+Since the publication of the original DQN algorithm, many improvements have been proposed. Prioritized Experience Replay (PER) (\citet{prioritized_memory}) was introduced to consider the difference between the network prediction and the reality of the environment after the agent interaction, known as loss. With the idea that some experiences are more useful than others to learn, PER weights them with respect to the loss, prioritizing the ones that have a bigger loss.
+
+To improve the learning process in DQNs, which may overestimate the value of the actions, a Double Deep Q-Network (DDQN) (\citet{DDQN}) was proposed. A DDQN makes use of a second network that is updated after fixed intervals of time with a copy of the original network. By decoupling the architecture, the overestimation bias is solved by making the prediction of the states, action pairs with the new network. Moreover, by fixing the estimations the learning process is stabilized.
+
+Different deep networks architectures have been also proposed to adapt to specific situations: to improve exploration (\citet{noisy_dqn}) (\citet{hierarchical_dqn}), to benefit from different estimations (\citet{DuelingDQN}) (\citet{distributional_dqn}) and to join different improvements in one algorithm (\citet{rainbow}). This project is closely related to the Double Deep Q-Network algorithm (\citet{DDQN}) that we have adapted in order to work with the representation module.
+
+\subsection{Transfer Learning for Reinforcement Learning}
+% Transfer Learning for RL
+Early work on transfer learning for reinforcement learning mostly relied on human intervention to create a mapping between source and target tasks \citep[e.g.][]{taylor2007cross}. \citet{taylor2007cross}, for example, developed a method called \textit{Rule Transfer}. Their algorithm learns a policy on a source task that gets transformed into rules, serving as advise to the agent when training on the new environment. To use these rules in the target task, hand-coded translation functions were applied.
+
+In contrast, \citet{taylor2008autonomous} published the first system that automatically mapped source and target task. They use little data from a short exploration period in the target task to approximate a one-to-many mapping between the state and action space. This is achieved by comparing all possible state-state and action-action pairs and choosing the ones with the smallest MSE when predicting the next action using neural networks trained on the target task observations. While their method effectively facilitated learning in the target task, it needs to be noted that transfer was performed on modifications of the same task. Hence, they were fairly similar and there was no attempt to tackle cross-domain transfer. 
+
+\citet{gupta2017learning} used a proxy task learned in both the source and target domains, and a test task where transfer should occur. Firstly, with the proxy task, pairs of corresponding states are found using time-based alignment or dynamic time warping. Based on these state pairs, a common latent state space is learned by minimizing reconstruction errors and pairwise distances. In the test task, to incentivize policy transfer from source to task, the distance to source optimal policy in the common space is incorporated in the reward function.
+
+\citet{MAML} propose a meta-learning algorithm, MAML, capable of adapting and perform in different tasks that are independent between each other. Using gradient descent, the meta-learner is trained over a wide range of them with the objective of constructing a general latent representation that allow the agent to behave correctly in the known activities and, also, that can be quickly adapted for new unseen tasks, using few examples.
+
+%\citet{MAML} objective was to find a model capable of learning a new task from a small amount of new data. To do so, the agent is trained in a set of task with the goal of building a representation of the learning that will allow it to learn new tasks in few trials. The idea behind this objective is that some internal representations are more transferable than others. To emerge the use of these internal representations, gradient-based learning is used with the aim of generating a model that can quickly in the different tasks.
+
+For tasks where the reward cannot be found in a few steps and exploration is needed, MAESN (\citet{MAESN}) combines the meta-learning algorithm developed in MAML (\citet{MAML}) with stochastic exploration. This algorithm uses the policy and the latent space learned in previous tasks in conjunction with noise to generate better informed exploration strategies that accelerates the learning in unseen environments. 
+
+% For tasks where the reward can not be found in a few steps, \citet{MAESN} use the latent space and meta-learning to improve the exploration phase for the new task the agent is tackling. To do so, model-agnostic meta-learning was used to generate knowledge that could be easily adapted for different tasks. In addition, policy gradient methods in conjunction with meta-learning were utilized to generate and train the policies. 
+
+\citet{parisotto2015actor} trained an agent to learn multiple (related) games of the Atari Learning Environment simultaneously to later generalize from the learned experiences. The training was done by teaching the agent to mimic an expert and then doing a feature regression of the learned mimicking. This can be seen as telling the agent what to do and later telling him why he should do it this way. They proposed to use this actor-mimic approach as a pre-training to increase learning speed on a set of tasks.
+
+% \citet{mnih2016asynchronous} used asynchronous gradient descent to train deep neural networks. This framework is lightweight so that it can run on a CPU instead of a GPU. They "execute multiple agents in parallel on multiple instances of the environment" \citet{mnih2016asynchronous}. This stabilized learning and reduced the training time. The reduction in training time was roughly linear to the number of processes. Asynchronous advantage actor-critic (A3C) achieved new state-of-the-art performances in 57 Atari games.
+
+% \citet{andrychowicz2017hindsight} say that one of the biggest challenges in RL are sparse rewards. They constructed an algorithm that learns from undesired results as well as from desired results. This way the agent can learn from more experiences and thus constructing a reward function is not necessary. Constructing a good reward function is challenging (\citet{ng1999policy}) and can be complicated (\citet{popov2017data}). They showed that with their approach tasks were able to be learned that previously were not possible. Furthermore, they proposed to train an agent "on multiple goals even if we care only about one of them." \citet{andrychowicz2017hindsight}.
+
+% RL for visual tasks/DL for RL
+% PUT HERE DQN/DDQN/..., that is, general work on visual RL
+
+% \subsubsection{Deep Q-Network}
+% One of the drawbacks of table-based Q-learning occurs in environments with large state spaces.
+% Maintaining and updating the values of all possible states is memory intensive and requires a great amount of training data.
+% An alternative that avoids this problem is function approximation. 
+% We use a Deep Q-Network (DQN) \citep{DQN}, which is a Q-learning algorithm that uses deep neural networks to approximate the state Q-values of each action.
+
+% Experience replay is used to improve the learning process in DQN. 
+% This mechanism stores the situations that the agent previously encountered as ``memories'' and randomly samples them to train the network. 
+% The sampling of memories is meant to remove correlation between training instances and avoid forgetting previous experiences, facilitating the learning.
+
+% Furthermore, prioritized experience replay (PER) \citep{prioritized_memory} was introduced to take into account the loss caused by the memories. With the idea that some experiences are more useful than other to learn, PER weights them with respect to the loss, prioritizing the ones that have a major loss.
+
+% However, prioritized replay memory can introduce bias towards high priority memories, leaving experiences out of the training process. Due to project's objective, random sampling is used during multi-task training to avoid greater influence of more complex games in the training batches. 
+
+% \subsubsection{Double Deep Q-Network}
+% Double Deep Q-Network (DDQN) \citep{DDQN} is an improvement to DQN that stabilizes the target Q-values to be predicted. In DQN, the maximization step taken to calculate the next Q-value (Equation \ref{eq:dqn_td}) can lead to inaccurate predictions that generates overestimation bias, affecting the learning process.
+
+% \begin{equation}\label{eq:dqn_td}
+%      Q(s,a) = r(s,a) + \gamma max_{a}Q(s',a)
+% \end{equation}
+
+% By decoupling the selection of the action from the value evaluation, as in equation \ref{eq:ddqn_td}, DDQN addresses this overestimation problem. Two networks are used in this process: the original DQN, used to choose the action that maximizes the Q-value and a target network, $Q_{t}$, that calculates the estimation with the given action.
+
+% % This is done by the use of a target network, which will estimate the next Q-value after choosing and action with the DQN network. is updated with the trained network every certain number of steps.
+
+% \begin{equation}\label{eq:ddqn_td}
+%      Q(s,a) = r(s,a) + \gamma Q_{t}(s,argmax_{a}Q(s',a))
+% \end{equation}
+
+% More specifically, the DQN network is used and updated during the training meanwhile the target network is a snapshot of the first, that is made every certain number of steps. This procedure makes the target function fixed between updates, allowing a more stable training.
 
 
-\citet{gupta2017learning} used a proxy task learnt in both the source and target domains, and a test task where transfer should occur. Firstly, with the proxy task, pairs of corresponding states are found using time-based alignment or dynamic time warping. Based on these state pairs, a common latent state space is learnt by minimizing reconstruction errors and pairwise distances. In the test task, to incentivize policy transfer from source to task, the distance to source optimal policy in the common space is incorporated the reward function.
+% % More specifically, the target network is kept fixed for a certain number of steps after which is updated with the DQN weights, that keeps changing every step.
 
-\cite{MAML} objective was to find a model capable of learning a new task from a small amount of new data. To do so, the agent is trained in a set of task with the goal of building a representation of the learning that will allow it to use to learn new tasks in few trials. The idea behind this objective is that some internals representations are more transferable than others, for so, to emerge the use of them, gradient-based learning is used with the aim of generating a model that can quickly in the different tasks.
+% %DQN state, contrary to in DQN where it changes every step.
 
-For tasks where the reward can not be found in few steps or were the search, \citet{MAESN} use the latent space and meta-learning to improve the exploration phase for the new task the agent is tackling. To do so, model-agnostic meta-learning was used to generate knowledge that could be easily adapted for different tasks (latent space). In addition, policy gradients methods in conjunction with meta-learning were utilized to generate and train the policies. 
-
-\citet{parisotto2015actor} trained an agent to learn multiple (related) games of the Atari Learning Environment simultaneously to later generalize from the learned experiences. The training was done by teaching the agent to mimic an expert (hence, actor-mimic) and then doing a feature regression of the learned mimicking. This can be seen as telling the agent what to do and later telling him why he should do it this way. They proposed to use Actor-mimic as a pre-training to increase learning speed on a set of tasks.
-
-\citet{mnih2016asynchronous} used asynchronous gradient descent to train deep neural networks. This framework is lightweight so that it can run on a CPU instead of a GPU. They "execute multiple agents in parallel on multiple instances of the environment" \citet{mnih2016asynchronous}. This stabilized learning and reduced the training time. The reduction in training time was roughly linear to the number of processes. Asynchronous advantage actor-critic (A3C) achieved new state-of-the-art performances in 57 Atari games.
-
-\citet{andrychowicz2017hindsight} say that one of the biggest challenges in RL are sparse rewards. They constructed an algorithm that learns from undesired results as well as from desired results. This way the agent can learn from more experiences and thus constructing a reward function is not necessary. Constructing a good reward function is challenging (\cite{ng1999policy}) and can be complicated (\cite{popov2017data}). They showed that with their approach tasks were able to be learned that previously were not possible. Furthermore, they proposed to train an agent "on multiple goals even if we care only about one of them." \citet{andrychowicz2017hindsight}.
-
-In the following sections ...
+% \iffalse
+% \begin{itemize}
+% 	\item DDQN  also has prioritized memory 
+% 	%Dueling DQN \citep{DuelingDQN}: state value, mix between q=learning and state action.
+% 	\item DQN update policy every time. 
+% 	\item continuously changing policy, estimate q-value changes every time.
+% 	target network updated every 100 steps. prediction of q-values is fixed. otherwise there is ``more bias''?
+% \end{itemize}
+% \fi

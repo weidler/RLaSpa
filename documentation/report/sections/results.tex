@@ -1,3 +1,69 @@
 \section{Results}
 \label{sec:results}
-%\lipsum[2-3]
+
+In the following we report and analyze results on the experiments described in the previous section. 
+
+\subsection{Representation Modules}
+% figures showing the different results of repr modules
+% qualitative analysis
+
+We begin by qualitatively analyzing the reconstructions created by the variational autoencoder (VAE), the Janus architecture and the Cerberus architecture.
+
+\begin{figure}[ht!]
+	\centering
+	\begin{subfigure}{0.45\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{"janus_recon"}
+		\caption{Janus}
+		\label{subfig:janus_reconstruction}
+	\end{subfigure}%
+	~ 
+	\begin{subfigure}{0.45\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{"cerberus_recon"}
+		\caption{Cerberus}
+		\label{subfig:cerberus_reconstruction}
+	\end{subfigure}
+	\begin{subfigure}{0.5\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{"cvae_recon"}
+		\caption{CVAE}
+		\label{subfig:cvae_reconstruction}
+	\end{subfigure}%
+	~ 
+
+	\caption{Reconstruction of the different representation learners. For each architecture is depicted the ground-truth (upper images) and the reconstructions (lower images).
+	
+	}
+	\label{fig:repr_learner_reconstructions}
+\end{figure}
+
+% include the best images we have at training complete:
+    % -Janus 
+    % -Cerberus
+    % -CVAE
+    
+\subsection{Policy Learner}
+% tables for DQN without AE loss
+    % racing
+    % tunnel
+    % pathing?
+    
+    % task | test avg | test median 
+
+The results for the different tasks were taken from a point during a 50,000 episode training where intermediate performance was maximal. This avoids taking the policy in a state where the agent currently reconsiders its solution to potentially find a better one.
+
+\begin{table}[]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Task} & \textbf{$\mu_r$} & \textbf{$\widetilde{r}$} & \textbf{episodes} & \textbf{baseline} \textbf{$\mu(r)$} \\ \midrule
+Race & $2799.1$ &  & $36,000$ & 472\\
+Tunnel &  &  & & 120\\ 
+Pathing & -480 & -480 & 10,000 & -8988\\ \bottomrule
+\end{tabular}
+\caption{My caption}
+\label{my-label}
+\end{table}
+    
+% figure showing distribution of test results

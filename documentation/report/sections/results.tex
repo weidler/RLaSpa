@@ -9,48 +9,37 @@ In the following we report and analyze results on the experiments described in t
 
 We begin by qualitatively analyzing the reconstructions created by the variational autoencoder (VAE), the Janus architecture and the Cerberus architecture.
 
-\begin{figure}[ht!]
+\begin{figure}[t!]
 	\centering
-	\begin{subfigure}{0.45\columnwidth}
+	\begin{subfigure}{0.6\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{"janus_recon"}
+		\includegraphics[width=\linewidth]{img/janus_tunnel_recon.png}
 		\caption{Janus}
 		\label{subfig:janus_reconstruction}
 	\end{subfigure}%
 	~ 
-	\begin{subfigure}{0.45\columnwidth}
+	\begin{subfigure}{0.3\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{"cerberus_recon"}
+		\includegraphics[width=\linewidth]{img/cvae_tunnel_recon.png}
+		\caption{CVAE}
+		\label{subfig:cvae_reconstruction}
+	\end{subfigure}
+	
+	
+	\begin{subfigure}{0.9\columnwidth}
+		\centering
+		\includegraphics[width=\linewidth]{img/cerberus_tunnel_recon.png}
 		\caption{Cerberus}
 		\label{subfig:cerberus_reconstruction}
 	\end{subfigure}
-	\begin{subfigure}{0.5\columnwidth}
-		\centering
-		\includegraphics[width=\linewidth]{"cvae_recon"}
-		\caption{CVAE}
-		\label{subfig:cvae_reconstruction}
-	\end{subfigure}%
-	~ 
 
-	\caption{Reconstruction of the different representation learners. For each architecture is depicted the ground-truth (upper images) and the reconstructions (lower images).
-	
-	}
+	\caption{Reconstruction of the different representation learners performing over the Tunnel task. For each architecture the ground-truth (upper images) and the reconstructions (lower images) are depicted.}
 	\label{fig:repr_learner_reconstructions}
 \end{figure}
 
-% include the best images we have at training complete:
-    % -Janus 
-    % -Cerberus
-    % -CVAE
+In Figure \ref{fig:repr_learner_reconstructions}
     
 \subsection{Policy Learner}
-% tables for DQN without AE loss
-    % racing
-    % tunnel
-    % pathing?
-    
-    % task | test avg | test median 
-
 The results for the different tasks were taken from a point during a 50,000 episode training where intermediate performance was maximal. This avoids taking the policy in a state where the agent currently reconsiders its solution to potentially find a better one.
 
 \begin{table}[]
@@ -58,11 +47,11 @@ The results for the different tasks were taken from a point during a 50,000 epis
 \begin{tabular}{@{}lllll@{}}
 \toprule
 \textbf{Task} & \textbf{$\mu_r$} & \textbf{$\widetilde{r}$} & \textbf{episodes} & \textbf{baseline} \textbf{$\mu(r)$} \\ \midrule
-Race & $2799.1$ &  & $36,000$ & 472\\
+Race & $2799.1$ & $2265$ & $36,000$ & 472\\
 Tunnel &  &  & & 120\\ 
 Pathing & -480 & -480 & 10,000 & -8988\\ \bottomrule
 \end{tabular}
-\caption{My caption}
+\caption{Performance of the DDQN without autoencoder loss but using a convolutional encoder. Results are given as arithmetic mean $\mu_r$ and median $\widetilde{r}$. Baseline results are using a random policy and therefore the absolut minimum performance. For the Racing and Tunnel task, maximum performance is 5000, while for Pathing -480 is the best score achievable.}
 \label{my-label}
 \end{table}
     

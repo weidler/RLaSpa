@@ -9,7 +9,7 @@ Alessandro
   - *get figures with results of latent space created by CVAE/Janus/Cerberus for tunnel/scrollers
   - run transfer learning experiments
      - zero shot performance
-     - learning speed improvement (run e.g. 10k episodes, gather performance avg every 100 and plot random init vs 	pretrained) (transfer)
+     - learning speed improvement (run e.g. 10k episodes, gather performance avg every 100 and plot random init vs pretrained) (transfer)
 
 Danni
   - gather results from cluster

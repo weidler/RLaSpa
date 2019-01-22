@@ -125,8 +125,11 @@ class RepresentationViewer(object):
                 size = 32
             else:
                 size = [self.width, self.height]
-            img = img.astype(np.uint8).reshape(size)
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+            img_in = img.astype(np.uint8).reshape(size)
+            boarder = 1
+            img = np.zeros((img_in.shape[0] + boarder*2, img_in.shape[1] + boarder*2))
+            img[boarder: boarder+img_in.shape[0], boarder: boarder+img_in.shape[1]] = img_in
+            img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_GRAY2RGB)
             # Note: OpenCV uses BGR and plt uses RGB
             image = OffsetImage(img, zoom=zoom)
             ab = AnnotationBbox(image, (x0, y0), xycoords='data', frameon=False)

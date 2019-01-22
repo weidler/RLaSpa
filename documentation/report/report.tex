@@ -1,5 +1,6 @@
-\documentclass[10pt]{article}
+\documentclass[10pt,a4paper]{article}
 \usepackage{acl2014}
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{times}
 \usepackage{url}
@@ -10,8 +11,10 @@
 \usepackage[normalem]{ulem}
 \usepackage[ruled]{algorithm2e}
 \usepackage[]{setspace}
+\usepackage{booktabs}
 \useunder{\uline}{\ul}{}
-\usepackage{caption} 
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{enumerate}
 \usepackage{lastpage}
 \usepackage{float}
 \usepackage[page]{appendix}
@@ -19,17 +22,19 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \title{Reinforcement Learning in Latent Space}
+\date{23rd January, 2019}
 
 \addbibresource{references.bib}
-\addbibresource{references_lit_review.bib}
 \AtBeginBibliography{\small}
 
-\author{Adrián Rodríguez Grillo, Danni Liu, Alessandro Scoppio, Kevin Trebing and Tonio Weidler}
+\author{\normalfont Adrián Rodríguez Grillo, Danni Liu, Alessandro Scoppio,\\Kevin Trebing and Tonio Weidler\\\\
+Department of Data Science and Knowledge Engineering, Maastricht University\\\today}
 
 \setlength{\parskip}{0.5em}
 \begin{document}
 
 \maketitle
+
 \begin{abstract}
 
 {{\it \bf Keywords: transfer learning, reinforcement learning, deep learning}}

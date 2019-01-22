@@ -55,7 +55,7 @@ if __name__ == '__main__':
     init_eps = 1.0
     memory_eps = 0.8
     min_eps = 0.01
-    eps_decay = 40000000
+    eps_decay = 3000000
     episode = 1000000
     linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
     exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
@@ -73,7 +73,9 @@ if __name__ == '__main__':
 
     # TRAIN/TEST
     start_time = time.time()
-    agent.train_agent(episode, experience_warmup_length=4, log=True, episodes_per_saving=10000)
+    if len(sys.argv) > 2:
+        agent.load(sys.argv[3])
+    agent.train_agent(episode, experience_warmup_length=4, log=True, episodes_per_saving=10000, train_on_ae_loss=False)
     agent.save(episode=episode)  # save last
     print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
     for env in envs:

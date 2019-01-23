@@ -76,10 +76,10 @@ if __name__ == '__main__':
     policy.target_model.to(device)
 
     # TRAIN/TEST
-    # start_time = time.time()
+    start_time = time.time()
     # agent.load(sys.argv[3], load_policy_learner=True)
     # agent.train_agent(10000, plot_every=100)
     for env in envs:
         agent.test(numb_runs=10000, env=env)
 
-    # print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
+    print(f'Total training took {(time.time() - start_time) / 60:.2f} min')

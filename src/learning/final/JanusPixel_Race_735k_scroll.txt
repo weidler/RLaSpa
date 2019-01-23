@@ -1,4 +1,3 @@
-
 TESTRUN EPISODE: 735000    Average max score after 100 testruns: 492.8 with a peak of 1270 at episode 21    Median score after 100 testruns: 450.0
 TESTRUN EPISODE: 735500    Average max score after 100 testruns: 454.0 with a peak of 1320 at episode 47    Median score after 100 testruns: 420.0
 TESTRUN EPISODE: 736000    Average max score after 100 testruns: 470.8 with a peak of 1270 at episode 34    Median score after 100 testruns: 390.0

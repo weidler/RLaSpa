@@ -109,7 +109,7 @@ class ParallelAgent(_Agent):
 
                 # train policy
                 if episode >= experience_warmup_length:
-                    #encoder_before = self.policy.model.representation_network.encoder.ffnn.weight.data.clone()
+                    # encoder_before = self.representation_learner.network.encoder.ffnn.weight.data.clone()
 
                     # transformations into the latent space need to be done here such that the update is based on the
                     # current state of the encoder!
@@ -119,8 +119,8 @@ class ParallelAgent(_Agent):
                     # exp_latent_observation = self.representation_learner.encode(exp_next_state)
                     policy_loss += self.policy.update(exp_state, exp_action, exp_reward, exp_next_state,
                                                       exp_done)
-                    #encoder_after = self.policy.model.representation_network.encoder.ffnn.weight.data.clone()
-                    #print(f"Weights stayed the same: {torch.equal(encoder_before, encoder_after)}")
+                    # encoder_after = self.representation_learner.network.encoder.ffnn.weight.data.clone()
+                    # print(f"Weights stayed the same: {torch.equal(encoder_before, encoder_after)}")
 
                 # update states (both, to avoid redundant encoding)
                 last_state = current_state
@@ -129,7 +129,9 @@ class ParallelAgent(_Agent):
                 # trackers
                 episode_reward += reward
 
-
+            # encoder_ae = self.representation_learner.network.encoder.ffnn.weight.data.clone()
+            # encoder_policy = self.policy.model.representation_network.encoder.ffnn.weight.data.clone()
+            # print(f"AE and Policy repr are the same: {torch.equal(encoder_ae, encoder_policy)}")
 
             # If we want to change the lr per episode
             self.representation_learner.scheduler.step()

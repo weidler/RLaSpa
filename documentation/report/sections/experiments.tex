@@ -1,28 +1,94 @@
 \section{Experiments}
 \label{sec:experiments}
 
-Experiments are designed to cover different modules combination of the framework and to investigate effectiveness of our approach. Specifically, each representation learner architecture is used for a variety of tasks, with the same policy module. 
+Experiments are designed to cover different combinations of the framework's modules and to investigate the effectiveness of our approach. Specifically, each representation learner architecture is used for a variety of tasks, with the same policy module. 
 
 \subsection{Tasks}
 \label{sec:tasks}
-Various tasks were explored as candidates and finding the most suitable ones.
+% mention here the gym package?
+Various tasks were explored as candidates to find the most suitable ones.
 
-\textbf{Classic control tasks} (citation) from OpenAI GYM are a popular benchmark for Reinforcement Learning algorithms. Despite having similar physics properties like the sinusoidal nature of the tasks, some interior aspects make them less indicated for our goal. For example, the number of features used to describe the environment changes between different tasks (e.g.: cartpole has two and mountain car has three possible actions). Furthermore, experiments from OpenAI may have different dimensions of their state representation and therefore would require a mapping or a padding.
+%   \begin{enumerate}
+% 	\item Classic control tasks
+% 	\item Simple pathing, obstacle pathing
+% 	\item Dynamic scroller games (tunnel, evasion)
+% \end{enumerate}
 
-To overcome this, tasks that have the same action space and state representation were created. They are therefore more comparable to each other and do not require a mapping of the actions or visual input. 
-  \begin{enumerate}
-	\item Classic control tasks
-	\item Simple pathing, obstacle pathing
-	\item Dynamic scroller games (tunnel, evasion)
-\end{enumerate}
+\paragraph{Classic control tasks} 
+Conventional testing domains for RL agents include classic control tasks such as inverted pendulum, cart-pole, and mountain car.
+Despite having similar physical properties like the sinusoidal nature of the tasks, these tasks have some interior aspects that make them less indicated for our goal. 
+The primary issue is that the number of features used to describe the environments and the number of actions differs between tasks. For instance, cart-pole has two actions whereas mountain car has three. 
+Furthermore, classic control tasks describe the different environments using a different number of features (e.g. four features in cart-pole while only two for mountain car).
 
-\paragraph{Classic control tasks}
-In order to test our framework and different implementations of policy learners it was put to test on classic control tasks such as the cartpole and mountain car task. Since in their implementation the state is not visual, but physical properties such as angle speed and speed, no convolution in the representation learners are used. 
+To overcome the difference between actions and features numbers in different tasks, homogeneous tasks were developed. They are therefore easily comparable to each other and do not require a mapping of the actions or visual input. 
+
+% \paragraph{Classic control tasks}
+% In order to test our framework and different implementations of policy learners it was put to test on classic control tasks such as the cartpole and mountain car task. Since in their implementation the state is not visual, but physical properties such as angle speed and speed, no convolution in the representation learners are used. 
+
+
+% \paragraph{Pathing tasks}
+% To introduce visual states and to test whether the convolutional representation learners are correctly learning different pathing tasks are created. In each of these the agent needs to find a way from a starting point to an endpoint. In the simple pathing task there are no obstacles and the agent only needs to find the shortest path to the endpoint. In obstacle pathing there are obstacles blocking the agent's way and he therefore needs to go around them.
 
 \paragraph{Pathing tasks}
-To introduce visual states and to test whether the convolutional representation learners are correctly learning different pathing tasks are created. In each of these the agent needs to find a way from a starting point to an endpoint. In the simple pathing task there are no obstacles and the agent only needs to find the shortest path to the endpoint. In obstacle pathing there are obstacles blocking the agent's way and he therefore needs to go around them.
+We first propose the Pathing and Obstacle Pathing tasks, which are reasonably easy to solve and can be visualized - and learned - using a pixel representation of the state.
+In these tasks, the agent needs to find a path from a starting point to an endpoint. 
+In the simple pathing task there are no obstacles and the agent only needs to find the shortest path to the endpoint. 
+In obstacle pathing there are obstacles that the agent needs to circumvent.
+We hypothesize that learning a policy on the latent representation of a number of "maps" (obstacles/walls configurations) can be used as basis to learn the policy over a previously unseen map.
 
-\paragraph{Scroller games}
-Four different scroller games were created: Race, Evasion, Wall Evasion and Tunnel. The goal in all of these is the same: To survive by not hitting a black obstacle. The dynamics of the environment differ tho. In Race the obstacles come from the top and have the same size as the agent itself. Evasion is very similar, but the obstacles come from the right. Wall Evasion is similar to Evasion, but the obstacles are bigger, this should force the agent to plan a bit ahead when evading. Lastly, Tunnel puts the agent in the middle of a tunnel that randomly goes up or down and when the agent touches the edge of the tunnel it dies.
+% \paragraph{Scroller games}
+% Four different scroller games were created: Race, Evasion, Wall Evasion and Tunnel. The goal in all of these is the same: to survive by not hitting a black obstacle. The dynamics of the environment differ tho. In Race the obstacles come from the top and have the same size as the agent itself. Evasion is very similar, but the obstacles come from the right. Wall Evasion is similar to Evasion, but the obstacles are bigger, this should force the agent to plan a bit ahead when evading. Lastly, Tunnel puts the agent in the middle of a tunnel that randomly goes up or down and when the agent touches the edge of the tunnel it dies.
 
-\subsection{Experiment Setup}
+\paragraph{Scroller Games}
+To test the framework on a wider transfer context, we also implemented four different scroller games:
+Race, Evasion, Walls Evasion and Tunnel. The games share a single goal: reach the furthest point possible without hitting black pixels. 
+In Race and Evasion the obstacles have the same dimension of the agent, but the direction of the scrolling is different (top-down in Race and right-left in Evasion). Wall Evasion and Tunnel are different versions of Evasion. 
+On the one hand, Wall Evasion has larger obstacles resembling walls, which increases the difficulty for the agent to survive. 
+On the other hand, Tunnel generates continuous obstacles, with only a few free spots safe to navigate, looking as if the agent is placed in a tunnel. 
+The reason why we developed those different - but similar - tasks is that we expect an agent able to transfer knowledge to generalize all these tasks as general scroller games, and therefore be able to successfully re-use previous experiences and knowledge in tasks similar enough.
+
+\subsection{Experimental Setup}
+In the following set of experiments we validate our approach and determine which proposed representation module architecture is most suitable for transfer learning.
+
+For all experiments the Double Deep-Q-Network is used as policy learner. We test the performance of the Convolutional Variational Autoencoder, the Janus architecture and the Cerberus architecture as representation modules.
+
+\subsubsection{Experiments on Isolated Modules}
+We first test the performance of the system's submodules in isolation to i) test their stand-alone performance and to ii) reason about their effects on the full model.
+
+\paragraph{Representation Modules}
+% what tasks, what representation modules
+% motivate qualitative instead of quantitative analysis of results
+
+The goal of the representation module is to embed the raw state into a latent representation that serves as a condensed input to the policy learner. The loss produced by the autoencoder architecture is expected to guide the latent space into a generalizable direction. To successfully leverage this representation it needs to be able to reconstruct the input state well enough, even in a multi-task setting. That is, the latent space must contain enough information about the environment.
+
+We obtain a comparison between current input and output of the architectures after 500.000 episodes of training. The comparison includes all the reconstructions that the network performs, therefore Janus is tested on current and next state and Cerberus on current state, next state and differences between current and next state. We will qualitatively analyze these comparisons, since a quantitative analysis on e.g. the losses is unsuitable due to the different demands made to the architectures, depending on the number of heads. 
+
+\paragraph{Policy Learner}
+To test the DDQN in isolation, we use the full model, but skip the updates based on the loss produced by the autoencoder architectures. Due to the full backpropagation described in Section \ref{sec:approach}, the encoder will therefore only be updated based on the DDQN's loss and thus corresponds to the vanilla implementation by \citet{DQN}. 
+
+\subsubsection{Full System Experiments}
+Once the modules are tested individually, we can test the framework in its entirety.
+Each representation learner paired with the policy learner is tested on the Tunnel task and on a set of Scroller tasks (Tunnel, Evasion, Walls Evasion) for multi-task learning.
+
+These three subsets allow to test the approach by giving to the trained network a previously unseen task (as Race for Tunnel and Scrollers and a new map for Pathing), to investigate to which extent is the knowledge transfer achievable.
+
+% Transfer of only repr or repr+policy?
+
+The parameters used in these experiments are listed in Table \ref{tab:hyperparas} and were chosen heuristically.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\ \midrule
+number of episodes & $1,000,000$  \\
+size of latent space & $32$  \\
+memory delay & $10000$ steps  \\
+initial epsilon & $1$  \\
+initial epsilon with memory & $0.8$  \\
+minimum epsilon & $0.01$  \\
+epsilon decay & $3,000,000$  \\ \bottomrule
+\end{tabular}
+\caption{Table of hyperparameters used in the full system experiments.\label{tab:hyperparas}}
+\end{table}
+

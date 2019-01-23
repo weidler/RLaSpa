@@ -1,0 +1,29 @@
+REPORT TODOs:
+------------
+
+Adri
+  - related work
+
+Alessandro
+  - load 500 000 ckpt and include recon in        results
+  - *get figures with results of latent space created by CVAE/Janus/Cerberus for tunnel/scrollers
+  - run transfer learning experiments
+     - zero shot performance
+     - learning speed improvement (run e.g. 10k episodes, gather performance avg every 100 and plot random init vs pretrained) (transfer)
+
+Danni
+  - gather results from cluster
+  - analysis/description of isolated DQN results
+
+Kevin
+  - proofreading
+  - future work/discussion notes
+
+Tonio
+  - go over approach, make it coherent, reorganize the parallel learning section
+  - analysis of latent space results
+  - optimize full model figure
+
+Unassigned
+  - Write abstract
+  - future work

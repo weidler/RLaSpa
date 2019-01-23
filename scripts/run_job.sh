@@ -9,9 +9,11 @@ RIGHT_NOW=$(date +"%Y-%m-%d_%H-%M-%S")
 
 export TASK=${1}
 export REPR=${2}
+export CKPT=${3}
 
 echo '>>>>>>>>>>>>>>>>>timestamp = \t' $RIGHT_NOW
 echo '>>>>>>>>>>>>>>>>>task = \t' $TASK
+echo '>>>>>>>>>>>>>>>>>ckpt = \t' $CKPT
 
 module switch intel gcc
 module load python/3.6.0
@@ -28,7 +30,7 @@ cd /home/hn217262/RLaSpa
 
 export PYTHONPATH="${PYTHONPATH}:/home/hn217262/RLaSpa/src:/home/hn217262/RLaSpa"
 
-SCRIPT_PATH="src/learning/final/experiment_final.py $TASK $REPR"
+SCRIPT_PATH="src/learning/final/experiment_final.py $TASK $REPR $CKPT"
 echo '>>>>>>>>>>>>>>>>>trying to run \t' $SCRIPT_PATH
 
 python3 $SCRIPT_PATH

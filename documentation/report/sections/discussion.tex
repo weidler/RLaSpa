@@ -1,10 +1,28 @@
 \section{Discussion}
 \label{sec:discussion}
-%\lipsum[2-3]
 
-\subsection{Experiment Results Good or Bad}
+% (discussion of results)
 
-%\subsection{Related Work}
+% discussion why our approach may be flawed/ what couldve been better
+A possible flaw in our approach could be that the proposed representation learners do not embed useful information in the latent space. We assume that capturing the dynamics of the environment the agent is acting in is helpful, but it could be that our approach is not sufficient or practicable for the agent to use. Maybe more convolutional layers are more helpful than the handcrafted representation learners in this approach.
+Furthermore, our proposed tasks could be more different to show knowledge transfer. Since we were not able to show an improvement with these similar tasks, further dissimilar tasks are not yet needed.
+
+The underlying idea behind the autoencoder head that predicts the next state based on the encoding of the current state and the action is a reasonable idea. In the simple tasks investigated in this work though, the actions of the agent only affect its own position but not the dynamics of the environment. Furthermore, changes in the environment from one frame to another are always very small. This raises the question whether the reconstruction of the current state and the prediction of the next state are not basically the same objective, since the autoencoders can not model details precise enough to make such distinctions. This is particularly the case in multi-task learning.
+
+% why we do not use frame overlays
+    % in theory the dynamics do not need to be encoded since they are constant in the environment
+    % this overlay may even be harmful since it blurs the information perceived
+
+% discussion how our work differed from related work introduced before and why that results in different results
+
+\subsection{Limitations}
+Since our experiments do not have overwhelming results, this could be due to different factors. In the following we will address potential limitations to our results.
+
+\paragraph{Training time} A factor concerning the bad performance of the agents on a single task could be that it was not trained long enough to find a good policy. Due to time limitations longer training was not possible.
+
+\paragraph{Hyperparameter Tuning} Another reason for sub-optimal performance in any architecture presented in this work are non-optimal hyperparameter settings. These can be the exploration rate regarding the RL agent, but also any configuration of layer sizes and numbers for the representation module and the DDQN. Especially the latter can be crucial, since deep learning systems heavily depend on the correct setting of parameters. An exhaustive grid search was infeasible in the scope of this work, but we suggest that performance can be increased by doing a sophisticated optimization of the parameters.
+
+\paragraph{}
 
 \begin{itemize}
 	\item representation learning for transfer learning

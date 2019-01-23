@@ -22,6 +22,8 @@ if __name__ == '__main__':
         envs = [gym.make("Tunnel-v0")]
     elif envs_name == 'race':
         envs = [gym.make("Race-v0")]
+    elif envs_name == 'evasion':
+        envs = [gym.make("Evasion-v0")]
     elif envs_name == 'scrollers':
         envs = [gym.make("Tunnel-v0"),
                 gym.make("Evasion-v0"),
@@ -80,4 +82,4 @@ if __name__ == '__main__':
     agent.load(sys.argv[3])
     print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
     for env in envs:
-        agent.test(numb_runs=20, env=env)
+        agent.test(numb_runs=100, env=env)

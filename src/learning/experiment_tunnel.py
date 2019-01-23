@@ -15,7 +15,7 @@ if torch.cuda.is_available():
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # MODULES
-env = gym.make("Race-v0")
+env = gym.make("Evasion-v0")
 
 # representation_module = ConvolutionalPixel(32)
 representation_module = CerberusPixel(
@@ -26,11 +26,11 @@ representation_module = CerberusPixel(
     lr=0.1
 )
 
-memory_delay = 100
+memory_delay = 0
 init_eps = 1.0
 memory_eps = 0.8
 min_eps = 0.01
-eps_decay = 10000
+eps_decay = 300000
 linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
 exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
 policy = DoubleDeepQNetwork(32, env.action_space.n, eps_calculator=linear,
@@ -40,7 +40,6 @@ policy = DoubleDeepQNetwork(32, env.action_space.n, eps_calculator=linear,
 # AGENT
 agent = ParallelAgent(representation_module, policy, [env])
 
-# CUDA
 representation_module.network.to(device)  # if using passthrough or Flatten comment this
 policy.model.to(device)
 policy.target_model.to(device)

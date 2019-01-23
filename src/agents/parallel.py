@@ -45,7 +45,7 @@ class ParallelAgent(_Agent):
 
     def train_agent(self, episodes: int, batch_size: int = 32, ckpt_to_load: str = None,
                     episodes_per_saving: int = None, plot_every: int = None, numb_intermediate_tests: int = 0,
-                    experience_warmup_length=0, log: bool = False, train_on_ae_loss=True, statistics_every=100, env = None) -> None:
+                    experience_warmup_length=0, log: bool = False, train_on_ae_loss=True, statistics_every=100, stat_label="", env = None) -> None:
         """
         Method that trains the agent policy learner using the pretrained representation learner.
 
@@ -161,7 +161,7 @@ class ParallelAgent(_Agent):
 
             if episode % statistics_every == 0 and episode != 0:
 
-                self.test(numb_runs=100, env=env, episode_stat=episode)
+                self.test(numb_runs=100, env=env, episode_stat=episode, stat_label=stat_label)
         # Last update of the agent policy
         self.policy.finish_training()
 

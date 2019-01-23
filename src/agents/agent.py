@@ -119,7 +119,7 @@ class _Agent(abc.ABC):
             f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}"
         )
 
-    def test(self, env: Env, numb_runs: int = 1, render: bool = False, visual=True, gif=False, episode_stat=-1) -> None:
+    def test(self, env: Env, numb_runs: int = 1, render: bool = False, visual=True, gif=False, episode_stat=-1, stat_label = "") -> None:
         """
         Run a test in the environment using the current policy without exploration.
 
@@ -144,8 +144,8 @@ class _Agent(abc.ABC):
                 if render:
                     env.render()
             all_rewards.append(total_reward)
-            if episode_stat == -1:
-                print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
+            # if episode_stat == -1:
+                # print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
             if not render and visual:
                 ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
             if gif:
@@ -153,13 +153,14 @@ class _Agent(abc.ABC):
 
         if episode_stat is not -1:
 
-            file = open(f"{self.representation_learner.__class__.__name__}_{env.__class__.__name__}.txt", "w")
+            file = open(f"{self.representation_learner.__class__.__name__}_{env.__class__.__name__}_{stat_label}.txt", "a+")
 
-            file.write("\n\n\n\n\n***********************************************")
+            file.write("\n")
             file.write("TESTRUN EPISODE: ")
             file.write(str(episode_stat))
-            file.write("\n\n*********************************************\n\n\n\n\n")
+            file.write("    ")
             file.write(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)} with a peak of {max(all_rewards)} at episode {all_rewards.index(max(all_rewards))}')
+            file.write("    ")
             file.write(f'Median score after {numb_runs} testruns: {median(all_rewards)}')
 
             file.close()

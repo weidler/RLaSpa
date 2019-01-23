@@ -1,13 +1,20 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-\subsection{Contributions}
-\label{subsec:contributions}
-\begin{itemize}
-	\item Answer to research question
-	\item Other key results and findings
-\end{itemize}
+% summary approach
+In this work, we proposed a novel approach to automatic transfer learning in the domain of reinforcement learning on visual tasks. Our model builds on the DDQN architecture \citep{DDQN} that uses convolutional layers to transform the input images into a latent space. We add an additional representation module that is supposed to guide the latent space to more generalizable representations. To do so, the representation module additionally updates the convolutional encoder based on an autoencoder loss, perceived from reconstructing the input states, predicting following states and/or predicting dynamics in the environment.
+
+% summary key findings
+Our results show that the proposed approach is not sufficient. Indeed, the pre-training on tasks makes learning more difficult for the agent than a random initialization. Furthermore, a detailed analysis of the latent space revealed it to lack focus on features relevant to the tasks. Particularly, the reconstruction loss favored global structures over local information, which made operating in some environments difficult for the agent.
 
 \subsection{Future Work}
 \label{subsec:futurework}
-Since in our implementation we only use a Double Deep Q-Network it would be interesting to see if or how other policy networks, such as Rainbow \citep{rainbow} or hierarchical-DQN \citep{hierarchicalDeepRL}, are able to use the learned latent space. Furthermore, additional convolutional layers may be helpful for constructing a meaningful latent space. Since our results are promising it would be interesting to see our framework applied to Atari games.
+Overall, the experiment results reveal the general difficulty of creating a latent space that can facilitate knowledge transfer across RL tasks.
+With multi-task learning on Scroller tasks, the latent space visualization shows that the states from some tasks are separated, indicating that knowledge transfer can hardly occur.
+While this could be partially due to the chosen tasks lacking sufficient similarity, further extensions can be made to our framework in order to incentivize the merge of domains, for example by the adversarial domain classifier structure proposed by \citet{ganin2014unsupervised}.
+
+Moreover, as our policy learner is a DDQN, it would be interesting to extend it to more advanced policy networks, such as Rainbow \citep{rainbow} or hierarchical-DQN \citep{hierarchical_dqn}.
+Furthermore, additional convolutional layers may be helpful for constructing a meaningful latent space. 
+%Since our results are promising it would be interesting to see our framework applied to Atari games.
+
+Furthermore, the DQN approach is using function approximation to learn a policy. That is, it tries to approximate Q-values. An alternative to this approach, so called policy gradient methods such as the REINFORCE algorithm \citep{williams1992simple} and its variations, could make learning and ultimately transferring easier, since the agent does not need to learn to approximate a Q-function. Instead, it directly learns the policy.

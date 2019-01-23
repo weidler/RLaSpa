@@ -1,6 +1,7 @@
 import abc
 import statistics
 import time
+from statistics import median
 from typing import List
 from typing import Tuple
 import platform
@@ -118,7 +119,7 @@ class _Agent(abc.ABC):
             f"Eps: {self.policy.memory_epsilon_calculator.value(self.policy.total_steps_done - self.policy.memory_delay):.5f}"
         )
 
-    def test(self, env: Env, numb_runs: int = 1, render: bool = False, visual=True) -> None:
+    def test(self, env: Env, numb_runs: int = 1, render: bool = False, visual=True, gif=False) -> None:
         """
         Run a test in the environment using the current policy without exploration.
 
@@ -146,8 +147,10 @@ class _Agent(abc.ABC):
             print(f"Tested episode {i} took {step} steps and gathered a reward of {total_reward}.")
             if not render and visual:
                 ani = animation.ArtistAnimation(fig, ims, blit=True, repeat_delay=1000)
+            if gif:
                 ani.save(self.path_manager.get_data_dir(f'{env.__class__.__name__}_testrun_{i}.gif'), writer="pillow", fps=15)
         print(f'Average max score after {numb_runs} testruns: {sum(all_rewards) / len(all_rewards)} with a peak of {max(all_rewards)} at episode {all_rewards.index(max(all_rewards))}')
+        print(f'Median score after {numb_runs} testruns: {median(all_rewards)}')
 
     def get_config_name(self):
         return "_".join(

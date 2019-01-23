@@ -77,7 +77,9 @@ if __name__ == '__main__':
 
     # TRAIN/TEST
     start_time = time.time()
-    agent.load(sys.argv[3])
-    print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
+    # agent.load(sys.argv[3], load_policy_learner=True)
+    # agent.train_agent(10000, plot_every=100)
     for env in envs:
-        agent.test(numb_runs=20, env=env)
+        agent.test(numb_runs=3, env=env)
+
+    print(f'Total training took {(time.time() - start_time) / 60:.2f} min')

@@ -1,12 +1,12 @@
 \section{Experiments}
 \label{sec:experiments}
 
-Experiments are designed to cover different combinations of the framework's modules and to investigate the effectiveness of our approach. Specifically, each representation learner architecture is used for a variety of tasks, with the same policy module. 
+Our experiments are designed to cover different combinations of the framework's modules and to investigate the effectiveness of our approach. Specifically, each representation learner architecture is used for a variety of tasks, with the same policy module. We will first describe the tasks we experiment on and then introduce a set of preliminary as well as our main experiment.
 
 \subsection{Tasks}
 \label{sec:tasks}
 % mention here the gym package?
-Various tasks were explored as candidates to find the most suitable ones.
+Various tasks have been explored as candidates to find the most suitable ones for the final transfer experiment.
 
 %   \begin{enumerate}
 % 	\item Classic control tasks
@@ -16,11 +16,11 @@ Various tasks were explored as candidates to find the most suitable ones.
 
 \paragraph{Classic Control Tasks} 
 Conventional testing domains for RL agents include classic control tasks such as inverted pendulum, cart-pole, and mountain car.
-Despite having similar physical properties like the sinusoidal nature of the tasks, these tasks have some interior aspects that make them less indicated for our goal. 
-The primary issue is that the number of features used to describe the environments and the number of actions differ between tasks. For instance, cart-pole has two actions whereas mountain car has three. 
-Furthermore, classic control tasks describe the different environments using a different number of features (e.g. four features in cart-pole while only two for mountain car).
+Despite having similar physical properties like their sinusoidal nature, these tasks have some interior aspects that make them less indicated for our goal. 
+The primary issue is that the number of features used to describe the environments differs between tasks. For instance, cart-pole has four features whereas mountain car only two. This would have required changing the architecture of the representation learner each time and the dimensionality of the weights would have differed. 
+Furthermore, the number of possible actions changes between tasks.
 
-To overcome the difference between number of actions and number of features in different tasks, homogeneous tasks were developed. They are therefore easily comparable to each other and do not require a mapping of the actions or visual input. 
+To overcome the difference between number of actions and number of features in different tasks, we developed a number of homogeneous tasks. They are easily comparable to each other and do not require a mapping of the actions or visual input while still carrying key differences. 
 
 \paragraph{Pathing Tasks}
 We first propose a Pathing and Obstacle Pathing task, which are reasonably easy to solve and can be visualized - and learned - using a pixel representation of the state.
@@ -34,49 +34,49 @@ Race, Evasion, Wall Evasion and Tunnel. The games share a single goal: reach the
 In Race and Evasion, the obstacles have the same size as the agent, but the direction of the scrolling is different (top-down in Race and right-left in Evasion). Wall Evasion and Tunnel are different versions of Evasion. 
 On the one hand, Wall Evasion has larger obstacles resembling walls, which increases the difficulty for the agent to survive. 
 On the other hand, Tunnel generates continuous obstacles, with only a few free spots safe to navigate, looking as if the agent is placed in a tunnel. 
-The reason why we developed those different - but similar - tasks is that we expect an agent that is able to transfer knowledge, to generalize all these tasks as general scroller games and therefore be able to successfully re-use previous experiences and knowledge in tasks similar enough.
+The motivation behind those different - but similar - tasks is that we expect an agent that is able to transfer knowledge, to generalize all these tasks as general Scroller games and therefore be able to successfully re-use previous experiences and knowledge in tasks similar enough.
 
 \begin{figure}[ht!]
 	\centering
 	\begin{subfigure}{0.24\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{documentation/report/img/scroller_state.png}
-		\caption{Race.}
+		\includegraphics[width=\linewidth,trim={9cm 0 9cm 0},clip]{documentation/report/img/race.png}
+		\caption{Race.\newline}
 		\label{subfig:race}
 	\end{subfigure}%
 	%
 	\begin{subfigure}{0.24\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{documentation/report/img/evasion.png}
-		\caption{Evasion.}
+		\includegraphics[width=\linewidth,trim={9cm 0 9cm 0},clip]{documentation/report/img/evasion.png}
+		\caption{Evasion.\newline}
 		\label{subfig:evasion}
 	\end{subfigure}
 	%
 	\centering
 	\begin{subfigure}{0.24\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{documentation/report/img/evasion.png}
+		\includegraphics[width=\linewidth,trim={9cm 0 9cm 0},clip]{documentation/report/img/walls.png}
 		\caption{Walls \\ Evasion.}
 		\label{subfig:wall_evasion}
 	\end{subfigure}%
 	% 
 	\begin{subfigure}{0.24\columnwidth}
 		\centering
-		\includegraphics[width=\linewidth]{documentation/report/img/tunnel.png}
-		\caption{Tunnel.\\}
+		\includegraphics[width=\linewidth,trim={9cm 0 9cm 0},clip]{documentation/report/img/tunnel.png}
+		\caption{Tunnel.\newline}
 		\label{subfig:tunnel}
 	\end{subfigure}
-	\caption{Visualizations of different Scroller games.}
+	\caption{Visualizations of different Scroller games. All games progress horizontally apart from Race, which progresses vertically. The agent is a grey pixel and its goal is to avoid black pixels.}
 	\label{fig:scrollers}
 \end{figure}
 
 \subsection{Experimental Setup}
 In the following experiments, we evaluate our approach and determine which proposed representation module architecture is most suitable for transfer learning.
 
-For all experiments the Double Deep-Q-Network is used as policy learner. We test the performance of the Convolutional Variational Autoencoder, the Janus architecture and the Cerberus architecture as representation modules.
+For all experiments the Double Deep-Q-Network is used as the policy learner. We test the performance of the Convolutional Variational Autoencoder (CVAE), the Janus architecture and the Cerberus architecture as representation modules.
 
 \subsubsection{Experiments on Isolated Modules}
-We first test the performance of the system's submodules in isolation to i) test their stand-alone performance and to ii) reason about their effects on the full model.
+We first test the performance of the system's submodules in isolation to test their stand-alone performance and to reason about their effects on the full model.
 
 \paragraph{Representation Modules}
 % what tasks, what representation modules
@@ -92,21 +92,21 @@ That is, the weights of the autoencoder are not updated based on its decoder's r
 Due to the full backpropagation described in Section \ref{sec:approach}, the weights are still updated by the DDQN's loss, corresponding to the original architecture by \citet{DQN}. 
 
 \subsubsection{Full System Experiments}
+\label{full-system-experiment}
 Once the modules are tested individually, we can test the framework in its entirety.
 Each representation module paired with the policy learner is trained on the Tunnel task and on a set of Scroller tasks (Tunnel, Evasion, Walls Evasion) for multi-task learning. 
 These subsets make it possible to test our approach by giving a previously unseen task to the trained network to investigate to which extent knowledge transfer is achievable.
 
-Pathing tasks were not included in the final experiments for two main reasons: on the one hand, the agent needs a considerable amount of training time to reach the goal, especially in the first part of the training where its policy is purely random. On the other hand, Pathing tasks do not have any \textit{dynamics}, meaning that states differ only in the position of the agent. Since this difference is very small compared to the static obstacles and to the environment itself, it is difficult to represent the agent's position in the reconstruction of the representation learner.
+Pathing tasks are not included in the final experiments for two main reasons: on the one hand, the agent needs a considerable amount of training time to reach the goal, especially in the earlier training phase where its policy is purely random. On the other hand, Pathing tasks do not have any \textit{dynamics}, meaning that states differ only in the position of the agent. Since this difference is very small compared to the static obstacles and to the environment itself, it is difficult to represent the agent's position in the reconstruction of the representation learner.
 
-To analyze how the transfer learning affects the training on a previously unseen task, two types of experiments were performed.
+To analyze how the transfer learning affects the training on a previously unseen task, two types of experiments are performed.
 
-\textbf{Zero-shot} experiments, that measures how the system performs on a new task leveraging only the transferred knowledge, without any additional training.
+\paragraph{Zero-shot} The zero-shot experiments measure how the system performs on a previously unseen task (Race) without any additional training. 
 
-\textbf{Learning improvement} experiments, that measure how the transferred knowledge affects the policy in a new training phase. 
-For this type of experiment, the pre-trained network is further trained on the new task for $25,000$ episodes, and its performance is compared to the same architecture without any pre-training. 
-It is worth to mention that in the second training phase, the loss of the representation learner is not back-propagated, so the whole system is updated only on the DDQN loss.
+\paragraph{Learning Improvement} Apart from zero-shot experiments, the next experiments measure how the transferred knowledge affects the policy in a new training phase. 
+For this type of experiment, the pre-trained network is further trained on the new task (Race) for $25,000$ episodes, and its performance is compared to the same architecture without any pre-training. It is worth to mention that in the second training phase, the loss of the representation learner is not back-propagated, so the whole system is updated only on the DDQN loss.
 
-The parameters used in these experiments are listed in Table \ref{tab:hyperparas} and were chosen heuristically.
+The parameters used in these experiments are listed in Table \ref{tab:hyperparas} and are chosen heuristically.
 
 \begin{table}[t]
 \centering
@@ -121,5 +121,5 @@ initial epsilon with memory & $0.8$  \\
 minimum epsilon & $0.01$  \\
 epsilon decay & $3,000,000$  \\ \bottomrule
 \end{tabular}
-\caption{Table of hyperparameters used in the full system experiments. For the further training in the learning improvement experiment, $25,000$ episodes were used, with an epsilon decay of $300,000$, other parameters were not changed.  \label{tab:hyperparas}}
+\caption{Table of hyperparameters used in the full system experiments. For the further training in the learning improvement experiment, $25,000$ episodes were used, with an epsilon decay of $300,000$. The rest of the parameters were not changed.\label{tab:hyperparas}}
 \end{table}

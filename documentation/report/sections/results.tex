@@ -4,6 +4,7 @@
 In the following, we report and analyze the results of the experiments described in the previous section. 
 
 \subsection{Representation Modules}
+To evaluate the representation modules, first the decoders' outputs will be inspected and then a closer look at the latent space itself is going to be taken.
 
 \subsubsection{Decoder Output}
 We begin by qualitatively analyzing the reconstructions created by the variational autoencoder (VAE), the Janus architecture and the Cerberus architecture. Note that while we will loosely refer to the outputs of the decoders as \textit{reconstructions} in the following, only the leftmost output of the multi-decoder architectures is an actual reconstruction. As described in Section \ref{sec:approach}, the middle and right output are predictions or approximations of unseen information.
@@ -28,7 +29,7 @@ We begin by qualitatively analyzing the reconstructions created by the variation
 	\begin{subfigure}{0.9\columnwidth}
 		\centering
 		\includegraphics[width=\linewidth]{img/cerberus_tunnel_recon.png}
-		\caption{Cerberus. From left to right are the current frame, next frame, and the differences between the two frames.}
+		\caption{Cerberus. From left to right are the current frame, next frame and the difference between the two frames.}
 		\label{subfig:cerberus_reconstruction}
 	\end{subfigure}
 
@@ -36,7 +37,7 @@ We begin by qualitatively analyzing the reconstructions created by the variation
 	\label{fig:repr_learner_reconstructions}
 \end{figure}
 
-Figures \ref{fig:repr_learner_reconstructions} to \ref{fig:cvae_multitask} show examples of the outputs of the decoders in the three different architectures. Figure \ref{fig:repr_learner_reconstructions} is the result of 500,000 episodes of training on the Tunnel task. It comes unsurprising that the reconstructions are not perfect, since the environment is randomly generated. Out of the three architectures, Janus seems to be most flawed. Although the course of the tunnel seems correctly reconstructed, its borders are a lot blurrier. The CVAE appears to reconstruct slightly more defined borders and also approximates the tunnel's course well. Similarly, Cerberus produces borders that are more clearly defined than in Janus.
+Figures \ref{fig:repr_learner_reconstructions} to \ref{fig:cvae_multitask} show examples of the outputs of the decoders in the three different architectures. Figure \ref{fig:repr_learner_reconstructions} is the result of 500,000 episodes of training on the Tunnel task. It comes unsurprising that the reconstructions are not perfect, since the environment is randomly generated. Out of the three architectures, Janus seems to be most flawed. Although the course of the tunnel seems correctly reconstructed, its edges are a lot blurrier. The CVAE appears to reconstruct slightly more defined edges and also approximates the tunnel's course well. Similarly, Cerberus produces edges that are more clearly defined than in Janus.
 
 % CVAE MT
 \begin{figure}[t!]
@@ -177,11 +178,10 @@ To inspect the latent representations constructed by the encoders, we visualize 
 Figure \ref{fig:tsne-multitask} shows the original states and the latent states respectively with their dimensionalities reduced to two. Thirty states are sampled from each of Evasion, Wall Evasions, and Tunnel. 
 As t-SNE preserves relative distances in high dimensional spaces, the frames closer to each other in the visualizations tend to be closer in the original spaces too.
 
-In Figure \ref{subfig:tsne_multitask_states}, the original 30*30 input are plotted on two dimensions.
-As expected, frames from Tunnel form their own cluster far apart from those from other tasks due to their distinct spatial characteristic, namely the large continuous areas of dark pixels. One can further observe that the nearly-empty frames are closer to each other, forming the center of the lower-left cluster.
-This center is surrounded by other frames containing more dark pixels.
+In Figure \ref{subfig:tsne_multitask_states}, the original $30\times30$ pixel inputs are plotted on two dimensions.
+As expected, frames from Tunnel form their own cluster far apart from those of other tasks due to their distinct spatial characteristic, namely the large continuous areas of dark pixels. One can further observe that the nearly-empty frames are closer to each other, forming the center of the lower-left cluster. This center is surrounded by other frames containing more dark pixels.
 
-The t-SNE output in Figure \ref{subfig:tsne_multitask_latent} is based on the encoded latent states, although only the original frames are plotted to aid visual interpretation.
+The t-SNE output in Figure \ref{subfig:tsne_multitask_latent} is based on the encoded latent states, although the original frames are plotted to aid visual interpretation.
 Unlike previously, the embedding clearly distinguishes the frames with dense dark pixels from those without. It furthermore shows a smooth gradient corresponding to the change in dark pixel density.
 This provides evidence that the latent representation is able to capture abstract features of the inputs.
 However, the frames from Tunnel still fall far from the other tasks, indicating that the encoder has not found a common representation for all tasks.
@@ -189,7 +189,7 @@ It is also visible that there is a further separation of Tunnel frames based on 
 
 \paragraph{Latent Space of Tunnel Task} \label{para:latent_tunnel}
 When using the representation module trained only on Tunnel and projecting latent spaces from Tunnel using t-SNE (Figure \ref{fig:tsne-tunnel}), a key problem of our approach becomes apparent. 
-The additional structure in the Tunnel environment reveals the encoders inability to identify information relevant to tasks, that is, local information around the agent for these tasks. 
+The additional structure in the Tunnel environment reveals the encoders inability to identify information relevant to tasks, that is, local information around the agent 
 %Instead, the latent space is separating based on general structure.
 Instead, the latent space is constructed based on the spatial structure of the frame, that is, the positions of the tunnel.
 %In the case of the tunnel frames, this shows in the position of the tunnel in the frame being indicative of the latent space distance between states. 
@@ -199,21 +199,10 @@ The curved structure in Figure \ref{subfig:tsne_tunnel_latent} could indicate th
 However, this information is not useful for the agent when learning the task. In fact, the latent space should be grouping the frames based on the course of the tunnel and the current position of the agent. 
 
 \subsection{Policy Learner}
-The results for the different tasks were taken from a point during a 50,000 episode training where intermediate performance was maximal. This avoids taking the policy in a state where the agent currently reconsiders its solution to potentially find a better one.
+Table \ref{tab:isolated_policy_learner} shows the performance of the DDQN on four tasks respectively. The results for the different tasks were taken from a point during a 50,000 episode training where intermediate performance was maximal. This avoids taking the policy in a state where the agent currently reconsiders its solution to potentially find a better one. Note that the autoencoder weights are not updated by its own loss in order to test the policy learner in isolation. On Pathing, Race, and Evasion, the performance is close to maximal and significantly outperforms the random baselines. However, in the Tunnel task the DDQN fails to learn an effective policy. Its resulting behavior is simply a straight horizontal movement without any action initiated by the agent itself.
 
-Table \ref{tab:isolated_policy_learner} shows the performance of the DDQN on four tasks respectively. 
-Note that the autoencoder weights are not updated by its own loss in order to test the policy learner in isolation.
-On Pathing, Race, and Evasion, the performance is close to maximal and significantly outperform the random baselines.
-However, in the Tunnel task the DDQN fails to learn an effective policy.
-Its resulting behavior is simply a straight horizontal movement without any action initiated by the agent itself.
-
-Since the effectiveness of the policy learner is proven on other tasks, we hypothesize that the poor performance is due to the latent representation not capturing useful information for this particular task.
-The previous analysis of the latent space structure in Section \ref{para:latent_tunnel} provides further support for this hypothesis.
-As previously stated, Figure \ref{subfig:tsne_tunnel_latent} shows that the latent representations for horizontally mirrored states are closer to each other. 
-This contradicts the intuition that the learned representation should capture information about edge avoidance and therefore place such frames far apart.
+Since the effectiveness of the policy learner is proven on other tasks, we hypothesize that the poor performance on Tunnel is due to the latent representation build by the DDQN not capturing useful information for this particular task. The previous analysis of the latent space structure in Section \ref{para:latent_tunnel} provides further support for this hypothesis. As previously stated, Figure \ref{subfig:tsne_tunnel_latent} shows that the latent representations for horizontally mirrored states are closer to each other. This contradicts the intuition that the learned representation should capture information about edge avoidance and therefore place such frames far apart.
 %The fact that even the original DDQN without our modification cannot learn to do this trained on Tunnel alone (compare Table \ref{tab:isolated_policy_learner}) indicates the challenges posed by this task. 
-But this observation also underlines the general difficulty of balancing between focusing on task-relevant features and generalizing for transfer learning.
-
 
 \begin{table}[t!]
 \centering
@@ -232,18 +221,20 @@ Tunnel & $193$ & $140$ & $313.06$ & $120$\\
 
 % FINAL TEST ON TRANSFER
 \subsection{Full System Experiments}
-After performing individual experiments over the modules, we decided to not include the Convolutional Variational Autoencoder in the final experiments, being the representation module that performed worse, especially in a multi-task context.
+After performing individual experiments on the modules, we decided to not include the Convolutional Variational Autoencoder in the final experiments, since it is the representation module that performed worse, especially in a multi-task context.
+
+Note that the pre-training agents themselves did not perform well on the source tasks they were trained on. On Tunnel, the results resembled those reported in Table \ref{tab:isolated_policy_learner} and in the multi-task setting the agent was unable to learn a valuable policy as well.
 
 \subsubsection{Zero-shot}
-In Table \ref{zero-shot-table} are depicted statistics concerning different training configurations.
-All results of this section are calculated over $10000$ test-runs and include average, peak and median reward.
+As introduced in Section \ref{full-system-experiment}, zero-shot refers to testing an agent trained on the source tasks on the target task (Race). All results of this section are calculated over $10,000$ test-runs and include average, peak and median reward.
 
-The zero-shot experiment showed no visible gain in using the pre-trained model. In fact, the collected reward of the pre-trained architectures was as inefficient as the random initialization, showing no valuable knowledge transfer.
+In Table \ref{zero-shot-table} statistics are depicted concerning different training configurations.
+The results show no visible gain in using the pre-trained model. In fact, the collected reward of the pre-trained architectures is as inefficient as the random initialization, showing no valuable knowledge transfer.
 
 \begin{table}[t!]
 \begin{tabular}{llllll}
 \toprule
-pre-training   & $\mu_r$ & max $r$ & $\widetilde{r}$ \\ \midrule
+\textbf{Pre-training}   & $\mu_r$ & max $r$ & $\widetilde{r}$ \\ \midrule
 Random Initialization                           &     $481.22$     &    $2260$     &      $420$      \\ \midrule
 Janus Scrollers &     $479.46$     &    $2210$     &      $420$      \\ 
 Cerberus Scrollers &     $479.06$     &    $2080$     &      $420$      \\ \midrule 
@@ -251,14 +242,13 @@ Janus Tunnel    &     $477.55$     &    $2620$     &      $420$      \\
 Cerberus Tunnel    &     $481.00$     &    $2530$     &      $420$      \\ \bottomrule 
 
 \end{tabular}
-\caption{Zero-Shot performance of proposed architectures compared with untrained agent on task Race. All pre-trainings trained on ~900,000 episodes. Statistics were calculated on 10,000 testruns.}
+\caption{Zero-Shot performance of the proposed architectures compared with untrained agent on Race task. All pre-trainings trained for $\sim$900,000 episodes. Statistics are calculated based on 10,000 test runs.}
 \label{zero-shot-table}
 \end{table}
 
 \subsubsection{Improved Learning from Transfer}
 
-In Figure \ref{fig:improved-learning} is depicted the collected reward of the system when pre-trained on the Tunnel task and on the Scroller tasks compared to the untrained model.
-As the graph clearly shows, the system was not able to learn any interesting policy when trained starting from a pre-trained model, and the only configuration that managed to learn a correct policy - getting the max reward in several occasions - was the untrained one.
+In Figure \ref{fig:improved-learning}, the collected reward of the system is depicted when pre-trained on the Tunnel task and on the Scroller tasks compared to the untrained model. As the figure shows, the system was not able to learn any interesting policy when trained with transfer, and the only configuration that managed to learn a good policy quickly - getting the max reward in several occasions - was the one without pre-training.
 
 \begin{figure}
     \centering

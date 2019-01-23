@@ -69,8 +69,8 @@ if __name__ == '__main__':
     init_eps = 1.0
     memory_eps = 0.8
     min_eps = 0.01
-    eps_decay = 40000000
-    episode = 1000000
+    eps_decay = 300000
+    episode = 50000
     linear = LinearSchedule(schedule_timesteps=memory_delay, initial_p=init_eps, final_p=memory_eps)
     exponential = ExponentialSchedule(initial_p=memory_eps, min_p=min_eps, decay=eps_decay)
     policy = DoubleDeepQNetwork(32, envs[0].action_space.n, eps_calculator=linear,
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     # TRAIN/TEST
     start_time = time.time()
     # agent.load("/home/alescop/Desktop/final_experiments/zero-shot/janus_scroll", load_policy_learner=True)
-    agent.train_agent(10000, plot_every=9999, train_on_ae_loss=False)
+    agent.train_agent(50000, plot_every=25000, train_on_ae_loss=False, statistics_every=500)
     print(f'Total training took {(time.time() - start_time) / 60:.2f} min')
     for env in envs:
         agent.test(numb_runs=10000, env=env)

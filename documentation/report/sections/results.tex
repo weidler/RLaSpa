@@ -179,11 +179,11 @@ Figure \ref{fig:tsne-multitask} shows the original states and the latent states 
 As t-SNE preserves relative distances in high dimensional spaces, the frames closer to each other in the visualizations tend to be closer in the original spaces too.
 
 In Figure \ref{subfig:tsne_multitask_states}, the original $30\times30$ pixel inputs are plotted on two dimensions.
-As expected, frames from Tunnel form their own cluster far apart from those of other tasks due to their distinct spatial characteristic, namely the large continuous areas of dark pixels. One can further observe that the nearly-empty frames are closer to each other, forming the center of the lower-left cluster. This center is surrounded by other frames containing more dark pixels.
+As expected, frames from Tunnel form their own cluster far apart from those of other tasks due to their distinct spatial characteristic, namely the large continuous areas of dark pixels. One can further observe that the nearly-empty frames are closer to each other, forming the center of the upper-left cluster. This center is surrounded by other frames containing more dark pixels.
 
 The t-SNE output in Figure \ref{subfig:tsne_multitask_latent} is based on the encoded latent states, although the original frames are plotted to aid visual interpretation.
 Unlike previously, the embedding clearly distinguishes the frames with dense dark pixels from those without. It furthermore shows a smooth gradient corresponding to the change in dark pixel density.
-This provides evidence that the latent representation is able to capture abstract features of the inputs.
+This provides evidence that the latent representation is able to capture some abstract features of the inputs, i.e. the density of dark pixels.
 However, the frames from Tunnel still fall far from the other tasks, indicating that the encoder has not found a common representation for all tasks.
 It is also visible that there is a further separation of Tunnel frames based on their spatial arrangements, i.e. the positions of the tunnels.
 

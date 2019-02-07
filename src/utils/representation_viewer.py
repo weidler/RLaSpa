@@ -14,7 +14,7 @@ from torch import Tensor
 from src.agents.agent import reset_env, step_env
 from src.policy.dqn import DoubleDeepQNetwork
 import matplotlib.pyplot as plt
-from src.representation.learners import JanusPixel, CerberusPixel, CVAEPixel
+from src.representation.learners import JanusPixel, CerberusPixel, CVAEPixel, Cerberus
 from src.utils.model_handler import apply_checkpoint
 
 
@@ -42,6 +42,10 @@ class RepresentationViewer(object):
             self.environments = [gym.make("Tunnel-v0")]
         elif env_name == 'scrollers':
             self.environments = [gym.make("Tunnel-v0"),
+                                 gym.make("Evasion-v0"),
+                                 gym.make("EvasionWalls-v0")]
+        elif env_name == 'evasion':
+            self.environments = [gym.make("Race-v0"),
                                  gym.make("Evasion-v0"),
                                  gym.make("EvasionWalls-v0")]
         elif env_name == 'all':
@@ -120,15 +124,15 @@ class RepresentationViewer(object):
         for i in range(len(x)):
             x0, y0 = x[i], y[i]
             # Convert to image
-            img = (1- imageData[i]) * 255.
+            img = (1 - imageData[i]) * 255.
             if latent_repr:
                 size = 32
             else:
                 size = [self.width, self.height]
             img_in = img.astype(np.uint8).reshape(size)
             boarder = 1
-            img = np.zeros((img_in.shape[0] + boarder*2, img_in.shape[1] + boarder*2))
-            img[boarder: boarder+img_in.shape[0], boarder: boarder+img_in.shape[1]] = img_in
+            img = np.zeros((img_in.shape[0] + boarder * 2, img_in.shape[1] + boarder * 2))
+            img[boarder: boarder + img_in.shape[0], boarder: boarder + img_in.shape[1]] = img_in
             img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_GRAY2RGB)
             # Note: OpenCV uses BGR and plt uses RGB
             image = OffsetImage(img, zoom=zoom)
@@ -176,21 +180,23 @@ if __name__ == '__main__':
     cerberus_ckpt = '_CerberusPixel_DoubleDeepQNetwork'
     janus_ckpt = '_JanusPixel_DoubleDeepQNetwork'
     cvae_ckpt = '_CVAEPixel_DoubleDeepQNetwork'
+    repr_ckpt = '/repr'
+    dqn_ckpt = '/dqn'
     # Final path
-    ckpt_path = '/home/adrigrillo/Documents/RLaSpa/ckpt/' + scrollers_ckpt + cerberus_ckpt
+    ckpt_path = '/home/adrigrillo/Documents/RLaSpa/ckpt/' + scrollers_ckpt + cerberus_ckpt + repr_ckpt
     # Load environments and representation learner
     visualizer = RepresentationViewer(env_name=env_name, repr_learner_name=repr_learner_name,
                                       ckpt_path=ckpt_path, load_policy=False)
     # Graph configuration
-    number_of_snapshots = 20
+    number_of_snapshots = 50
     states = np.empty((number_of_snapshots * len(visualizer.environments), visualizer.height, visualizer.width))
     latent_repr = np.empty((number_of_snapshots * len(visualizer.environments), 32))
 
     for i in range(len(visualizer.environments)):
         new_states, new_latent_repr = visualizer.get_representation(environment=visualizer.environments[i],
                                                                     number_of_snapshots=number_of_snapshots,
-                                                                    steps_per_snapshot=5)
-        states[i*number_of_snapshots:(i+1)*number_of_snapshots] = new_states
+                                                                    steps_per_snapshot=17)
+        states[i * number_of_snapshots:(i + 1) * number_of_snapshots] = new_states
         latent_repr[i * number_of_snapshots:(i + 1) * number_of_snapshots] = new_latent_repr
     # visualize
     visualizer.compute_tsne_states(states)

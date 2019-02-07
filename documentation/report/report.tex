@@ -5,11 +5,11 @@
 \usepackage{times}
 \usepackage{url}
 \usepackage{amsmath}
-\usepackage[natbib=true,backend=biber,style=authoryear]{biblatex}
+\usepackage[natbib=true,backend=biber,style=authoryear,maxbibnames=99]{biblatex}
 \usepackage{lipsum}
 \usepackage{latexsym}
 \usepackage[normalem]{ulem}
-\usepackage[ruled]{algorithm2e}
+\usepackage{algorithm, algorithmic}%
 \usepackage[]{setspace}
 \usepackage{booktabs}
 \useunder{\uline}{\ul}{}
@@ -21,6 +21,7 @@
 \pagestyle{plain} 
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{bookmark}
 \title{Reinforcement Learning in Latent Space}
 \date{23rd January, 2019}
 
@@ -31,13 +32,18 @@
 Department of Data Science and Knowledge Engineering, Maastricht University\\\today}
 
 \setlength{\parskip}{0.5em}
+\captionsetup{font=small,labelfont=bf}
+\captionsetup[sub]{font=small,labelfont=bf}
+
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
 
-{{\it \bf Keywords: transfer learning, reinforcement learning, deep learning}}
+In general, \textit{reinforcement learning} algorithms produce task-specific solutions. This makes learned knowledge unusable when learning new tasks, although there might be strong similarities between them. However, reinforcement learning often requires expensive training, raising the need for such \textit{transfer learning}. In this work, we propose a technique of guiding a Deep-Q-Network towards producing more general abstractions of visual input in order to make transfer to unseen tasks easier. For this purpose, the encoder producing the representation of the visual input is not only trained by the Deep-Q-Network performing the task, but also using multiple decoders resembling the structure of an autoencoder. Although we incorporate multiple measures to model dynamics in the representation, our results show that this task is challenging. Knowledge from learning one or multiple tasks did not successfully transfer to unseen tasks. Furthermore, an analysis of the latent space produced by the encoder network revealed the encoder's lack of focus on features relevant to solving the agent's objectives.
+
+{{\it \bf Keywords: transfer learning, reinforcement learning, deep learning, unsupervised learning, autoencoders}}
 \end{abstract}
 
 \input{sections/introduction}

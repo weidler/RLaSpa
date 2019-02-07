@@ -11,6 +11,8 @@ Alessandro
      - zero shot performance
      - learning speed improvement (run e.g. 10k episodes, gather performance avg every 100 and plot random init vs pretrained) (transfer)
 
+
+
 Danni
   - gather results from cluster
   - analysis/description of isolated DQN results
